@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>人間ビームシューター</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: black;
+        }
+        #gameCanvas {
+            border: 1px solid white;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // プレイヤー
+        const player = {
+            x: canvas.width / 2,
+            y: canvas.height - 50,
+            width: 30,
+            height: 50,
+            speed: 3
+        };
+
+        // 敵
+        const enemies = [];
+        for (let i = 0; i < 5; i++) {
+            enemies.push({
+                x: i * 70 + 50,
+                y: 50,
+                width: 30,
+                height: 30,
+                speed: 0.5
+            });
+        }
+
+        // ビーム
+        const beams = [];
+
+        // ゲーム状態
+        let gameOver = false;
+        let yellowBeamRate = 10;
+        let yellowBeamCounter = 0;
+        let blueBeamRate = 20;
+        let blueBeamCounter = 0;
+
+        // キー入力
+        const keys = {};
+
+        document.addEventListener('keydown', (e) => {
+            keys[e.code] = true;
+        });
+
+        document.addEventListener('keyup', (e) => {
+            keys[e.code] = false;
+        });
+
+        function fireYellowBeam() {
+            if (!gameOver) {
+                beams.push({
+                    x: player.x + player.width / 2,
+                    y: player.y,
+                    width: 2,
+                    height: 20,
+                    speed: 6,
+                    color: 'yellow',
+                    dx: 0
+                });
+            }
+        }
+
+        function fireBlueBeams() {
+            if (!gameOver) {
+                // 左の青いビーム
+                beams.push({
+                    x: player.x,
+                    y: player.y + player.height * 0.3,
+                    width: 2,
+                    height: 15,
+                    speed: 5,
+                    color: 'cyan',
+                    dx: -0.5
+                });
+                // 右の青いビーム
+                beams.push({
+                    x: player.x + player.width,
+                    y: player.y + player.height * 0.3,
+                    width: 2,
+                    height: 15,
+                    speed: 5,
+                    color: 'cyan',
+                    dx: 0.5
+                });
+            }
+        }
+
+        function update() {
+            if (gameOver) return;
+
+            // プレイヤーの移動
+            if (keys['ArrowLeft'] && player.x > 0) player.x -= player.speed;
+            if (keys['ArrowRight'] && player.x < canvas.width - player.width) player.x += player.speed;
+
+            // 黄色いビームの発射処理
+            if (keys['Space']) {
+                yellowBeamCounter++;
+                if (yellowBeamCounter >= yellowBeamRate) {
+                    fireYellowBeam();
+                    yellowBeamCounter = 0;
+                }
+            } else {
+                yellowBeamCounter = yellowBeamRate;
+            }
+
+            // 青いビームの発射処理
+            if (keys['KeyB']) {
+                blueBeamCounter++;
+                if (blueBeamCounter >= blueBeamRate) {
+                    fireBlueBeams();
+                    blueBeamCounter = 0;
+                }
+            } else {
+                blueBeamCounter = blueBeamRate;
+            }
+
+            // 敵の移動
+            enemies.forEach(enemy => {
+                enemy.x += enemy.speed;
+                if (enemy.x <= 0 || enemy.x >= canvas.width - enemy.width) {
+                    enemy.speed *= -1;
+                    enemy.y += 10;
+                }
+            });
+
+            // ビームの移動と当たり判定
+            beams.forEach((beam, beamIndex) => {
+                beam.y -= beam.speed;
+                beam.x += beam.dx;
+                if (beam.y + beam.height < 0 || beam.x < 0 || beam.x > canvas.width) {
+                    beams.splice(beamIndex, 1);
+                    return;
+                }
+
+                enemies.forEach((enemy, enemyIndex) => {
+                    if (
+                        beam.x < enemy.x + enemy.width &&
+                        beam.x + beam.width > enemy.x &&
+                        beam.y < enemy.y + enemy.height &&
+                        beam.y + beam.height > enemy.y
+                    ) {
+                        enemies.splice(enemyIndex, 1);
+                        beams.splice(beamIndex, 1);
+                    }
+                });
+            });
+
+            // ゲームクリア判定
+            if (enemies.length === 0) {
+                gameOver = true;
+            }
+        }
+
+        function drawPlayer() {
+            ctx.fillStyle = 'lime';
+            
+            // 体
+            ctx.fillRect(player.x + player.width * 0.3, player.y + player.height * 0.4, player.width * 0.4, player.height * 0.6);
+            
+            // 頭
+            ctx.beginPath();
+            ctx.arc(player.x + player.width / 2, player.y + player.height * 0.2, player.width * 0.2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 左腕
+            ctx.fillRect(player.x, player.y + player.height * 0.3, player.width * 0.2, player.height * 0.4);
+            
+            // 右腕
+            ctx.fillRect(player.x + player.width * 0.8, player.y + player.height * 0.3, player.width * 0.2, player.height * 0.4);
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // プレイヤーの描画
+            drawPlayer();
+
+            // 敵の描画
+            ctx.fillStyle = 'red';
+            enemies.forEach(enemy => {
+                ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+            });
+
+            // ビームの描画
+            beams.forEach(beam => {
+                ctx.fillStyle = beam.color;
+                ctx.fillRect(beam.x, beam.y, beam.width, beam.height);
+            });
+
+            // ゲームオーバー時の"Perfect"表示
+            if (gameOver) {
+                ctx.fillStyle = 'yellow';
+                ctx.font = '48px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('Perfect', canvas.width / 2, canvas.height / 2);
+            }
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+    </script>
+</body>
+</html>
