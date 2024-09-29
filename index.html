@@ -167,8 +167,10 @@
                 togglePause();
             }
             
-            // Start background music on first user interaction
-            startBackgroundMusic();
+            // Start background music on first user interaction if it's not already playing
+            if (backgroundMusic.paused) {
+                startBackgroundMusic();
+            }
         });
 
         document.addEventListener('keyup', (e) => {
@@ -312,9 +314,10 @@
             lives = 3;
             updateLives();
 
-            // Start or restart the background music
-            stopBackgroundMusic();
-            startBackgroundMusic();
+            // Start the background music if it's not already playing
+            if (backgroundMusic.paused) {
+                startBackgroundMusic();
+            }
         }
 
         let isPaused = false;
@@ -347,7 +350,11 @@
         }
 
         function update() {
-            if (gameOver || isPaused) return;
+            if (gameOver) {
+                stopBackgroundMusic();
+                return;
+            }
+            if (isPaused) return;
 
             // プレイヤーの移動
             if (keys['ArrowLeft'] && player.x > 0) player.x -= player.speed;
@@ -431,6 +438,7 @@
             if (enemies.length === 0) {
                 level++;
                 resetGame();
+                // Don't restart the music here, it should continue playing
             }
 
             // ビームの発射レートを下げる（間隔を長くする）
