@@ -81,15 +81,45 @@
             font-size: 24px;
             color: red;
         }
+
+        #pauseOverlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 48px;
+            z-index: 10;
+        }
+        #pauseMessage {
+            text-align: center;
+        }
     </style>
 </head>
 <body>
+    <!-- Add this audio element just after the opening body tag -->
+    <audio id="backgroundMusic" loop>
+        <source src="15. Underground (Fast).mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
     <button id="reloadBtn">Reload Game</button>
     <div id="lives">❤❤❤</div>
     <canvas id="gameCanvas" width="400" height="400"></canvas>
     <div class="mobile-controls">
         <button id="yellowBeamBtn" class="mobile-button">Y</button>
         <button id="blueBeamBtn" class="mobile-button">B</button>
+    </div>
+    <div id="pauseOverlay">
+        <div id="pauseMessage">
+            一時停止中<br>
+            Hキーで再開
+        </div>
     </div>
     <script>
         const canvas = document.getElementById('gameCanvas');
@@ -131,6 +161,14 @@
 
         document.addEventListener('keydown', (e) => {
             keys[e.code] = true;
+            if (e.code === 'KeyS') {
+                togglePause();
+            } else if (e.code === 'KeyH' && isPaused) {
+                togglePause();
+            }
+            
+            // Start background music on first user interaction
+            startBackgroundMusic();
         });
 
         document.addEventListener('keyup', (e) => {
@@ -188,6 +226,10 @@
             keys['ArrowRight'] = false;
         });
 
+        const mushrooms = [];
+        let powerUpTimer = 0;
+        const POWER_UP_DURATION = 300; // 5秒間（60FPS想定）
+
         function fireYellowBeam() {
             if (!gameOver) {
                 beams.push({
@@ -195,7 +237,7 @@
                     y: player.y,
                     width: 2,
                     height: 20,
-                    speed: 6,
+                    speed: powerUpTimer > 0 ? 15 : 2, // 通常速度を4から2に減少
                     color: 'yellow',
                     dx: 0
                 });
@@ -210,17 +252,17 @@
                     y: player.y + player.height * 0.3,
                     width: 2,
                     height: 15,
-                    speed: 5,
+                    speed: powerUpTimer > 0 ? 12 : 1.5, // 通常速度を3から1.5に減少
                     color: 'cyan',
                     dx: -0.5
                 });
-                // ��の青いビーム
+                // 右の青いビーム
                 beams.push({
                     x: player.x + player.width,
                     y: player.y + player.height * 0.3,
                     width: 2,
                     height: 15,
-                    speed: 5,
+                    speed: powerUpTimer > 0 ? 12 : 1.5, // 通常速度を3から1.5に減少
                     color: 'cyan',
                     dx: 0.5
                 });
@@ -269,10 +311,43 @@
             gameOver = false;
             lives = 3;
             updateLives();
+
+            // Start or restart the background music
+            stopBackgroundMusic();
+            startBackgroundMusic();
+        }
+
+        let isPaused = false;
+
+        function togglePause() {
+            isPaused = !isPaused;
+            const pauseOverlay = document.getElementById('pauseOverlay');
+            pauseOverlay.style.display = isPaused ? 'flex' : 'none';
+            
+            // Pause or resume the background music
+            if (isPaused) {
+                backgroundMusic.pause();
+            } else {
+                backgroundMusic.play().catch(error => {
+                    console.log("Audio play failed:", error);
+                });
+            }
+        }
+
+        function spawnMushroom() {
+            if (Math.random() < 0.0005) { // 0.5%の確率できのこを生成
+                mushrooms.push({
+                    x: Math.random() * (canvas.width - 20),
+                    y: 0,
+                    width: 20,
+                    height: 20,
+                    speed: 2
+                });
+            }
         }
 
         function update() {
-            if (gameOver) return;
+            if (gameOver || isPaused) return;
 
             // プレイヤーの移動
             if (keys['ArrowLeft'] && player.x > 0) player.x -= player.speed;
@@ -357,6 +432,32 @@
                 level++;
                 resetGame();
             }
+
+            // ビームの発射レートを下げる（間隔を長くする）
+            yellowBeamRate = 20; // 5から20に増加（より少ない頻度で発射）
+            blueBeamRate = 40; // 10から40に増加（より少ない頻度で発射）
+
+            // きのこの更新
+            spawnMushroom();
+            mushrooms.forEach((mushroom, index) => {
+                mushroom.y += mushroom.speed;
+                if (mushroom.y > canvas.height) {
+                    mushrooms.splice(index, 1);
+                } else if (
+                    player.x < mushroom.x + mushroom.width &&
+                    player.x + player.width > mushroom.x &&
+                    player.y < mushroom.y + mushroom.height &&
+                    player.y + player.height > mushroom.y
+                ) {
+                    mushrooms.splice(index, 1);
+                    powerUpTimer = POWER_UP_DURATION;
+                }
+            });
+
+            // パワーアップタイマーの更新
+            if (powerUpTimer > 0) {
+                powerUpTimer--;
+            }
         }
 
         function drawPlayer() {
@@ -378,6 +479,8 @@
         }
 
         function draw() {
+            if (isPaused) return;
+
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             // プレイヤーの描画
@@ -414,6 +517,20 @@
             ctx.font = '20px Arial';
             ctx.textAlign = 'left';
             ctx.fillText(`Level: ${level}`, 10, 30);
+
+            // きのこの描画
+            ctx.fillStyle = 'purple';
+            mushrooms.forEach(mushroom => {
+                ctx.fillRect(mushroom.x, mushroom.y, mushroom.width, mushroom.height);
+            });
+
+            // パワーアップ状態の表示
+            if (powerUpTimer > 0) {
+                ctx.fillStyle = 'white';
+                ctx.font = '16px Arial';
+                ctx.textAlign = 'left';
+                ctx.fillText('Power Up!', 10, 50);
+            }
         }
 
         function gameLoop() {
@@ -428,6 +545,20 @@
             location.reload();
         });
 
+        const backgroundMusic = document.getElementById('backgroundMusic');
+
+        function startBackgroundMusic() {
+            backgroundMusic.play().catch(error => {
+                console.log("Audio play failed:", error);
+            });
+        }
+
+        function stopBackgroundMusic() {
+            backgroundMusic.pause();
+            backgroundMusic.currentTime = 0;
+        }
+
+        // Start the game
         resetGame();
         gameLoop();
     </script>
