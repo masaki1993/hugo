@@ -229,8 +229,8 @@
         });
 
         const mushrooms = [];
-        let powerUpTimer = 0;
-        const POWER_UP_DURATION = 300; // 5秒間（60FPS想定）
+        let isPoweredUp = false;
+        let powerLevel = 0; // New variable to track power level
 
         function fireYellowBeam() {
             if (!gameOver) {
@@ -238,8 +238,8 @@
                     x: player.x + player.width / 2,
                     y: player.y,
                     width: 2,
-                    height: powerUpTimer > 0 ? 40 : 20, // パワーアップ時にビームを長くする
-                    speed: powerUpTimer > 0 ? 30 : 4,
+                    height: isPoweredUp ? 40 : 20,
+                    speed: isPoweredUp ? 30 + (powerLevel * 5) : 4, // Increase speed with power level
                     color: 'yellow',
                     dx: 0
                 });
@@ -253,8 +253,8 @@
                     x: player.x,
                     y: player.y + player.height * 0.3,
                     width: 2,
-                    height: powerUpTimer > 0 ? 30 : 15, // パワーアップ時にビームを長くする
-                    speed: powerUpTimer > 0 ? 24 : 3,
+                    height: isPoweredUp ? 30 : 15,
+                    speed: isPoweredUp ? 24 + (powerLevel * 4) : 3, // Increase speed with power level
                     color: 'cyan',
                     dx: -0.5
                 });
@@ -263,8 +263,8 @@
                     x: player.x + player.width,
                     y: player.y + player.height * 0.3,
                     width: 2,
-                    height: powerUpTimer > 0 ? 30 : 15, // パワーアップ時にビームを長くする
-                    speed: powerUpTimer > 0 ? 24 : 3,
+                    height: isPoweredUp ? 30 : 15,
+                    speed: isPoweredUp ? 24 + (powerLevel * 4) : 3, // Increase speed with power level
                     color: 'cyan',
                     dx: 0.5
                 });
@@ -276,14 +276,14 @@
         const enemyBullets = [];
 
         function fireEnemyBullet() {
-            if (enemies.length > 0 && Math.random() < 0.02) {
+            if (enemies.length > 0 && Math.random() < 0.00067) { // 0.02から0.0067に減少（約1/3の確率）
                 const shooter = enemies[Math.floor(Math.random() * enemies.length)];
                 enemyBullets.push({
                     x: shooter.x + shooter.width / 2,
                     y: shooter.y + shooter.height,
                     width: 2,
                     height: 10,
-                    speed: 1.5, // 速度を3から1.5に減少
+                    speed: 1.5,
                     color: 'red'
                 });
             }
@@ -314,6 +314,9 @@
             lives = 3;
             updateLives();
 
+            // パワーアップ状態をリセットしない
+            // isPoweredUp はそのまま維持される
+
             // Start the background music if it's not already playing
             if (backgroundMusic.paused) {
                 startBackgroundMusic();
@@ -338,13 +341,13 @@
         }
 
         function spawnMushroom() {
-            if (Math.random() < 0.0005) { // 0.5%の確率できのこを生成
+            if (Math.random() < 0.001) { // 0.05%の確率できのこを生成
                 mushrooms.push({
                     x: Math.random() * (canvas.width - 20),
                     y: 0,
                     width: 20,
                     height: 20,
-                    speed: 2
+                    speed: 1 // 速度を2から1に減少（半分の速さに）
                 });
             }
         }
@@ -441,7 +444,7 @@
                 // Don't restart the music here, it should continue playing
             }
 
-            // ビームの発射レートを下げる（間隔を長くす���）
+            // ビームの発射レートを下げる（間隔を長くす）
             yellowBeamRate = 20; // 5から20に増加（より少ない頻度で発射）
             blueBeamRate = 40; // 10から40に増加（より少ない頻度で発射）
 
@@ -458,14 +461,10 @@
                     player.y + player.height > mushroom.y
                 ) {
                     mushrooms.splice(index, 1);
-                    powerUpTimer = POWER_UP_DURATION;
+                    isPoweredUp = true;
+                    powerLevel++; // Increase power level when mushroom is collected
                 }
             });
-
-            // パワーアップタイマーの更新
-            if (powerUpTimer > 0) {
-                powerUpTimer--;
-            }
         }
 
         function drawPlayer() {
@@ -533,11 +532,11 @@
             });
 
             // パワーアップ状態の表示
-            if (powerUpTimer > 0) {
+            if (isPoweredUp) {
                 ctx.fillStyle = 'white';
                 ctx.font = '16px Arial';
                 ctx.textAlign = 'left';
-                ctx.fillText('Power Up!', 10, 50);
+                ctx.fillText(`Power Up! Level: ${powerLevel}`, 10, 50);
             }
         }
 
