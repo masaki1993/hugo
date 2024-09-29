@@ -16,10 +16,47 @@
         #gameCanvas {
             border: 1px solid white;
         }
+        // ... existing styles ...
+
+        /* New styles for mobile buttons */
+        .mobile-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+        }
+        .mobile-button {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            font-size: 24px;
+            color: white;
+            display: none;
+        }
+        #yellowBeamBtn {
+            background-color: yellow;
+            color: black;
+        }
+        #blueBeamBtn {
+            background-color: cyan;
+        }
+        @media (max-width: 768px) {
+            .mobile-button {
+                display: block;
+            }
+        }
     </style>
 </head>
 <body>
     <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <div class="mobile-controls">
+        <button id="yellowBeamBtn" class="mobile-button">Y</button>
+        <button id="blueBeamBtn" class="mobile-button">B</button>
+    </div>
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
@@ -64,6 +101,57 @@
 
         document.addEventListener('keyup', (e) => {
             keys[e.code] = false;
+        });
+
+        // Add touch event listeners for mobile buttons
+        const yellowBeamBtn = document.getElementById('yellowBeamBtn');
+        const blueBeamBtn = document.getElementById('blueBeamBtn');
+
+        yellowBeamBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            keys['Space'] = true;
+        });
+
+        yellowBeamBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            keys['Space'] = false;
+        });
+
+        blueBeamBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            keys['KeyB'] = true;
+        });
+
+        blueBeamBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            keys['KeyB'] = false;
+        });
+
+        // Add touch events for player movement
+        let touchStartX = 0;
+        canvas.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const touchX = e.touches[0].clientX;
+            const diffX = touchX - touchStartX;
+            
+            if (diffX > 0) {
+                keys['ArrowRight'] = true;
+                keys['ArrowLeft'] = false;
+            } else if (diffX < 0) {
+                keys['ArrowLeft'] = true;
+                keys['ArrowRight'] = false;
+            }
+            
+            touchStartX = touchX;
+        });
+
+        canvas.addEventListener('touchend', () => {
+            keys['ArrowLeft'] = false;
+            keys['ArrowRight'] = false;
         });
 
         function fireYellowBeam() {
