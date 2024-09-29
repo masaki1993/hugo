@@ -238,8 +238,8 @@
                     x: player.x + player.width / 2,
                     y: player.y,
                     width: 2,
-                    height: 20,
-                    speed: powerUpTimer > 0 ? 15 : 2, // 通常速度を4から2に減少
+                    height: powerUpTimer > 0 ? 40 : 20, // パワーアップ時にビームを長くする
+                    speed: powerUpTimer > 0 ? 30 : 4,
                     color: 'yellow',
                     dx: 0
                 });
@@ -253,8 +253,8 @@
                     x: player.x,
                     y: player.y + player.height * 0.3,
                     width: 2,
-                    height: 15,
-                    speed: powerUpTimer > 0 ? 12 : 1.5, // 通常速度を3から1.5に減少
+                    height: powerUpTimer > 0 ? 30 : 15, // パワーアップ時にビームを長くする
+                    speed: powerUpTimer > 0 ? 24 : 3,
                     color: 'cyan',
                     dx: -0.5
                 });
@@ -263,8 +263,8 @@
                     x: player.x + player.width,
                     y: player.y + player.height * 0.3,
                     width: 2,
-                    height: 15,
-                    speed: powerUpTimer > 0 ? 12 : 1.5, // 通常速度を3から1.5に減少
+                    height: powerUpTimer > 0 ? 30 : 15, // パワーアップ時にビームを長くする
+                    speed: powerUpTimer > 0 ? 24 : 3,
                     color: 'cyan',
                     dx: 0.5
                 });
@@ -283,7 +283,7 @@
                     y: shooter.y + shooter.height,
                     width: 2,
                     height: 10,
-                    speed: 3,
+                    speed: 1.5, // 速度を3から1.5に減少
                     color: 'red'
                 });
             }
@@ -441,7 +441,7 @@
                 // Don't restart the music here, it should continue playing
             }
 
-            // ビームの発射レートを下げる（間隔を長くする）
+            // ビームの発射レートを下げる（間隔を長くす���）
             yellowBeamRate = 20; // 5から20に増加（より少ない頻度で発射）
             blueBeamRate = 40; // 10から40に増加（より少ない頻度で発射）
 
