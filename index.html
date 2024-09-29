@@ -18,15 +18,14 @@
         }
         // ... existing styles ...
 
-        /* New styles for mobile buttons */
+        /* Updated styles for mobile buttons */
         .mobile-controls {
-            position: absolute;
+            position: fixed;
             bottom: 20px;
-            left: 0;
-            right: 0;
+            left: 20px;
+            right: 20px;
             display: flex;
             justify-content: space-between;
-            padding: 0 20px;
         }
         .mobile-button {
             width: 60px;
@@ -49,9 +48,29 @@
                 display: block;
             }
         }
+        
+        /* New styles for reload button */
+        #reloadBtn {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        #reloadBtn:hover {
+            background-color: #45a049;
+        }
     </style>
 </head>
 <body>
+    <button id="reloadBtn">Reload Game</button>
     <canvas id="gameCanvas" width="400" height="400"></canvas>
     <div class="mobile-controls">
         <button id="yellowBeamBtn" class="mobile-button">Y</button>
@@ -309,6 +328,12 @@
             draw();
             requestAnimationFrame(gameLoop);
         }
+
+        // Add reload button functionality
+        const reloadBtn = document.getElementById('reloadBtn');
+        reloadBtn.addEventListener('click', () => {
+            location.reload();
+        });
 
         gameLoop();
     </script>
