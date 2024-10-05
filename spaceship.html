@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>宇宙船ゲーム</title>
+    <style>
+        /* スタイル定義 */
+        body {
+            margin: 0;
+            background-color: black;
+            color: white;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        #gameCanvas {
+            display: block;
+            margin: 0 auto;
+            background-color: black;
+        }
+        #reloadBtn {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #lives {
+            position: fixed;
+            top: 10px;
+            right: 20px;
+            font-size: 24px;
+            color: red;
+        }
+        .mobile-controls {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 400px;
+            margin: 20px auto;
+            padding: 0 10px;
+            box-sizing: border-box;
+        }
+        .mobile-button {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            font-size: 24px;
+            color: white;
+            display: none;
+            position: fixed;
+            bottom: 20px;
+        }
+        #yellowBeamBtn {
+            background-color: yellow;
+            color: black;
+            left: 10px;
+        }
+        #blueBeamBtn {
+            background-color: cyan;
+            right: 10px;
+        }
+        @media (max-width: 768px) {
+            .mobile-button {
+                display: block;
+            }
+        }
+        #pauseOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 48px;
+            z-index: 10;
+        }
+        #pauseMessage {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <button id="reloadBtn">ゲーム選択に戻る</button>
+    <div id="lives">❤❤❤</div>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <div class="mobile-controls">
+        <button id="yellowBeamBtn" class="mobile-button">Y</button>
+        <button id="blueBeamBtn" class="mobile-button">B</button>
+    </div>
+    <div id="pauseOverlay">
+        <div id="pauseMessage">
+            一時停止中<br>
+            Hキーで再開
+        </div>
+    </div>
+    <script>
+        // 宇宙船ゲームのJavaScriptコード
+        // 既存の宇宙船ゲームのコードをここに記述します
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // ... ここにあなたの宇宙船ゲームのJavaScriptコードを配置してください ...
+
+        // 例:
+        // 以下、コードの一部を記述します（完全なコードは省略します）
+
+        // プレイヤーや敵などの初期設定
+        const player = { /* プレイヤーの設定 */ };
+        const enemies = [ /* 敵の設定 */ ];
+        // その他の変数や関数
+
+        // ゲームループ
+        function gameLoop() {
+            // 更新と描画処理
+            requestAnimationFrame(gameLoop);
+        }
+        gameLoop();
+
+        // 「ゲーム選択に戻る」ボタンの処理
+        document.getElementById('reloadBtn').addEventListener('click', () => {
+            location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>

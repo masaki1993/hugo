@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>えいごものがたり</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f8ff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+        }
+        #gameContainer {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 100%;
+        }
+        h1 {
+            color: #4a4a4a;
+            text-align: center;
+        }
+        #story, #question, #result {
+            margin: 20px 0;
+            font-size: 18px;
+            line-height: 1.6;
+        }
+        .option {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .option:hover {
+            background-color: #2980b9;
+        }
+        #nextBtn, #retryBtn {
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: none;
+        }
+        #progressBar {
+            width: 100%;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        #progress {
+            width: 0%;
+            height: 20px;
+            background-color: #3498db;
+            border-radius: 5px;
+            transition: width 0.5s;
+        }
+        #levelInfo {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <h1>えいごものがたり</h1>
+        <div id="levelInfo"></div>
+        <div id="story"></div>
+        <div id="question"></div>
+        <button class="option" id="optionA"></button>
+        <button class="option" id="optionB"></button>
+        <button class="option" id="optionC"></button>
+        <button class="option" id="optionD"></button>
+        <div id="result"></div>
+        <button id="nextBtn">つぎへ</button>
+        <button id="retryBtn">もういちどちょうせん</button>
+        <div id="progressBar"><div id="progress"></div></div>
+    </div>
+
+    <script>
+        const storyEl = document.getElementById('story');
+        const questionEl = document.getElementById('question');
+        const optionA = document.getElementById('optionA');
+        const optionB = document.getElementById('optionB');
+        const optionC = document.getElementById('optionC');
+        const optionD = document.getElementById('optionD');
+        const resultEl = document.getElementById('result');
+        const nextBtn = document.getElementById('nextBtn');
+        const retryBtn = document.getElementById('retryBtn');
+        const progressEl = document.getElementById('progress');
+
+        let currentQuestion = 0;
+        let score = 0;
+        let questions = [];
+
+        let currentLevel = 1;
+        const questionsPerLevel = 5;
+        const totalLevels = 50;
+
+        const levelInfoEl = document.getElementById('levelInfo');
+
+        const stories = [
+            'えいごのせかいへようこそ！たのしくえいごをまなびましょう。',
+            'もりのなかでぼうけんがはじまります。えいたんごでどうぶつとおはなししよう！',
+            'まちにやってきました。みせやレストランでつかうえいごをおぼえよう。',
+            'うちゅうせんにのってうちゅうりょこうへ！うちゅうのことばをまなぼう。',
+            // ... 追加のストーリーを記述 ...
+        ];
+
+        function loadQuestion(index) {
+            if (index >= questions.length) {
+                endGame();
+                return;
+            }
+            const q = questions[index];
+            storyEl.textContent = stories[Math.min(Math.floor(index / (questionsPerLevel * 10)), stories.length - 1)];
+            questionEl.textContent = `「${q.word}」のいみは？`;
+            const options = shuffle([q.correct, ...q.incorrect]);
+            optionA.textContent = options[0];
+            optionB.textContent = options[1];
+            optionC.textContent = options[2];
+            optionD.textContent = options[3];
+
+            resultEl.textContent = '';
+            nextBtn.style.display = 'none';
+
+            [optionA, optionB, optionC, optionD].forEach(button => {
+                button.disabled = false;
+                button.style.backgroundColor = '#3498db';
+            });
+
+            progressEl.style.width = `${((index + 1) / questions.length) * 100}%`;
+            updateLevelInfo();
+        }
+
+        function updateLevelInfo() {
+            currentLevel = Math.floor(currentQuestion / questionsPerLevel) + 1;
+            levelInfoEl.textContent = `レベル: ${currentLevel} / ${totalLevels}`;
+        }
+
+        function checkAnswer(selectedOption) {
+            const userAnswer = selectedOption.textContent;
+            const correctAnswer = questions[currentQuestion].correct;
+
+            if (userAnswer === correctAnswer) {
+                resultEl.textContent = 'せいかい！よくできました！';
+                resultEl.style.color = 'green';
+                score++;
+            } else {
+                resultEl.textContent = `ざんねん。せいかいは「${correctAnswer}」でした。`;
+                resultEl.style.color = 'red';
+            }
+
+            [optionA, optionB, optionC, optionD].forEach(button => {
+                button.disabled = true;
+                if (button.textContent === correctAnswer) {
+                    button.style.backgroundColor = 'lightgreen';
+                } else if (button === selectedOption) {
+                    button.style.backgroundColor = 'pink';
+                }
+            });
+
+            if (currentQuestion % questionsPerLevel === questionsPerLevel - 1) {
+                nextBtn.textContent = 'つぎのレベルへ';
+            } else {
+                nextBtn.textContent = 'つぎへ';
+            }
+
+            nextBtn.style.display = 'block';
+        }
+
+        function endGame() {
+            storyEl.textContent = 'おめでとう！すべてのレベルをクリアしました！';
+            questionEl.textContent = `あなたのスコア: ${score} / ${questions.length}`;
+            [optionA, optionB, optionC, optionD].forEach(button => button.style.display = 'none');
+            nextBtn.style.display = 'none';
+            retryBtn.style.display = 'block';
+            levelInfoEl.style.display = 'none';
+        }
+
+        optionA.addEventListener('click', () => checkAnswer(optionA));
+        optionB.addEventListener('click', () => checkAnswer(optionB));
+        optionC.addEventListener('click', () => checkAnswer(optionC));
+        optionD.addEventListener('click', () => checkAnswer(optionD));
+
+        nextBtn.addEventListener('click', () => {
+            currentQuestion++;
+            loadQuestion(currentQuestion);
+        });
+
+        retryBtn.addEventListener('click', () => {
+            currentQuestion = 0;
+            score = 0;
+            [optionA, optionB, optionC, optionD].forEach(button => button.style.display = 'block');
+            retryBtn.style.display = 'none';
+            loadQuestion(currentQuestion);
+        });
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        fetch('vocabulary.json')
+            .then(response => response.json())
+            .then(data => {
+                questions = data.words;
+                loadQuestion(currentQuestion);
+            })
+            .catch(error => {
+                console.error('たんごデータのよみこみにしっぱいしました:', error);
+            });
+    </script>
+</body>
+</html>

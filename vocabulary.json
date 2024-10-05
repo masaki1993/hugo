@@ -1,0 +1,909 @@
+{
+    "words": [
+        {
+            "word": "apple",
+            "correct": "りんご",
+            "incorrect": ["ばなな", "ぶどう", "おれんじ"]
+        },
+        {
+            "word": "cat",
+            "correct": "ねこ",
+            "incorrect": ["いぬ", "とり", "さかな"]
+        },
+        {
+            "word": "dog",
+            "correct": "いぬ",
+            "incorrect": ["ねこ", "うま", "うし"]
+        },
+        {
+            "word": "bird",
+            "correct": "とり",
+            "incorrect": ["ちょう", "こうもり", "はち"]
+        },
+        {
+            "word": "fish",
+            "correct": "さかな",
+            "incorrect": ["くじら", "いるか", "たこ"]
+        },
+        {
+            "word": "book",
+            "correct": "ほん",
+            "incorrect": ["ノート", "ペン", "えんぴつ"]
+        },
+        {
+            "word": "pen",
+            "correct": "ペン",
+            "incorrect": ["えんぴつ", "ふで", "まーか���"]
+        },
+        {
+            "word": "car",
+            "correct": "くるま",
+            "incorrect": ["じてんしゃ", "でんしゃ", "ひこうき"]
+        },
+        {
+            "word": "house",
+            "correct": "いえ",
+            "incorrect": ["がっこう", "びょういん", "こうえん"]
+        },
+        {
+            "word": "tree",
+            "correct": "き",
+            "incorrect": ["はな", "くさ", "やま"]
+        },
+        {
+            "word": "sun",
+            "correct": "たいよう",
+            "incorrect": ["つき", "ほし", "くも"]
+        },
+        {
+            "word": "moon",
+            "correct": "つき",
+            "incorrect": ["たいよう", "ほし", "うちゅう"]
+        },
+        {
+            "word": "water",
+            "correct": "みず",
+            "incorrect": ["ゆき", "こおり", "くうき"]
+        },
+        {
+            "word": "fire",
+            "correct": "ひ",
+            "incorrect": ["みず", "つち", "かぜ"]
+        },
+        {
+            "word": "earth",
+            "correct": "ちきゅう",
+            "incorrect": ["たいよう", "つき", "うちゅう"]
+        },
+        {
+            "word": "sky",
+            "correct": "そら",
+            "incorrect": ["うみ", "やま", "かわ"]
+        },
+        {
+            "word": "sea",
+            "correct": "うみ",
+            "incorrect": ["かわ", "みずうみ", "いけ"]
+        },
+        {
+            "word": "mountain",
+            "correct": "やま",
+            "incorrect": ["たに", "どうくつ", "さばく"]
+        },
+        {
+            "word": "river",
+            "correct": "かわ",
+            "incorrect": ["うみ", "みずうみ", "いけ"]
+        },
+        {
+            "word": "flower",
+            "correct": "はな",
+            "incorrect": ["き", "くさ", "もり"]
+        },
+        {
+            "word": "grass",
+            "correct": "くさ",
+            "incorrect": ["き", "はな", "もり"]
+        },
+        {
+            "word": "forest",
+            "correct": "もり",
+            "incorrect": ["こうえん", "どうぶつえん", "はたけ"]
+        },
+        {
+            "word": "cloud",
+            "correct": "くも",
+            "incorrect": ["あめ", "ゆき", "かぜ"]
+        },
+        {
+            "word": "rain",
+            "correct": "あめ",
+            "incorrect": ["ゆき", "かぜ", "たいふう"]
+        },
+        {
+            "word": "snow",
+            "correct": "ゆき",
+            "incorrect": ["あめ", "こおり", "くも"]
+        },
+        {
+            "word": "wind",
+            "correct": "かぜ",
+            "incorrect": ["あめ", "ゆき", "たいふう"]
+        },
+        {
+            "word": "food",
+            "correct": "たべもの",
+            "incorrect": ["のみもの", "くすり", "おかし"]
+        },
+        {
+            "word": "drink",
+            "correct": "のみもの",
+            "incorrect": ["たべもの", "くすり", "おかし"]
+        },
+        {
+            "word": "fruit",
+            "correct": "くだもの",
+            "incorrect": ["やさい", "にく", "さかな"]
+        },
+        {
+            "word": "vegetable",
+            "correct": "やさい",
+            "incorrect": ["くだもの", "にく", "さかな"]
+        },
+        {
+            "word": "meat",
+            "correct": "にく",
+            "incorrect": ["さかな", "たまご", "とうふ"]
+        },
+        {
+            "word": "egg",
+            "correct": "たまご",
+            "incorrect": ["にく", "さかな", "とうふ"]
+        },
+        {
+            "word": "bread",
+            "correct": "パン",
+            "incorrect": ["ごはん", "めん", "ピザ"]
+        },
+        {
+            "word": "rice",
+            "correct": "ごはん",
+            "incorrect": ["パン", "めん", "ピザ"]
+        },
+        {
+            "word": "milk",
+            "correct": "ぎゅうにゅう",
+            "incorrect": ["みず", "おちゃ", "ジュース"]
+        },
+        {
+            "word": "tea",
+            "correct": "おちゃ",
+            "incorrect": ["ぎゅうにゅう", "みず", "ジュース"]
+        },
+        {
+            "word": "coffee",
+            "correct": "コーヒー",
+            "incorrect": ["おちゃ", "ぎゅうにゅう", "ジュース"]
+        },
+        {
+            "word": "juice",
+            "correct": "ジュース",
+            "incorrect": ["みず", "おちゃ", "ぎゅうにゅう"]
+        },
+        {
+            "word": "water",
+            "correct": "みず",
+            "incorrect": ["ジュース", "おちゃ", "ぎゅうにゅう"]
+        },
+        {
+            "word": "head",
+            "correct": "あたま",
+            "incorrect": ["て", "あし", "かお"]
+        },
+        {
+            "word": "eye",
+            "correct": "め",
+            "incorrect": ["みみ", "はな", "くち"]
+        },
+        {
+            "word": "ear",
+            "correct": "みみ",
+            "incorrect": ["め", "はな", "くち"]
+        },
+        {
+            "word": "nose",
+            "correct": "はな",
+            "incorrect": ["め", "みみ", "くち"]
+        },
+        {
+            "word": "mouth",
+            "correct": "くち",
+            "incorrect": ["め", "みみ", "はな"]
+        },
+        {
+            "word": "hand",
+            "correct": "て",
+            "incorrect": ["あし", "ゆび", "うで"]
+        },
+        {
+            "word": "foot",
+            "correct": "あし",
+            "incorrect": ["て", "ゆび", "うで"]
+        },
+        {
+            "word": "finger",
+            "correct": "ゆび",
+            "incorrect": ["て", "あし", "うで"]
+        },
+        {
+            "word": "arm",
+            "correct": "うで",
+            "incorrect": ["て", "あし", "ゆび"]
+        },
+        {
+            "word": "leg",
+            "correct": "あし",
+            "incorrect": ["て", "うで", "ゆび"]
+        },
+        {
+            "word": "one",
+            "correct": "いち",
+            "incorrect": ["に", "さん", "よん"]
+        },
+        {
+            "word": "two",
+            "correct": "に",
+            "incorrect": ["いち", "さん", "よん"]
+        },
+        {
+            "word": "three",
+            "correct": "さん",
+            "incorrect": ["いち", "に", "よん"]
+        },
+        {
+            "word": "four",
+            "correct": "よん",
+            "incorrect": ["いち", "に", "さん"]
+        },
+        {
+            "word": "five",
+            "correct": "ご",
+            "incorrect": ["ろく", "なな", "はち"]
+        },
+        {
+            "word": "six",
+            "correct": "ろく",
+            "incorrect": ["ご", "なな", "はち"]
+        },
+        {
+            "word": "seven",
+            "correct": "なな",
+            "incorrect": ["ご", "ろく", "はち"]
+        },
+        {
+            "word": "eight",
+            "correct": "はち",
+            "incorrect": ["ご", "ろく", "なな"]
+        },
+        {
+            "word": "nine",
+            "correct": "きゅう",
+            "incorrect": ["じゅう", "じゅういち", "じゅうに"]
+        },
+        {
+            "word": "ten",
+            "correct": "じゅう",
+            "incorrect": ["きゅう", "じゅういち", "じゅうに"]
+        },
+        {
+            "word": "red",
+            "correct": "あか",
+            "incorrect": ["あお", "きいろ", "みどり"]
+        },
+        {
+            "word": "blue",
+            "correct": "あお",
+            "incorrect": ["あか", "きいろ", "みどり"]
+        },
+        {
+            "word": "yellow",
+            "correct": "きいろ",
+            "incorrect": ["あか", "あお", "みどり"]
+        },
+        {
+            "word": "green",
+            "correct": "みどり",
+            "incorrect": ["あか", "あお", "きいろ"]
+        },
+        {
+            "word": "white",
+            "correct": "しろ",
+            "incorrect": ["くろ", "ちゃいろ", "むらさき"]
+        },
+        {
+            "word": "black",
+            "correct": "くろ",
+            "incorrect": ["しろ", "ちゃいろ", "むらさき"]
+        },
+        {
+            "word": "brown",
+            "correct": "ちゃいろ",
+            "incorrect": ["しろ", "くろ", "むらさき"]
+        },
+        {
+            "word": "purple",
+            "correct": "むらさき",
+            "incorrect": ["しろ", "くろ", "ちゃいろ"]
+        },
+        {
+            "word": "orange",
+            "correct": "オレンジいろ",
+            "incorrect": ["あか", "きいろ", "みどり"]
+        },
+        {
+            "word": "pink",
+            "correct": "ピンク",
+            "incorrect": ["あか", "むらさき", "オレンジいろ"]
+        },
+        {
+            "word": "gray",
+            "correct": "はいいろ",
+            "incorrect": ["くろ", "しろ", "ちゃいろ"]
+        },
+        {
+            "word": "gold",
+            "correct": "きんいろ",
+            "incorrect": ["ぎんいろ", "どういろ", "なまりいろ"]
+        },
+        {
+            "word": "silver",
+            "correct": "ぎんいろ",
+            "incorrect": ["きんいろ", "どういろ", "なまりいろ"]
+        },
+        {
+            "word": "Monday",
+            "correct": "げつようび",
+            "incorrect": ["かようび", "すいようび", "もくようび"]
+        },
+        {
+            "word": "Tuesday",
+            "correct": "かようび",
+            "incorrect": ["げつようび", "すいようび", "もくようび"]
+        },
+        {
+            "word": "Wednesday",
+            "correct": "すいようび",
+            "incorrect": ["げつようび", "かようび", "もくようび"]
+        },
+        {
+            "word": "Thursday",
+            "correct": "もくようび",
+            "incorrect": ["げつようび", "かようび", "すいようび"]
+        },
+        {
+            "word": "Friday",
+            "correct": "きんようび",
+            "incorrect": ["げつようび", "かようび", "すいようび"]
+        },
+        {
+            "word": "Saturday",
+            "correct": "どようび",
+            "incorrect": ["にちようび", "げつようび", "かようび"]
+        },
+        {
+            "word": "Sunday",
+            "correct": "にちようび",
+            "incorrect": ["どようび", "げつようび", "かようび"]
+        },
+        {
+            "word": "January",
+            "correct": "い��がつ",
+            "incorrect": ["にがつ", "さんがつ", "しがつ"]
+        },
+        {
+            "word": "February",
+            "correct": "にがつ",
+            "incorrect": ["いちがつ", "さんがつ", "しがつ"]
+        },
+        {
+            "word": "March",
+            "correct": "さんがつ",
+            "incorrect": ["いちがつ", "にがつ", "しがつ"]
+        },
+        {
+            "word": "April",
+            "correct": "しがつ",
+            "incorrect": ["いちがつ", "にがつ", "さんがつ"]
+        },
+        {
+            "word": "May",
+            "correct": "ごがつ",
+            "incorrect": ["ろくがつ", "しちがつ", "はちがつ"]
+        },
+        {
+            "word": "June",
+            "correct": "ろくがつ",
+            "incorrect": ["ごがつ", "しちがつ", "はちがつ"]
+        },
+        {
+            "word": "July",
+            "correct": "しちがつ",
+            "incorrect": ["ごがつ", "ろくがつ", "はちがつ"]
+        },
+        {
+            "word": "August",
+            "correct": "はちがつ",
+            "incorrect": ["ごがつ", "ろくがつ", "しちがつ"]
+        },
+        {
+            "word": "September",
+            "correct": "くがつ",
+            "incorrect": ["じゅうがつ", "じゅういちがつ", "じゅうにがつ"]
+        },
+        {
+            "word": "October",
+            "correct": "じゅうがつ",
+            "incorrect": ["くがつ", "じゅういちがつ", "じゅうにがつ"]
+        },
+        {
+            "word": "November",
+            "correct": "じゅういちがつ",
+            "incorrect": ["くがつ", "じゅうがつ", "じゅうにがつ"]
+        },
+        {
+            "word": "December",
+            "correct": "じゅうにがつ",
+            "incorrect": ["くがつ", "じゅうがつ", "じゅういちがつ"]
+        },
+        {
+            "word": "spring",
+            "correct": "はる",
+            "incorrect": ["なつ", "あき", "ふゆ"]
+        },
+        {
+            "word": "summer",
+            "correct": "なつ",
+            "incorrect": ["はる", "あき", "ふゆ"]
+        },
+        {
+            "word": "autumn",
+            "correct": "あき",
+            "incorrect": ["はる", "なつ", "ふゆ"]
+        },
+        {
+            "word": "winter",
+            "correct": "��ゆ",
+            "incorrect": ["はる", "なつ", "あき"]
+        },
+        {
+            "word": "morning",
+            "correct": "あさ",
+            "incorrect": ["ひる", "ゆうがた", "よる"]
+        },
+        {
+            "word": "afternoon",
+            "correct": "ごご",
+            "incorrect": ["あさ", "ゆうがた", "よる"]
+        },
+        {
+            "word": "evening",
+            "correct": "ゆうがた",
+            "incorrect": ["あさ", "ひる", "よる"]
+        },
+        {
+            "word": "night",
+            "correct": "よる",
+            "incorrect": ["あさ", "ひる", "ゆうがた"]
+        },
+        {
+            "word": "today",
+            "correct": "きょう",
+            "incorrect": ["きのう", "あした", "あさって"]
+        },
+        {
+            "word": "yesterday",
+            "correct": "きのう",
+            "incorrect": ["きょう", "あした", "あさって"]
+        },
+        {
+            "word": "tomorrow",
+            "correct": "あした",
+            "incorrect": ["きょう", "きのう", "あさって"]
+        },
+        {
+            "word": "day after tomorrow",
+            "correct": "あさって",
+            "incorrect": ["きょう", "きのう", "あした"]
+        },
+        {
+            "word": "week",
+            "correct": "しゅう",
+            "incorrect": ["つき", "とし", "にち"]
+        },
+        {
+            "word": "month",
+            "correct": "つき",
+            "incorrect": ["しゅう", "とし", "にち"]
+        },
+        {
+            "word": "year",
+            "correct": "とし",
+            "incorrect": ["しゅう", "つき", "にち"]
+        },
+        {
+            "word": "century",
+            "correct": "せいき",
+            "incorrect": ["とし", "じゅうねん", "ひゃくねん"]
+        },
+        {
+            "word": "hour",
+            "correct": "じかん",
+            "incorrect": ["ふん", "びょう", "にち"]
+        },
+        {
+            "word": "minute",
+            "correct": "ふん",
+            "incorrect": ["じかん", "びょ��", "にち"]
+        },
+        {
+            "word": "second",
+            "correct": "びょう",
+            "incorrect": ["じかん", "ふん", "にち"]
+        },
+        {
+            "word": "clock",
+            "correct": "とけい",
+            "incorrect": ["カレンダー", "にっき", "アラーム"]
+        },
+        {
+            "word": "calendar",
+            "correct": "カレンダー",
+            "incorrect": ["とけい", "にっき", "アラーム"]
+        },
+        {
+            "word": "diary",
+            "correct": "にっき",
+            "incorrect": ["とけい", "カレンダー", "アラーム"]
+        },
+        {
+            "word": "alarm",
+            "correct": "アラーム",
+            "incorrect": ["とけい", "カレンダー", "にっき"]
+        },
+        {
+            "word": "mother",
+            "correct": "はは",
+            "incorrect": ["ちち", "あね", "いもうと"]
+        },
+        {
+            "word": "father",
+            "correct": "ちち",
+            "incorrect": ["はは", "あに", "おとうと"]
+        },
+        {
+            "word": "sister",
+            "correct": "しまい",
+            "incorrect": ["きょうだい", "いとこ", "めい"]
+        },
+        {
+            "word": "brother",
+            "correct": "きょうだい",
+            "incorrect": ["しまい", "いとこ", "おい"]
+        },
+        {
+            "word": "grandmother",
+            "correct": "そぼ",
+            "incorrect": ["そふ", "おば", "めい"]
+        },
+        {
+            "word": "grandfather",
+            "correct": "そふ",
+            "incorrect": ["そぼ", "おじ", "おい"]
+        },
+        {
+            "word": "aunt",
+            "correct": "おば",
+            "incorrect": ["おじ", "いとこ", "めい"]
+        },
+        {
+            "word": "uncle",
+            "correct": "おじ",
+            "incorrect": ["おば", "いとこ", "おい"]
+        },
+        {
+            "word": "cousin",
+            "correct": "いとこ",
+            "incorrect": ["きょうだい", "しまい", "めい"]
+        },
+        {
+            "word": "niece",
+            "correct": "めい",
+            "incorrect": ["おい", "いとこ", "むすめ"]
+        },
+        {
+            "word": "nephew",
+            "correct": "おい",
+            "incorrect": ["めい", "��とこ", "むすこ"]
+        },
+        {
+            "word": "husband",
+            "correct": "おっと",
+            "incorrect": ["つま", "こども", "りょうしん"]
+        },
+        {
+            "word": "wife",
+            "correct": "つま",
+            "incorrect": ["おっと", "こども", "りょうしん"]
+        },
+        {
+            "word": "child",
+            "correct": "こども",
+            "incorrect": ["おとな", "りょうしん", "きょうだい"]
+        },
+        {
+            "word": "parent",
+            "correct": "りょうしん",
+            "incorrect": ["こども", "きょうだい", "いとこ"]
+        },
+        {
+            "word": "family",
+            "correct": "かぞく",
+            "incorrect": ["ともだち", "どうりょう", "きんじょ"]
+        },
+        {
+            "word": "friend",
+            "correct": "ともだち",
+            "incorrect": ["かぞく", "どうりょう", "きんじょ"]
+        },
+        {
+            "word": "colleague",
+            "correct": "どうりょう",
+            "incorrect": ["かぞく", "ともだち", "きんじょ"]
+        },
+        {
+            "word": "neighbor",
+            "correct": "きんじょ",
+            "incorrect": ["かぞく", "ともだち", "どうりょう"]
+        },
+        {
+            "word": "teacher",
+            "correct": "せんせい",
+            "incorrect": ["がくせい", "いしゃ", "かんごし"]
+        },
+        {
+            "word": "student",
+            "correct": "がくせい",
+            "incorrect": ["せんせい", "いしゃ", "かんごし"]
+        },
+        {
+            "word": "doctor",
+            "correct": "いしゃ",
+            "incorrect": ["かんごし", "せんせい", "がくせい"]
+        },
+        {
+            "word": "nurse",
+            "correct": "かんごし",
+            "incorrect": ["いしゃ", "せんせい", "がくせい"]
+        },
+        {
+            "word": "police officer",
+            "correct": "けいさつかん",
+            "incorrect": ["しょうぼうし", "うんてんしゅ", "べんごし"]
+        },
+        {
+            "word": "firefighter",
+            "correct": "しょうぼうし",
+            "incorrect": ["けいさつかん", "うんてんしゅ", "べんごし"]
+        },
+        {
+            "word": "driver",
+            "correct": "うんてん���ゅ",
+            "incorrect": ["けいさつかん", "しょうぼうし", "べんごし"]
+        },
+        {
+            "word": "lawyer",
+            "correct": "べんごし",
+            "incorrect": ["けいさつかん", "しょうぼうし", "うんてんしゅ"]
+        },
+        {
+            "word": "chef",
+            "correct": "コック",
+            "incorrect": ["ウェイター", "バーテンダー", "マネージャー"]
+        },
+        {
+            "word": "waiter",
+            "correct": "ウェイター",
+            "incorrect": ["コック", "バーテンダー", "マネージャー"]
+        },
+        {
+            "word": "bartender",
+            "correct": "バーテンダー",
+            "incorrect": ["コック", "ウェイター", "マネージャー"]
+        },
+        {
+            "word": "manager",
+            "correct": "マネージャー",
+            "incorrect": ["コック", "ウェイター", "バーテンダー"]
+        },
+        {
+            "word": "artist",
+            "correct": "げいじゅつか",
+            "incorrect": ["おんがくか", "はいゆう", "さっか"]
+        },
+        {
+            "word": "musician",
+            "correct": "おんがくか",
+            "incorrect": ["げいじゅつか", "はいゆう", "さっか"]
+        },
+        {
+            "word": "actor",
+            "correct": "はいゆう",
+            "incorrect": ["げいじゅつか", "おんがくか", "さっか"]
+        },
+        {
+            "word": "writer",
+            "correct": "さっか",
+            "incorrect": ["げいじゅつか", "おんがくか", "はいゆう"]
+        },
+        {
+            "word": "engineer",
+            "correct": "エンジニア",
+            "incorrect": ["けんちくか", "でざいなー", "プログラマー"]
+        },
+        {
+            "word": "architect",
+            "correct": "けんちくか",
+            "incorrect": ["エンジニア", "でざいなー", "プログラマー"]
+        },
+        {
+            "word": "designer",
+            "correct": "でざいなー",
+            "incorrect": ["エンジニア", "けんちくか", "プログラマー"]
+        },
+        {
+            "word": "programmer",
+            "correct": "プログラマー",
+            "incorrect": ["エンジニア", "けんちくか", "でざいなー"]
+        },
+        {
+            "word": "scientist",
+            "correct": "かがくしゃ",
+            "incorrect": ["てんもんがくしゃ", "せいぶつがくしゃ", "ぶつりがくしゃ"]
+        },
+        {
+            "word": "astronomer",
+            "correct": "てんもんがくしゃ",
+            "incorrect": ["かがくしゃ", "せいぶつがくしゃ", "ぶつりがくしゃ"]
+        },
+        {
+            "word": "biologist",
+            "correct": "せいぶつがくしゃ",
+            "incorrect": ["かがくしゃ", "てんもんがくしゃ", "ぶつりがくしゃ"]
+        },
+        {
+            "word": "physicist",
+            "correct": "ぶつりがくしゃ",
+            "incorrect": ["かがくしゃ", "てんもんがくしゃ", "せいぶつがくしゃ"]
+        },
+        {
+            "word": "athlete",
+            "correct": "せんしゅ",
+            "incorrect": ["コーチ", "しんぱん", "かんとく"]
+        },
+        {
+            "word": "coach",
+            "correct": "コーチ",
+            "incorrect": ["せんしゅ", "しんぱん", "かんとく"]
+        },
+        {
+            "word": "referee",
+            "correct": "しんぱん",
+            "incorrect": ["せんしゅ", "コーチ", "かんとく"]
+        },
+        {
+            "word": "manager",
+            "correct": "かんとく",
+            "incorrect": ["せんしゅ", "コーチ", "しんぱん"]
+        },
+        {
+            "word": "journalist",
+            "correct": "きしゃ",
+            "incorrect": ["へんしゅうしゃ", "しゃしんか", "ほうそうしゃ"]
+        },
+        {
+            "word": "editor",
+            "correct": "へんしゅうしゃ",
+            "incorrect": ["きしゃ", "しゃしんか", "ほうそうしゃ"]
+        },
+        {
+            "word": "photographer",
+            "correct": "しゃしんか",
+            "incorrect": ["きしゃ", "へんしゅうしゃ", "ほうそうしゃ"]
+        },
+        {
+            "word": "broadcaster",
+            "correct": "ほうそうしゃ",
+            "incorrect": ["きしゃ", "へんしゅうしゃ", "しゃしんか"]
+        },
+        {
+            "word": "pilot",
+            "correct": "パイロット",
+            "incorrect": ["スチュワーデス", "きかんし", "うんてんしゅ"]
+        },
+        {
+            "word": "flight attendant",
+            "correct": "スチュワーデス",
+            "incorrect": ["パイロット", "きかんし", "うんてんしゅ"]
+        },
+        {
+            "word": "mechanic",
+            "correct": "きかんし",
+            "incorrect": ["パイロット", "スチュワーデス", "うんてんしゅ"]
+        },
+        {
+            "word": "driver",
+            "correct": "うんてんしゅ",
+            "incorrect": ["パイロット", "スチュワーデス", "きかんし"]
+        },
+        {
+            "word": "farmer",
+            "correct": "のうか",
+            "incorrect": ["りょうし", "こうじょうろうどうしゃ", "こうふ"]
+        },
+        {
+            "word": "fisherman",
+            "correct": "りょうし",
+            "incorrect": ["のうか", "こうじょうろうどうしゃ", "こうふ"]
+        },
+        {
+            "word": "factory worker",
+            "correct": "こうじょうろうどうしゃ",
+            "incorrect": ["のうか", "りょうし", "こうふ"]
+        },
+        {
+            "word": "miner",
+            "correct": "こうふ",
+            "incorrect": ["のうか", "りょうし", "こうじょうろうどうしゃ"]
+        },
+        {
+            "word": "businessman",
+            "correct": "しょうにん",
+            "incorrect": ["ぎんこういん", "かいけいし", "せきゆう"]
+        },
+        {
+            "word": "banker",
+            "correct": "ぎんこういん",
+            "incorrect": ["しょうにん", "かいけいし", "せきゆう"]
+        },
+        {
+            "word": "accountant",
+            "correct": "かいけいし",
+            "incorrect": ["しょうにん", "ぎんこういん", "せきゆう"]
+        },
+        {
+            "word": "salesperson",
+            "correct": "せきゆう",
+            "incorrect": ["しょうにん", "ぎんこういん", "かいけいし"]
+        },
+        {
+            "word": "politician",
+            "correct": "せいじか",
+            "incorrect": ["がいこうかん", "しちょう", "ぎいん"]
+        },
+        {
+            "word": "diplomat",
+            "correct": "がいこうかん",
+            "incorrect": ["せいじか", "しちょう", "ぎいん"]
+        },
+        {
+            "word": "mayor",
+            "correct": "しちょう",
+            "incorrect": ["せいじか", "がいこうかん", "ぎいん"]
+        },
+        {
+            "word": "member of parliament",
+            "correct": "ぎいん",
+            "incorrect": ["せいじか", "がいこうかん", "しちょう"]
+        }
+    ]
+}
