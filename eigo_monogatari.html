@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>えいごものがたり</title>
+    <title>えいごものがたり - しんけいすいじゃく</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -18,19 +18,14 @@
             border-radius: 10px;
             padding: 20px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            max-width: 600px;
+            max-width: 800px;
             width: 100%;
         }
-        h1 {
+        h1, h2 {
             color: #4a4a4a;
             text-align: center;
         }
-        #story, #question, #result {
-            margin: 20px 0;
-            font-size: 18px;
-            line-height: 1.6;
-        }
-        .option {
+        .gameButton {
             display: block;
             width: 100%;
             padding: 10px;
@@ -43,190 +38,223 @@
             cursor: pointer;
             transition: background-color 0.3s;
         }
-        .option:hover {
+        .gameButton:hover {
             background-color: #2980b9;
         }
-        #nextBtn, #retryBtn {
-            background-color: #2ecc71;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            font-size: 16px;
-            border-radius: 5px;
-            cursor: pointer;
-            display: none;
+        #gameArea {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
         }
-        #progressBar {
+        .card {
+            width: 80px;
+            height: 120px;
+            margin: 5px;
+            background-color: #3498db;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 12px;
+            perspective: 1000px;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .card .front, .card .back {
+            position: absolute;
             width: 100%;
-            background-color: #f0f0f0;
-            border-radius: 5px;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .card .back {
+            background-color: #2ecc71;
+            transform: rotateY(180deg);
+        }
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+        #score, #level {
+            font-size: 20px;
             margin-top: 20px;
         }
-        #progress {
-            width: 0%;
-            height: 20px;
-            background-color: #3498db;
-            border-radius: 5px;
-            transition: width 0.5s;
-        }
-        #levelInfo {
-            font-size: 18px;
-            margin-bottom: 10px;
+        #nextLevelBtn {
+            display: none;
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
     <div id="gameContainer">
-        <h1>えいごものがたり</h1>
-        <div id="levelInfo"></div>
-        <div id="story"></div>
-        <div id="question"></div>
-        <button class="option" id="optionA"></button>
-        <button class="option" id="optionB"></button>
-        <button class="option" id="optionC"></button>
-        <button class="option" id="optionD"></button>
-        <div id="result"></div>
-        <button id="nextBtn">つぎへ</button>
-        <button id="retryBtn">もういちどちょうせん</button>
-        <div id="progressBar"><div id="progress"></div></div>
+        <h1>えいごものがたり - しんけいすいじゃく</h1>
+        <div id="gameSelection">
+            <h2>レベルをえらんでね</h2>
+            <div id="levelButtons"></div>
+        </div>
+        <div id="gameArea" style="display:none;"></div>
+        <div id="score"></div>
+        <div id="level"></div>
+        <button id="nextLevelBtn" class="gameButton" onclick="nextLevel()" style="display:none;">つぎのレベルへ</button>
     </div>
 
     <script>
-        const storyEl = document.getElementById('story');
-        const questionEl = document.getElementById('question');
-        const optionA = document.getElementById('optionA');
-        const optionB = document.getElementById('optionB');
-        const optionC = document.getElementById('optionC');
-        const optionD = document.getElementById('optionD');
-        const resultEl = document.getElementById('result');
-        const nextBtn = document.getElementById('nextBtn');
-        const retryBtn = document.getElementById('retryBtn');
-        const progressEl = document.getElementById('progress');
+        let allCards = [];
+        let currentCards = [];
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let moves = 0;
+        let currentLevel = 0;
+        let canFlip = true;
 
-        let currentQuestion = 0;
-        let score = 0;
-        let questions = [];
+        function loadCards() {
+            fetch('vocabulary.json')
+                .then(response => response.json())
+                .then(data => {
+                    allCards = data.words.map((word, index) => {
+                        return {
+                            id: index,
+                            english: word.word,
+                            japanese: word.correct
+                        };
+                    });
+                    createLevelButtons();
+                })
+                .catch(error => {
+                    console.error('単語データの読み込みに失敗しました:', error);
+                });
+        }
 
-        let currentLevel = 1;
-        const questionsPerLevel = 5;
-        const totalLevels = 50;
+        function createLevelButtons() {
+            const levelButtons = document.getElementById('levelButtons');
+            for (let i = 1; i <= 12; i++) {
+                const button = document.createElement('button');
+                button.textContent = `レベル ${i}`;
+                button.className = 'gameButton';
+                button.onclick = () => startGame(i);
+                levelButtons.appendChild(button);
+            }
+        }
 
-        const levelInfoEl = document.getElementById('levelInfo');
+        function startGame(level) {
+            currentLevel = level;
+            document.getElementById('gameSelection').style.display = 'none';
+            document.getElementById('gameArea').style.display = 'flex';
+            document.getElementById('nextLevelBtn').style.display = 'none';
 
-        const stories = [
-            'えいごのせかいへようこそ！たのしくえいごをまなびましょう。',
-            'もりのなかでぼうけんがはじまります。えいたんごでどうぶつとおはなししよう！',
-            'まちにやってきました。みせやレストランでつかうえいごをおぼえよう。',
-            'うちゅうせんにのってうちゅうりょこうへ！うちゅうのことばをまなぼう。',
-            // ... 追加のストーリーを記述 ...
-        ];
+            const startIndex = (level - 1) * 10;
+            const selectedWords = allCards.slice(startIndex, startIndex + 10);
 
-        function loadQuestion(index) {
-            if (index >= questions.length) {
-                endGame();
+            currentCards = [];
+            selectedWords.forEach(word => {
+                currentCards.push({ id: word.id, word: word.english, isEnglish: true });
+                currentCards.push({ id: word.id, word: word.japanese, isEnglish: false });
+            });
+
+            matchedPairs = 0;
+            moves = 0;
+            canFlip = true;
+            flippedCards = [];
+            shuffleCards();
+            createCardElements();
+            updateLevel();
+            updateScore();
+        }
+
+        function shuffleCards() {
+            for (let i = currentCards.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [currentCards[i], currentCards[j]] = [currentCards[j], currentCards[i]];
+            }
+        }
+
+        function createCardElements() {
+            const gameArea = document.getElementById('gameArea');
+            gameArea.innerHTML = '';
+            currentCards.forEach((card, index) => {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'card';
+                cardElement.innerHTML = `
+                    <div class="front">?</div>
+                    <div class="back">${card.word}</div>
+                `;
+                cardElement.addEventListener('click', () => flipCard(cardElement, index));
+                gameArea.appendChild(cardElement);
+            });
+        }
+
+        function flipCard(cardElement, index) {
+            if (!canFlip || flippedCards.length >= 2 || flippedCards.includes(index) || cardElement.classList.contains('matched')) {
                 return;
             }
-            const q = questions[index];
-            storyEl.textContent = stories[Math.min(Math.floor(index / (questionsPerLevel * 10)), stories.length - 1)];
-            questionEl.textContent = `「${q.word}」のいみは？`;
-            const options = shuffle([q.correct, ...q.incorrect]);
-            optionA.textContent = options[0];
-            optionB.textContent = options[1];
-            optionC.textContent = options[2];
-            optionD.textContent = options[3];
 
-            resultEl.textContent = '';
-            nextBtn.style.display = 'none';
+            cardElement.classList.add('flipped');
+            flippedCards.push(index);
 
-            [optionA, optionB, optionC, optionD].forEach(button => {
-                button.disabled = false;
-                button.style.backgroundColor = '#3498db';
-            });
-
-            progressEl.style.width = `${((index + 1) / questions.length) * 100}%`;
-            updateLevelInfo();
-        }
-
-        function updateLevelInfo() {
-            currentLevel = Math.floor(currentQuestion / questionsPerLevel) + 1;
-            levelInfoEl.textContent = `レベル: ${currentLevel} / ${totalLevels}`;
-        }
-
-        function checkAnswer(selectedOption) {
-            const userAnswer = selectedOption.textContent;
-            const correctAnswer = questions[currentQuestion].correct;
-
-            if (userAnswer === correctAnswer) {
-                resultEl.textContent = 'せいかい！よくできました！';
-                resultEl.style.color = 'green';
-                score++;
-            } else {
-                resultEl.textContent = `ざんねん。せいかいは「${correctAnswer}」でした。`;
-                resultEl.style.color = 'red';
+            if (flippedCards.length === 2) {
+                canFlip = false;
+                moves++;
+                setTimeout(checkMatch, 800);
             }
+        }
 
-            [optionA, optionB, optionC, optionD].forEach(button => {
-                button.disabled = true;
-                if (button.textContent === correctAnswer) {
-                    button.style.backgroundColor = 'lightgreen';
-                } else if (button === selectedOption) {
-                    button.style.backgroundColor = 'pink';
+        function checkMatch() {
+            const [index1, index2] = flippedCards;
+            const card1 = currentCards[index1];
+            const card2 = currentCards[index2];
+
+            const cards = document.querySelectorAll('.card');
+
+            if (card1.id === card2.id && card1.isEnglish !== card2.isEnglish) {
+                cards[index1].classList.add('matched');
+                cards[index2].classList.add('matched');
+                matchedPairs++;
+
+                if (matchedPairs === currentCards.length / 2) {
+                    // 全てのペアをマッチした場合
+                    setTimeout(() => {
+                        alert(`レベル ${currentLevel} クリア！ ${moves} 手でクリアしました！`);
+                        document.getElementById('nextLevelBtn').style.display = 'block';
+                    }, 500);
                 }
-            });
-
-            if (currentQuestion % questionsPerLevel === questionsPerLevel - 1) {
-                nextBtn.textContent = 'つぎのレベルへ';
             } else {
-                nextBtn.textContent = 'つぎへ';
+                setTimeout(() => {
+                    cards[index1].classList.remove('flipped');
+                    cards[index2].classList.remove('flipped');
+                }, 500);
             }
 
-            nextBtn.style.display = 'block';
+            flippedCards = [];
+            canFlip = true;
+            updateScore();
         }
 
-        function endGame() {
-            storyEl.textContent = 'おめでとう！すべてのレベルをクリアしました！';
-            questionEl.textContent = `あなたのスコア: ${score} / ${questions.length}`;
-            [optionA, optionB, optionC, optionD].forEach(button => button.style.display = 'none');
-            nextBtn.style.display = 'none';
-            retryBtn.style.display = 'block';
-            levelInfoEl.style.display = 'none';
+        function updateScore() {
+            document.getElementById('score').textContent = `マッチした組: ${matchedPairs} / 手数: ${moves}`;
         }
 
-        optionA.addEventListener('click', () => checkAnswer(optionA));
-        optionB.addEventListener('click', () => checkAnswer(optionB));
-        optionC.addEventListener('click', () => checkAnswer(optionC));
-        optionD.addEventListener('click', () => checkAnswer(optionD));
+        function updateLevel() {
+            document.getElementById('level').textContent = `レベル: ${currentLevel} / 12`;
+        }
 
-        nextBtn.addEventListener('click', () => {
-            currentQuestion++;
-            loadQuestion(currentQuestion);
-        });
-
-        retryBtn.addEventListener('click', () => {
-            currentQuestion = 0;
-            score = 0;
-            [optionA, optionB, optionC, optionD].forEach(button => button.style.display = 'block');
-            retryBtn.style.display = 'none';
-            loadQuestion(currentQuestion);
-        });
-
-        function shuffle(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
+        function nextLevel() {
+            if (currentLevel < 12) {
+                startGame(currentLevel + 1);
+            } else {
+                alert('全てのレベルをクリアしました！おめでとうございます！');
+                document.getElementById('gameSelection').style.display = 'block';
+                document.getElementById('gameArea').style.display = 'none';
+                document.getElementById('nextLevelBtn').style.display = 'none';
+                document.getElementById('score').textContent = '';
+                document.getElementById('level').textContent = '';
             }
-            return array;
         }
 
-        fetch('vocabulary.json')
-            .then(response => response.json())
-            .then(data => {
-                questions = data.words;
-                loadQuestion(currentQuestion);
-            })
-            .catch(error => {
-                console.error('たんごデータのよみこみにしっぱいしました:', error);
-            });
+        // ゲーム開始時にカードをロード
+        loadCards();
     </script>
 </body>
 </html>

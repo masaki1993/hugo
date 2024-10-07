@@ -33,7 +33,7 @@
         {
             "word": "pen",
             "correct": "ペン",
-            "incorrect": ["えんぴつ", "ふで", "まーか���"]
+            "incorrect": ["えんぴつ", "ふで", "まーかー"]
         },
         {
             "word": "car",
@@ -397,7 +397,7 @@
         },
         {
             "word": "January",
-            "correct": "い��がつ",
+            "correct": "いちがつ",
             "incorrect": ["にがつ", "さんがつ", "しがつ"]
         },
         {
@@ -472,7 +472,7 @@
         },
         {
             "word": "winter",
-            "correct": "��ゆ",
+            "correct": "ふゆ",
             "incorrect": ["はる", "なつ", "あき"]
         },
         {
@@ -543,7 +543,7 @@
         {
             "word": "minute",
             "correct": "ふん",
-            "incorrect": ["じかん", "びょ��", "にち"]
+            "incorrect": ["じかん", "びょう", "にち"]
         },
         {
             "word": "second",
@@ -623,7 +623,7 @@
         {
             "word": "nephew",
             "correct": "おい",
-            "incorrect": ["めい", "��とこ", "むすこ"]
+            "incorrect": ["めい", "いとこ", "むすこ"]
         },
         {
             "word": "husband",
@@ -697,7 +697,7 @@
         },
         {
             "word": "driver",
-            "correct": "うんてん���ゅ",
+            "correct": "うんてんしゅ",
             "incorrect": ["けいさつかん", "しょうぼうし", "べんごし"]
         },
         {
