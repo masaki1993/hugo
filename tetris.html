@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>テトリス</title>
+  <style>
+    body {
+      background: #222;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      color: #fff;
+      font-family: Arial, sans-serif;
+    }
+    canvas {
+      border: 2px solid #fff;
+      background: #000;
+    }
+    .score {
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+    }
+    .controls {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 1.2rem;
+      line-height: 1.5;
+    }
+    #reloadBtn {
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <button id="reloadBtn">ゲーム選択に戻る</button>
+  <div class="score" id="score">スコア: 0</div>
+  <canvas id="tetris" width="240" height="400"></canvas>
+  <div class="controls">
+    ← →: 左右移動<br>
+    ↓: 落下加速<br>
+    スペース: 回転<br>
+  </div>
+  <script>
+    const canvas = document.getElementById('tetris');
+    const context = canvas.getContext('2d');
+    const scoreElement = document.getElementById('score');
+
+    // Each Tetris block will be scaled up (each block is 20x20 pixels)
+    const scale = 20;
+    context.scale(scale, scale);
+
+    // Create a matrix (grid) for the game board (10 columns x 20 rows)
+    function createMatrix(w, h) {
+      const matrix = [];
+      while (h--) {
+        matrix.push(new Array(w).fill(0));
+      }
+      return matrix;
+    }
+
+    const board = createMatrix(10, 20);
+
+    // Define Tetris pieces and their shapes
+    // The numbers represent the piece type and also index into the colors array.
+    function createPiece(type) {
+      switch (type) {
+        case 'T':
+          return [
+            [0, 1, 0],
+            [1, 1, 1],
+            [0, 0, 0]
+          ];
+        case 'O':
+          return [
+            [2, 2],
+            [2, 2]
+          ];
+        case 'L':
+          return [
+            [0, 0, 3],
+            [3, 3, 3],
+            [0, 0, 0]
+          ];
+        case 'J':
+          return [
+            [4, 0, 0],
+            [4, 4, 4],
+            [0, 0, 0]
+          ];
+        case 'I':
+          return [
+            [0, 5, 0, 0],
+            [0, 5, 0, 0],
+            [0, 5, 0, 0],
+            [0, 5, 0, 0]
+          ];
+        case 'S':
+          return [
+            [0, 6, 6],
+            [6, 6, 0],
+            [0, 0, 0]
+          ];
+        case 'Z':
+          return [
+            [7, 7, 0],
+            [0, 7, 7],
+            [0, 0, 0]
+          ];
+        default:
+          return [[]];
+      }
+    }
+
+    // Colors for each piece (index 0 is empty)
+    const colors = [
+      null,
+      '#800080', // T
+      '#FFFF00', // O
+      '#FFA500', // L
+      '#0000FF', // J
+      '#00FFFF', // I
+      '#008000', // S
+      '#FF0000'  // Z
+    ];
+
+    // The player object holds the current piece and its position.
+    const player = {
+      pos: { x: 0, y: 0 },
+      matrix: null,
+      score: 0
+    };
+
+    // Collision detection: Check if the player's piece collides with the board or the boundaries.
+    function collide(board, player) {
+      const [m, o] = [player.matrix, player.pos];
+      for (let y = 0; y < m.length; y++) {
+        for (let x = 0; x < m[y].length; x++) {
+          if (m[y][x] !== 0 &&
+              (board[y + o.y] && board[y + o.y][x + o.x]) !== 0) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
+    // Merge the player's piece into the board when it can no longer move.
+    function merge(board, player) {
+      player.matrix.forEach((row, y) => {
+        row.forEach((value, x) => {
+          if (value !== 0) {
+            board[y + player.pos.y][x + player.pos.x] = value;
+          }
+        });
+      });
+    }
+
+    // Clear full rows from the board and update the score.
+    function sweep() {
+      let rowCount = 1;
+      outer: for (let y = board.length - 1; y >= 0; y--) {
+        for (let x = 0; x < board[y].length; x++) {
+          if (board[y][x] === 0) {
+            continue outer;
+          }
+        }
+        const row = board.splice(y, 1)[0].fill(0);
+        board.unshift(row);
+        y++;
+        player.score += rowCount * 100;  // Increased score reward
+        rowCount *= 2;
+        updateScore();
+      }
+    }
+
+    // Rotate a matrix (the piece) by transposing and then reversing rows or the entire matrix.
+    function rotate(matrix, dir) {
+      for (let y = 0; y < matrix.length; y++) {
+        for (let x = 0; x < y; x++) {
+          [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
+        }
+      }
+      if (dir > 0) {
+        matrix.forEach(row => row.reverse());
+      } else {
+        matrix.reverse();
+      }
+    }
+
+    // Attempt to rotate the player's piece with a "wall kick" to adjust position if needed.
+    function playerRotate(dir) {
+      const pos = player.pos.x;
+      let offset = 1;
+      rotate(player.matrix, dir);
+      while (collide(board, player)) {
+        player.pos.x += offset;
+        offset = -(offset + (offset > 0 ? 1 : -1));
+        if (offset > player.matrix[0].length) {
+          rotate(player.matrix, -dir);
+          player.pos.x = pos;
+          return;
+        }
+      }
+    }
+
+    // Draw a matrix (either the board or the current piece) onto the canvas.
+    function drawMatrix(matrix, offset) {
+      matrix.forEach((row, y) => {
+        row.forEach((value, x) => {
+          if (value !== 0) {
+            context.fillStyle = colors[value];
+            context.fillRect(x + offset.x, y + offset.y, 1, 1);
+          }
+        });
+      });
+    }
+
+    // Draw grid lines
+    function drawGrid() {
+      context.strokeStyle = '#333';
+      context.lineWidth = 0.05;
+
+      // Vertical lines
+      for (let x = 0; x <= 10; x++) {
+        context.beginPath();
+        context.moveTo(x, 0);
+        context.lineTo(x, 20);
+        context.stroke();
+      }
+
+      // Horizontal lines
+      for (let y = 0; y <= 20; y++) {
+        context.beginPath();
+        context.moveTo(0, y);
+        context.lineTo(10, y);
+        context.stroke();
+      }
+    }
+
+    // Draw the entire game scene.
+    function draw() {
+      context.fillStyle = '#000';
+      context.fillRect(0, 0, canvas.width / scale, canvas.height / scale);
+      drawGrid();
+      drawMatrix(board, { x: 0, y: 0 });
+      drawMatrix(player.matrix, player.pos);
+    }
+
+    // Timing variables for dropping the piece.
+    let dropCounter = 0;
+    let dropInterval = 1000; // milliseconds
+    let lastTime = 0;
+
+    // The main update loop of the game.
+    function update(time = 0) {
+      const deltaTime = time - lastTime;
+      lastTime = time;
+      dropCounter += deltaTime;
+      if (dropCounter > dropInterval) {
+        playerDrop();
+      }
+      draw();
+      requestAnimationFrame(update);
+    }
+
+    // Move the player's piece down; if collision occurs, merge the piece into the board.
+    function playerDrop() {
+      player.pos.y++;
+      if (collide(board, player)) {
+        player.pos.y--;
+        merge(board, player);
+        playerReset();
+        sweep();
+      }
+      dropCounter = 0;
+    }
+
+    // Move the player's piece left or right.
+    function playerMove(offset) {
+      player.pos.x += offset;
+      if (collide(board, player)) {
+        player.pos.x -= offset;
+      }
+    }
+
+    // When a new piece is needed, randomly choose one and reset the position.
+    function playerReset() {
+      const pieces = 'TJLOSZI';
+      player.matrix = createPiece(pieces[Math.floor(Math.random() * pieces.length)]);
+      player.pos.y = 0;
+      player.pos.x = Math.floor((board[0].length / 2) - (player.matrix[0].length / 2));
+      if (collide(board, player)) {
+        // Game over: clear the board and reset the score.
+        board.forEach(row => row.fill(0));
+        player.score = 0;
+        updateScore();
+      }
+    }
+
+    // Listen for keyboard events to move and rotate the piece.
+    document.addEventListener('keydown', event => {
+      if (event.keyCode === 37) {        // Left arrow
+        playerMove(-1);
+      } else if (event.keyCode === 39) { // Right arrow
+        playerMove(1);
+      } else if (event.keyCode === 40) { // Down arrow
+        playerDrop();
+      } else if (event.keyCode === 32) { // Spacebar
+        playerRotate(1);                 // Rotate clockwise
+      }
+    });
+
+    // Add return to game selection button functionality
+    document.getElementById('reloadBtn').addEventListener('click', () => {
+      location.href = 'index.html';
+    });
+
+    // Update score display to use Japanese
+    function updateScore() {
+      scoreElement.innerText = 'スコア: ' + player.score;
+    }
+
+    // Initialize the game.
+    playerReset();
+    update();
+  </script>
+</body>
+</html>
