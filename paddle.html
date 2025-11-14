@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>ブロック崩しゲーム</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+  <style>
+    body {
+      margin: 0;
+      background-color: black;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    #reloadBtn {
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      z-index: 11;
+    }
+  </style>
+</head>
+<body>
+  <button id="reloadBtn">ゲーム選択に戻る</button>
+  <main></main>
+  <script>
+    // Add return to game selection button functionality
+    document.getElementById('reloadBtn').addEventListener('click', () => {
+      location.href = 'index.html';
+    });
+
+    let ball;
+    let paddle;
+    let bricks = [];
+    let rows = 5;
+    let cols = 10;
+    let brickWidth;
+    let brickHeight = 20;
+    let score = 0;
+    let lives = 3;
+    let particles = [];
+
+    function setup() {
+      const canvas = createCanvas(600, 600);
+      canvas.parent('main');
+      ball = new Ball();
+      paddle = new Paddle();
+      
+      // Initialize bricks
+      brickWidth = width / cols;
+      let brickColors = [
+        color(255, 0, 0),    // Red
+        color(255, 165, 0),  // Orange
+        color(255, 255, 0),  // Yellow
+        color(0, 128, 0),    // Green
+        color(0, 0, 255)     // Blue
+      ];
+      
+      for (let i = 0; i < rows; i++) {
+        for (let j = 0; j < cols; j++) {
+          let brickX = j * brickWidth;
+          let brickY = i * brickHeight + 40;
+          let colIndex = i % brickColors.length;
+          bricks.push(new Brick(brickX, brickY, brickWidth, brickHeight, brickColors[colIndex]));
+        }
+      }
+    }
+
+    function draw() {
+      // Draw a cool gradient background
+      setGradient(0, 0, width, height, color(20, 20, 50), color(0, 0, 0));
+      
+      // Check for game over
+      if (lives <= 0) {
+        displayMessage("Game Over", "Press 'R' to Restart");
+        noLoop();
+        return;
+      }
+      
+      ball.update();
+      paddle.update();
+      
+      // Collision with paddle
+      if (circleRectCollision(ball, {x: paddle.x, y: paddle.y, w: paddle.w, h: paddle.h})) {
+        // Position correction so the ball doesn't stick to the paddle
+        ball.y = paddle.y - ball.r;
+        // Calculate hit position relative to paddle center to vary angle
+        let hitPos = (ball.x - (paddle.x + paddle.w / 2)) / (paddle.w / 2);
+        ball.vx = ball.speed * hitPos;
+        ball.vy = -abs(ball.vy);
+      }
+      
+      // Collision with bricks
+      for (let brick of bricks) {
+        if (!brick.broken && circleRectCollision(ball, {x: brick.x, y: brick.y, w: brick.w, h: brick.h})) {
+          brick.hit();
+          score += 10;
+          ball.vy *= -1;
+          // Only handle one brick collision per frame to avoid multiple bounces
+          break;
+        }
+      }
+      
+      // Update and display particles
+      for (let i = particles.length - 1; i >= 0; i--) {
+        particles[i].update();
+        particles[i].show();
+        if (particles[i].lifetime <= 0) {
+          particles.splice(i, 1);
+        }
+      }
+      
+      // Draw game objects
+      ball.show();
+      paddle.show();
+      
+      for (let brick of bricks) {
+        brick.show();
+      }
+      
+      // Display score and lives
+      fill(255);
+      textSize(16);
+      textAlign(LEFT);
+      text("Score: " + score, 10, 20);
+      textAlign(RIGHT);
+      text("Lives: " + lives, width - 10, 20);
+      
+      // Check win condition (all bricks broken)
+      let allBroken = bricks.every(brick => brick.broken);
+      if (allBroken) {
+        displayMessage("You Win!", "Press 'R' to Restart");
+        noLoop();
+      }
+    }
+
+    // Utility: Draws a vertical gradient from c1 to c2 over the specified rectangle.
+    function setGradient(x, y, w, h, c1, c2) {
+      noFill();
+      for (let i = y; i <= y + h; i++) {
+        let inter = map(i, y, y + h, 0, 1);
+        let c = lerpColor(c1, c2, inter);
+        stroke(c);
+        line(x, i, x + w, i);
+      }
+    }
+
+    // Utility: Displays a centered message with a sub-message.
+    function displayMessage(mainMsg, subMsg) {
+      textAlign(CENTER, CENTER);
+      fill(255);
+      textSize(32);
+      text(mainMsg, width / 2, height / 2);
+      textSize(16);
+      text(subMsg, width / 2, height / 2 + 40);
+    }
+
+    // Utility: Circle-rectangle collision detection.
+    function circleRectCollision(circle, rect) {
+      // Find the closest point to the circle within the rectangle
+      let closestX = constrain(circle.x, rect.x, rect.x + rect.w);
+      let closestY = constrain(circle.y, rect.y, rect.y + rect.h);
+      // Calculate the distance between the circle's center and this closest point
+      let distanceX = circle.x - closestX;
+      let distanceY = circle.y - closestY;
+      return (distanceX * distanceX + distanceY * distanceY) < (circle.r * circle.r);
+    }
+
+    // Ball class
+    class Ball {
+      constructor() {
+        this.r = 10;
+        this.speed = 5;
+        this.reset();
+      }
+      
+      reset() {
+        this.x = width / 2;
+        this.y = height - 60;
+        // Random upward angle between 45° and 135° (in radians)
+        let angle = random(-PI / 4, -3 * PI / 4);
+        this.vx = this.speed * cos(angle);
+        this.vy = this.speed * sin(angle);
+      }
+      
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        
+        // Bounce off left and right walls
+        if (this.x - this.r < 0) {
+          this.x = this.r;
+          this.vx *= -1;
+        }
+        if (this.x + this.r > width) {
+          this.x = width - this.r;
+          this.vx *= -1;
+        }
+        // Bounce off the top wall
+        if (this.y - this.r < 0) {
+          this.y = this.r;
+          this.vy *= -1;
+        }
+        
+        // If the ball goes below the screen, lose a life and reset
+        if (this.y - this.r > height) {
+          lives--;
+          this.reset();
+        }
+      }
+      
+      show() {
+        noStroke();
+        fill(255, 150, 0);
+        ellipse(this.x, this.y, this.r * 2);
+      }
+    }
+
+    // Paddle class
+    class Paddle {
+      constructor() {
+        this.w = 100;
+        this.h = 15;
+        this.x = width / 2 - this.w / 2;
+        this.y = height - 40;
+      }
+      
+      update() {
+        // Follow the mouse's horizontal position
+        this.x = constrain(mouseX - this.w / 2, 0, width - this.w);
+      }
+      
+      show() {
+        noStroke();
+        fill(200, 100, 240);
+        rect(this.x, this.y, this.w, this.h, 5);
+      }
+    }
+
+    // Brick class
+    class Brick {
+      constructor(x, y, w, h, col) {
+        this.x = x;
+        this.y = y;
+        this.w = w;
+        this.h = h;
+        this.col = col;
+        this.broken = false;
+      }
+      
+      show() {
+        if (!this.broken) {
+          stroke(255);
+          strokeWeight(2);
+          fill(this.col);
+          rect(this.x, this.y, this.w, this.h, 3);
+        }
+      }
+      
+      hit() {
+        this.broken = true;
+        // Generate particle effects for a cool brick-break explosion
+        for (let i = 0; i < 10; i++) {
+          particles.push(new Particle(this.x + this.w / 2, this.y + this.h / 2, this.col));
+        }
+      }
+    }
+
+    // Particle class for the brick break effect
+    class Particle {
+      constructor(x, y, col) {
+        this.x = x;
+        this.y = y;
+        this.lifetime = 255;
+        this.col = col;
+        this.vx = random(-2, 2);
+        this.vy = random(-2, 2);
+      }
+      
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.lifetime -= 4;
+      }
+      
+      show() {
+        noStroke();
+        fill(red(this.col), green(this.col), blue(this.col), this.lifetime);
+        ellipse(this.x, this.y, 5);
+      }
+    }
+
+    // Restart the game if 'R' is pressed
+    function keyPressed() {
+      if (key === 'r' || key === 'R') {
+        restartGame();
+      }
+    }
+
+    // Resets all game variables and objects
+    function restartGame() {
+      score = 0;
+      lives = 3;
+      ball.reset();
+      paddle = new Paddle();
+      bricks = [];
+      brickWidth = width / cols;
+      let brickColors = [
+        color(255, 0, 0),
+        color(255, 165, 0),
+        color(255, 255, 0),
+        color(0, 128, 0),
+        color(0, 0, 255)
+      ];
+      
+      for (let i = 0; i < rows; i++) {
+        for (let j = 0; j < cols; j++) {
+          let brickX = j * brickWidth;
+          let brickY = i * brickHeight + 40;
+          let colIndex = i % brickColors.length;
+          bricks.push(new Brick(brickX, brickY, brickWidth, brickHeight, brickColors[colIndex]));
+        }
+      }
+      particles = [];
+      loop();
+    }
+  </script>
+</body>
+</html>

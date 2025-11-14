@@ -86,9 +86,23 @@
             display: none;
             margin-top: 20px;
         }
+        #reloadBtn {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            z-index: 11;
+        }
     </style>
 </head>
 <body>
+    <button id="reloadBtn">ゲーム選択に戻る</button>
     <div id="gameContainer">
         <h1>えいごものがたり - しんけいすいじゃく</h1>
         <div id="gameSelection">
@@ -252,6 +266,11 @@
                 document.getElementById('level').textContent = '';
             }
         }
+
+        // Add return to game selection button functionality
+        document.getElementById('reloadBtn').addEventListener('click', () => {
+            window.location.href = 'index.html';
+        });
 
         // ゲーム開始時にカードをロード
         loadCards();

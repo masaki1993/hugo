@@ -1,0 +1,247 @@
+/* styles.css - Game styles */
+
+/* Base styles */
+body {
+  margin: 0;
+  background-color: black;
+  color: white;
+  font-family: Arial, sans-serif;
+  overflow: hidden;
+}
+
+#gameCanvas {
+  display: block;
+  margin: 0 auto;
+  background-color: black;
+}
+
+#reloadBtn {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 20px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  z-index: 11;
+}
+
+#gameInfo {
+  position: fixed;
+  top: 10px;
+  left: 20px;
+  font-size: 24px;
+  background-color: rgba(0, 0, 0, 0.7);
+  padding: 10px;
+  border-radius: 5px;
+}
+
+#score {
+  color: yellow;
+}
+
+#highScore {
+  color: gold;
+  font-weight: bold;
+}
+
+#level {
+  color: #00ff00;
+}
+
+#lives {
+  color: red;
+}
+
+#powerUpStatus {
+  color: cyan;
+}
+
+/* Mobile controls */
+.mobile-controls {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 400px;
+  margin: 20px auto;
+  padding: 0 10px;
+  box-sizing: border-box;
+}
+
+.mobile-button {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: none;
+  font-size: 24px;
+  color: white;
+  display: none;
+  position: fixed;
+  bottom: 20px;
+}
+
+#yellowBeamBtn {
+  background-color: yellow;
+  color: black;
+  left: 10px;
+}
+
+#blueBeamBtn {
+  background-color: cyan;
+  right: 10px;
+}
+
+@media (max-width: 768px) {
+  .mobile-button {
+    display: block;
+  }
+}
+
+/* Pause overlay */
+#pauseOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-size: 48px;
+  z-index: 10;
+}
+
+#pauseMessage {
+  text-align: center;
+}
+
+/* Start screen */
+#startScreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.9);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  z-index: 12;
+}
+
+.start-btn {
+  padding: 15px 30px;
+  font-size: 24px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin: 10px;
+  transition: background-color 0.3s;
+}
+
+.start-btn:hover {
+  background-color: #45a049;
+}
+
+#startScreen ul li {
+  margin: 10px 0;
+  font-size: 18px;
+}
+
+#startScreen p {
+  font-size: 18px;
+  line-height: 1.5;
+}
+
+/* Game over screen */
+#game-over {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 48px;
+  color: red;
+  text-shadow: 0 0 10px red;
+  z-index: 1000;
+  text-align: center;
+  background-color: rgba(0, 0, 0, 0.8);
+  padding: 20px;
+  border-radius: 10px;
+  border: 2px solid #444;
+  min-width: 300px;
+}
+
+/* Level up notification */
+.level-up {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 48px;
+  color: #ffff00;
+  text-shadow: 0 0 10px #ffff00;
+  z-index: 1000;
+  font-family: Arial, sans-serif;
+  animation: fade-out 2s forwards;
+}
+
+/* Boss alert notification */
+.boss-alert {
+  position: absolute;
+  top: 60%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 36px;
+  color: #ff0066;
+  text-shadow: 0 0 15px #ff0066;
+  z-index: 1000;
+  font-family: Arial, sans-serif;
+  animation: pulse 0.5s infinite alternate;
+}
+
+/* Danger zone indicator at bottom of screen */
+.danger-zone {
+  position: absolute;
+  bottom: 150px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background-color: rgba(255, 0, 0, 0.3);
+  z-index: 5;
+}
+
+/* Animations */
+@keyframes fade-out {
+  0% { opacity: 1; }
+  70% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes pulse {
+  from { transform: translate(-50%, -50%) scale(1); }
+  to { transform: translate(-50%, -50%) scale(1.1); }
+}
+
+@keyframes shake {
+  0% { transform: translate(0, 0); }
+  10% { transform: translate(-5px, 0); }
+  20% { transform: translate(5px, 0); }
+  30% { transform: translate(-5px, 0); }
+  40% { transform: translate(5px, 0); }
+  50% { transform: translate(-5px, 0); }
+  60% { transform: translate(5px, 0); }
+  70% { transform: translate(-5px, 0); }
+  80% { transform: translate(5px, 0); }
+  90% { transform: translate(-5px, 0); }
+  100% { transform: translate(0, 0); }
+} 

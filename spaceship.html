@@ -138,6 +138,56 @@
       font-size: 18px;
       line-height: 1.5;
     }
+    .level-up {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 48px;
+      color: #ffff00;
+      text-shadow: 0 0 10px #ffff00;
+      z-index: 1000;
+      font-family: Arial, sans-serif;
+      animation: fade-out 2s forwards;
+    }
+    
+    .boss-alert {
+      position: absolute;
+      top: 60%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 36px;
+      color: #ff0066;
+      text-shadow: 0 0 15px #ff0066;
+      z-index: 1000;
+      font-family: Arial, sans-serif;
+      animation: pulse 0.5s infinite alternate;
+    }
+    
+    @keyframes fade-out {
+      0% { opacity: 1; }
+      70% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+    
+    @keyframes pulse {
+      from { transform: translate(-50%, -50%) scale(1); }
+      to { transform: translate(-50%, -50%) scale(1.1); }
+    }
+    
+    @keyframes shake {
+      0% { transform: translate(0, 0); }
+      10% { transform: translate(-5px, 0); }
+      20% { transform: translate(5px, 0); }
+      30% { transform: translate(-5px, 0); }
+      40% { transform: translate(5px, 0); }
+      50% { transform: translate(-5px, 0); }
+      60% { transform: translate(5px, 0); }
+      70% { transform: translate(-5px, 0); }
+      80% { transform: translate(5px, 0); }
+      90% { transform: translate(-5px, 0); }
+      100% { transform: translate(0, 0); }
+    }
   </style>
 </head>
 <body>
@@ -208,27 +258,38 @@
     // サウンド効果
     const sounds = {
       shoot: new Audio('data:audio/wav;base64,UklGRl9vAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YTtvAAB/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/'),
-      explosion: new Audio('data:audio/wav;base64,UklGRl9vAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YTtvAAB/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/')
+      explosion: new Audio('data:audio/wav;base64,UklGRl9vAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YTtvAAB/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/'),
+      powerUp: new Audio('data:audio/wav;base64,UklGRl9vAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YTtvAAB/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/')
     };
 
+    // ショット音を設定
+    sounds.shoot.volume = 0.4;
+    
+    // 爆発音を設定
+    sounds.explosion.volume = 0.5;
+
     // プレイヤー設定
-    const player = {
+    let player = {
       x: canvas.width / 2,
       y: canvas.height - 100,
-      width: 40,
-      height: 40,
-      speed: 8,  // 速度を調整
+      width: 60,  // 少し大きく
+      height: 60, // 少し大きく
+      speed: 10,  // 速度を上げる
       powerUp: null,
       powerUpTimer: 0,
       invincible: false,
-      invincibleTimer: 0
+      invincibleTimer: 0,
+      weaponLevel: 1,  // 武器レベル追加
+      weaponCooldown: 0, // 武器のクールダウン
+      weaponHeat: 0,    // 武器の熱量
+      maxHeat: 100      // 最大熱量
     };
 
     // ゲーム状態
     let gameState = {
       level: 1,
       score: 0,
-      lives: 5,
+      lives: 3,
       isPaused: false,
       isGameOver: false,
       isStarted: false
@@ -236,7 +297,10 @@
 
     // パワーアップ設定
     const powerUpTypes = {
-      SHIELD: { color: '#ff00ff', duration: 1200, name: '無敵' }
+      SHIELD: { color: '#ff00ff', duration: 1200, name: '無敵' },
+      RAPID: { color: '#ffff00', duration: 900, name: '連射' },
+      TRIPLE: { color: '#00ffff', duration: 900, name: '3連射' },
+      LASER: { color: '#ff0000', duration: 600, name: 'レーザー' }
     };
 
     // 移動キーの状態
@@ -251,10 +315,14 @@
     // ゲームオブジェクト
     let beams = [];
     let enemies = [];
+    let enemyBeams = [];
     let powerUps = [];
     let particles = [];
+    let formation;
+    let lastUpdateTime = 0;
+    
+    // ゲームの初期設定
     let stars = [];
-    let enemyBeams = [];  // 敵の弾を追加
 
     // 敵の集団行動パターンを定義
     const formationPatterns = {
@@ -267,148 +335,520 @@
     // 敵の種類を更新
     const enemyTypes = {
       BASIC: { color: 'red', health: 1, points: 10, size: 30 },
-      SPEEDER: { color: 'blue', health: 1, points: 10, size: 30 }
+      SPEEDER: { color: 'blue', health: 1, points: 20, size: 25, speed: 2 },
+      TANK: { color: '#ff6600', health: 3, points: 30, size: 40 },
+      BOMBER: { color: '#cc00cc', health: 2, points: 40, size: 35 },
+      ELITE: { color: '#00cc00', health: 4, points: 60, size: 40 },
+      BOSS: { color: '#ff0066', health: 10, points: 100, size: 60 }
     };
 
     // バリアの設定を追加
     const barriers = [];
-    const BARRIER_COUNT = 4;
+    const BARRIER_COUNT = 0; // バリアを0に設定して無効化
 
     function createBarriers() {
-      const barrierWidth = 60;
-      const barrierHeight = 40;
-      const spacing = canvas.width / (BARRIER_COUNT + 1);
-      
-      for (let i = 0; i < BARRIER_COUNT; i++) {
-        barriers.push({
-          x: spacing * (i + 1) - barrierWidth / 2,
-          y: canvas.height - 150,
-          width: barrierWidth,
-          height: barrierHeight,
-          health: 4,  // バリアの耐久度
-          color: '#00ff00'
-        });
-      }
+      // バリアを作成しないようにする
     }
 
     // 敵の集団を管理するクラス
     class Formation {
       constructor(level) {
         this.level = level;
+        this.lastEnemyCreatedTime = 0;
         this.enemies = [];
-        this.direction = 1;  // 1: 右, -1: 左
-        this.dropDistance = 20;  // 下降距離
-        this.baseSpeed = 0.5;  // 基本速度
-        this.moveSpeed = this.baseSpeed;
-        this.lastShotTime = 0;
-        this.shotInterval = Math.max(2000 - (level * 100), 500);  // レベルごとの射撃間隔
+        this.baseSpeed = 0.5 + (level - 1) * 0.1; // 速度をレベルに応じて上げる
+        this.movementTimer = 0;
+        this.attackTimer = 0;
+        this.attackInterval = 1500 - (level - 1) * 100;
+        if (this.attackInterval < 500) this.attackInterval = 500;
         
-        this.createFormation(level);
+        this.isBossLevel = level % 5 === 0;
+        
+        // 追加のプロパティ
+        this.direction = 1; // 1: 右, -1: 左
+        this.dropDistance = 15; // 下降距離
+        this.pattern = this.selectPattern(level);
+        
+        // ボスレベルかどうかで敵の生成方法を変える
+        if (this.isBossLevel) {
+          this.createBossFormation();
+        } else {
+          this.createFormation();
+        }
+        
+        console.log(`Level ${level} formation created with ${this.enemies.length} enemies. Boss level: ${this.isBossLevel}`);
       }
-
-      createFormation(level) {
-        const rows = Math.min(5, 3 + Math.floor(level / 2));  // レベルに応じて行数増加（最大5行）
-        const cols = 11;
-        const spacing = 50;
-        const startX = (canvas.width - (cols * spacing)) / 2;
-        const startY = 50;  // 画面上部から開始
-
+      
+      // パターン選択
+      selectPattern(level) {
+        const patterns = ['ZIGZAG', 'CIRCLE', 'WAVE', 'VSHAPE'];
+        return patterns[(level - 1) % patterns.length];
+      }
+      
+      createFormation() {
+        const rows = Math.min(5, Math.ceil(this.level / 2) + 1); // レベルに応じて行数を増やす（最大5行）
+        const cols = 9;
+        
+        console.log(`Creating formation with ${rows} rows and ${cols} columns for level ${this.level}`);
+        
+        const startX = (canvas.width - (cols * 40)) / 2;
+        const spacing = 40;
+        
         for (let row = 0; row < rows; row++) {
           for (let col = 0; col < cols; col++) {
+            // 敵の初期位置
+            const x = startX + col * spacing;
+            const y = 50 + row * spacing;
+            
+            // 敵のタイプを決定（行によって異なる）
+            let type, color, health, points, size;
+            
+            if (row === 0) {
+              // 最前列は強力な敵（レベルが上がるほど強くなる）
+              type = this.level >= 3 ? 'ELITE' : 'TANK';
+              color = type === 'ELITE' ? '#9900ff' : '#ff6600';
+              health = Math.floor(2 + this.level * 0.5);
+              points = 100 + this.level * 20;
+              size = { width: 30, height: 30 };
+            } else if (row === rows - 1) {
+              // 最後列は素早い敵
+              type = 'SPEEDER';
+              color = '#00ccff';
+              health = Math.max(1, Math.floor(this.level * 0.3));
+              points = 50 + this.level * 10;
+              size = { width: 25, height: 20 };
+            } else if (row === Math.floor(rows / 2)) {
+              // 中央列はボンバー
+              type = this.level >= 2 ? 'BOMBER' : 'BASIC';
+              color = type === 'BOMBER' ? '#ff00cc' : '#ff0000';
+              health = Math.floor(1 + this.level * 0.4);
+              points = 75 + this.level * 15;
+              size = { width: 28, height: 28 };
+            } else {
+              // その他は通常の敵
+              type = 'BASIC';
+              color = '#ff0000';
+              health = Math.max(1, Math.floor(1 + this.level * 0.2));
+              points = 50 + this.level * 5;
+              size = { width: 25, height: 25 };
+            }
+            
+            // 敵を生成
             const enemy = {
-              x: startX + col * spacing,
-              y: startY + row * spacing,
-              width: 30,
-              height: 30,
-              type: 'BASIC',
-              health: 1,
-              color: this.getEnemyColor(row),
-              points: this.getEnemyPoints(row),
+              x: x,
+              y: y,
+              width: size.width,
+              height: size.height,
+              speed: this.baseSpeed,
+              color: color,
+              health: health,
+              maxHealth: health,
+              points: points,
+              type: type,
+              isBoss: false,
               row: row,
               col: col,
-              originalX: startX + col * spacing  // 元の位置を保存
+              originalX: x,
+              originalY: y,
+              lastShot: 0,
+              shotInterval: 2000 + Math.random() * 3000
             };
+            
             this.enemies.push(enemy);
+            enemies.push(enemy);
+            
+            console.log(`Created enemy: type=${type}, position=(${x},${y}), health=${health}`);
           }
         }
       }
-
-      getEnemyColor(row) {
-        // 上の行から順に色を変える
-        switch(row) {
-          case 0: return '#FF0000';  // 赤
-          case 1: return '#FF6B00';  // オレンジ
-          case 2: return '#FFD700';  // 黄色
-          case 3: return '#00FF00';  // 緑
-          case 4: return '#4169E1';  // 青
-          default: return '#FF0000';
+      
+      createBossFormation() {
+        console.log(`Creating boss formation for level ${this.level}`);
+        
+        // ボスのヘルスはレベルに応じて増加
+        const bossHealth = 20 + (this.level * 5);
+        
+        // ボスの生成
+        const bossEnemy = {
+          x: canvas.width / 2 - 60,
+          y: 80,
+          width: 120,
+          height: 120,
+          color: '#ff0066',
+          health: bossHealth,
+          maxHealth: bossHealth,
+          points: 500 * Math.floor(this.level / 5),
+          type: 'BOSS',
+          isBoss: true,
+          lastShot: 0,
+          shotInterval: 1000 - Math.min(500, this.level * 50),
+          attackPattern: 0
+        };
+        
+        this.enemies.push(bossEnemy);
+        enemies.push(bossEnemy);
+        
+        // ボスの周りに護衛を配置
+        const guardCount = Math.min(8, 4 + Math.floor(this.level / 5));
+        
+        for (let i = 0; i < guardCount; i++) {
+          const angle = (i / guardCount) * Math.PI * 2;
+          const distance = 150;
+          
+          // 護衛の種類を決定
+          let guardType, guardColor, guardHealth;
+          
+          if (this.level >= 10) {
+            guardType = 'ELITE';
+            guardColor = '#9900ff';
+            guardHealth = Math.max(3, Math.floor(this.level * 0.3));
+          } else if (this.level >= 5) {
+            guardType = 'BOMBER';
+            guardColor = '#ff00cc';
+            guardHealth = Math.max(2, Math.floor(this.level * 0.25));
+          } else {
+            guardType = 'TANK';
+            guardColor = '#ff6600';
+            guardHealth = Math.max(1, Math.floor(this.level * 0.2));
+          }
+          
+          // 護衛敵を生成
+          const guardEnemy = {
+            x: bossEnemy.x + Math.cos(angle) * distance + 60 - 15,
+            y: bossEnemy.y + Math.sin(angle) * distance + 60 - 15,
+            width: 30,
+            height: 30,
+            color: guardColor,
+            health: guardHealth,
+            maxHealth: guardHealth,
+            points: 100 + (this.level * 10),
+            type: guardType,
+            isBoss: false,
+            orbitAngle: angle,
+            orbitDistance: distance,
+            orbitCenter: { x: bossEnemy.x + 60, y: bossEnemy.y + 60 },
+            lastShot: 0,
+            shotInterval: 2000 + Math.random() * 2000
+          };
+          
+          this.enemies.push(guardEnemy);
+          enemies.push(guardEnemy);
+        }
+        
+        console.log(`Created boss with ${guardCount} guards. Boss health: ${bossHealth}`);
+      }
+      
+      update(elapsedTime) {
+        if (this.enemies.length === 0) return;
+        
+        this.movementTimer += elapsedTime;
+        this.attackTimer += elapsedTime;
+        
+        // 敵の動きを処理
+        if (this.isBossLevel) {
+          this.updateBossFormation(elapsedTime);
+        } else {
+          this.updateNormalFormation(elapsedTime);
+        }
+        
+        // 敵の攻撃を処理
+        if (this.attackTimer >= this.attackInterval) {
+          this.attackTimer = 0;
+          this.enemyAttack();
         }
       }
-
-      getEnemyPoints(row) {
-        // 上の行ほど高得点
-        return (5 - row) * 10;
+      
+      updateBossFormation(elapsedTime) {
+        const boss = this.enemies.find(e => e.isBoss);
+        if (!boss) return;
+        
+        // ボスの動き - 画面中央付近でゆっくり動く
+        boss.x += Math.sin(Date.now() / 1000) * 2;
+        
+        // ボスの攻撃
+        if (Date.now() - boss.lastShot > boss.shotInterval) {
+          // ボスの攻撃パターンをレベルに応じて変える
+          if (boss.health < boss.maxHealth * 0.3) {
+            // 体力が少ない時は全方向に攻撃
+            for (let i = 0; i < 12; i++) {
+              const angle = (i / 12) * Math.PI * 2;
+              enemyBeams.push({
+                x: boss.x + boss.width/2 + Math.cos(angle) * 30,
+                y: boss.y + boss.height/2 + Math.sin(angle) * 30,
+                width: 10,
+                height: 20,
+                speed: 5,
+                angle: angle,
+                color: '#ff3300',
+                damage: 2
+              });
+            }
+          } else if (boss.health < boss.maxHealth * 0.7) {
+            // 中程度の体力では3方向
+            for (let i = 0; i < 3; i++) {
+              const angle = Math.PI/2 + (i - 1) * Math.PI/4;
+              enemyBeams.push({
+                x: boss.x + boss.width/2,
+                y: boss.y + boss.height,
+                width: 15,
+                height: 25,
+                speed: 6,
+                angle: angle,
+                color: '#ff3300',
+                damage: 2
+              });
+            }
+          } else {
+            // 体力が多い時は単発の強力な攻撃
+            enemyBeams.push({
+              x: boss.x + boss.width/2,
+              y: boss.y + boss.height,
+              width: 20,
+              height: 30,
+              speed: 7,
+              color: '#ff3300',
+              damage: 3
+            });
+          }
+          
+          boss.lastShot = Date.now();
+        }
+        
+        // 護衛の動き
+        this.enemies.filter(e => !e.isBoss).forEach(guard => {
+          if (guard.orbitCenter) {
+            // ボスの周りを回る
+            guard.orbitAngle += 0.01;
+            guard.x = guard.orbitCenter.x + Math.cos(guard.orbitAngle) * guard.orbitDistance - guard.width/2;
+            guard.y = guard.orbitCenter.y + Math.sin(guard.orbitAngle) * guard.orbitDistance - guard.height/2;
+            
+            // 時々攻撃
+            if (Date.now() - guard.lastShot > guard.shotInterval) {
+              // 敵のタイプに応じた攻撃パターン
+              if (guard.type === 'ELITE') {
+                // 3方向に攻撃
+                for (let i = -1; i <= 1; i++) {
+                  enemyBeams.push({
+                    x: guard.x + guard.width/2 + i * 10,
+                    y: guard.y + guard.height,
+                    width: 6,
+                    height: 15,
+                    speed: 6,
+                    color: guard.color,
+                    damage: 1
+                  });
+                }
+              } else if (guard.type === 'BOMBER') {
+                // 爆発型の攻撃
+                enemyBeams.push({
+                  x: guard.x + guard.width/2,
+                  y: guard.y + guard.height,
+                  width: 8,
+                  height: 8,
+                  speed: 5,
+                  isExplosive: true,
+                  color: guard.color,
+                  damage: 1
+                });
+              } else {
+                // 通常攻撃
+                enemyBeams.push({
+                  x: guard.x + guard.width/2,
+                  y: guard.y + guard.height,
+                  width: 5,
+                  height: 15,
+                  speed: 6,
+                  color: guard.color,
+                  damage: 1
+                });
+              }
+              
+              guard.lastShot = Date.now();
+            }
+          }
+        });
       }
-
-      update() {
-        if (this.enemies.length === 0) return;
-
-        // 集団の端を検出
+      
+      updateNormalFormation(elapsedTime) {
+        // 敵の端を検出
         let leftMost = canvas.width;
         let rightMost = 0;
+        
         this.enemies.forEach(enemy => {
           leftMost = Math.min(leftMost, enemy.x);
           rightMost = Math.max(rightMost, enemy.x + enemy.width);
         });
-
-        // 画面端に到達したら方向転換して下降
+        
+        // 画面端で方向転換して下降
         if (rightMost >= canvas.width - 20 || leftMost <= 20) {
           this.direction *= -1;
           this.enemies.forEach(enemy => {
             enemy.y += this.dropDistance;
           });
         }
-
-        // 横移動（残りの敵が少ないほど速く）
-        const speedMultiplier = 1 + (1 - this.enemies.length / (55)) * 2;
-        this.moveSpeed = this.baseSpeed * speedMultiplier * (1 + this.level * 0.1);
-
-        this.enemies.forEach(enemy => {
-          enemy.x += this.direction * this.moveSpeed;
-        });
-
-        // 敵の攻撃（レベルに応じて頻度上昇）
-        const currentTime = Date.now();
-        if (currentTime - this.lastShotTime > this.shotInterval) {
-          this.enemyShoot();
-          this.lastShotTime = currentTime;
+        
+        // 残りの敵が少ないほど速く
+        const initialEnemyCount = 45; // 標準的な敵の数
+        const speedMultiplier = 1 + (1 - this.enemies.length / initialEnemyCount) * 3;
+        const moveSpeed = this.baseSpeed * speedMultiplier;
+        
+        // パターンに応じた動き
+        switch (this.pattern) {
+          case 'ZIGZAG':
+            this.updateZigzagPattern(elapsedTime, moveSpeed);
+            break;
+          case 'CIRCLE':
+            this.updateCirclePattern(elapsedTime, moveSpeed);
+            break;
+          case 'WAVE':
+            this.updateWavePattern(elapsedTime, moveSpeed);
+            break;
+          case 'VSHAPE':
+            this.updateVShapePattern(elapsedTime, moveSpeed);
+            break;
+          default:
+            // 基本の横移動
+            this.enemies.forEach(enemy => {
+              enemy.x += this.direction * moveSpeed;
+            });
         }
       }
-
-      enemyShoot() {
-        // ランダムに攻撃する敵を選択
-        const shootingEnemies = this.enemies.filter(e => 
-          !this.enemies.some(other => 
-            other.col === e.col && other.row > e.row
-          )
-        );
-        
-        if (shootingEnemies.length > 0) {
-          const shooter = shootingEnemies[Math.floor(Math.random() * shootingEnemies.length)];
-          enemyBeams.push({
-            x: shooter.x + shooter.width / 2,
-            y: shooter.y + shooter.height,
-            width: 4,
-            height: 10,
-            speed: 5,
-            color: '#ff0000'
-          });
-        }
+      
+      updateZigzagPattern(elapsedTime, moveSpeed) {
+        const time = Date.now();
+        this.enemies.forEach(enemy => {
+          enemy.x += this.direction * moveSpeed;
+          enemy.y += Math.sin(time / 500 + enemy.col * 0.5) * 0.5;
+        });
+      }
+      
+      updateCirclePattern(elapsedTime, moveSpeed) {
+        const time = Date.now();
+        this.enemies.forEach(enemy => {
+          const radius = 20;
+          const angle = time / 1000 + enemy.col * 0.3;
+          enemy.x = enemy.originalX + this.direction * moveSpeed * (elapsedTime / 16) + Math.cos(angle) * radius;
+          enemy.y = enemy.originalY + Math.sin(angle) * radius;
+        });
+      }
+      
+      updateWavePattern(elapsedTime, moveSpeed) {
+        const time = Date.now();
+        this.enemies.forEach(enemy => {
+          enemy.x += this.direction * moveSpeed;
+          const waveHeight = 10 + enemy.row * 3;
+          enemy.y = enemy.originalY + Math.sin(time / 500 + enemy.col * 0.3) * waveHeight;
+        });
+      }
+      
+      updateVShapePattern(elapsedTime, moveSpeed) {
+        const centerCol = 4; // 9列の中央
+        this.enemies.forEach(enemy => {
+          enemy.x += this.direction * moveSpeed;
+          const distFromCenter = Math.abs(enemy.col - centerCol);
+          enemy.y = enemy.originalY + distFromCenter * 5 + Math.sin(Date.now() / 800) * 5;
+        });
+      }
+      
+      enemyAttack() {
+        // 各敵が個別に攻撃するかを判定
+        this.enemies.forEach(enemy => {
+          if (enemy.isBoss) return; // ボスは別処理
+          
+          // 敵の種類と位置に応じて攻撃確率を調整
+          let attackChance = 0.1; // 基本確率
+          
+          // 最前列にいる敵は攻撃確率が高い
+          const isInFrontRow = !this.enemies.some(e => 
+            e.col === enemy.col && e.row > enemy.row
+          );
+          
+          if (isInFrontRow) {
+            attackChance *= 3;
+          }
+          
+          // 敵のタイプに応じた攻撃確率
+          switch (enemy.type) {
+            case 'ELITE':
+              attackChance *= 2;
+              break;
+            case 'BOMBER':
+              attackChance *= 1.5;
+              break;
+            case 'TANK':
+              attackChance *= 1.5;
+              break;
+            case 'SPEEDER':
+              attackChance *= 1.2;
+              break;
+          }
+          
+          // 攻撃判定
+          if (Math.random() < attackChance) {
+            // 敵のタイプに応じた攻撃パターン
+            if (enemy.type === 'ELITE') {
+              // 複数方向に攻撃
+              for (let i = -1; i <= 1; i++) {
+                enemyBeams.push({
+                  x: enemy.x + enemy.width/2 + i * 10,
+                  y: enemy.y + enemy.height,
+                  width: 6,
+                  height: 15,
+                  speed: 6,
+                  color: enemy.color,
+                  damage: 1
+                });
+              }
+            } else if (enemy.type === 'BOMBER') {
+              // 爆発型の攻撃
+              enemyBeams.push({
+                x: enemy.x + enemy.width/2,
+                y: enemy.y + enemy.height,
+                width: 8,
+                height: 8,
+                speed: 4,
+                isExplosive: true,
+                color: enemy.color,
+                damage: 1
+              });
+            } else if (enemy.type === 'TANK') {
+              // 強力な単発攻撃
+              enemyBeams.push({
+                x: enemy.x + enemy.width/2,
+                y: enemy.y + enemy.height,
+                width: 8,
+                height: 20,
+                speed: 5,
+                color: enemy.color,
+                damage: 2
+              });
+            } else if (enemy.type === 'SPEEDER') {
+              // 高速攻撃
+              enemyBeams.push({
+                x: enemy.x + enemy.width/2,
+                y: enemy.y + enemy.height,
+                width: 4,
+                height: 12,
+                speed: 8,
+                color: enemy.color,
+                damage: 1
+              });
+            } else {
+              // 通常攻撃
+              enemyBeams.push({
+                x: enemy.x + enemy.width/2,
+                y: enemy.y + enemy.height,
+                width: 5,
+                height: 15,
+                speed: 5,
+                color: enemy.color,
+                damage: 1
+              });
+            }
+          }
+        });
       }
     }
-
-    // ゲーム状態に集団管理を追加
-    let currentFormation = null;
 
     // レベルに応じた集団パターンを取得
     function getFormationForLevel(level) {
@@ -418,9 +858,15 @@
 
     // 新しい集団の生成
     function createNewFormation() {
-      const pattern = getFormationForLevel(gameState.level);
-      currentFormation = new Formation(gameState.level);
-      enemies = currentFormation.enemies;
+      console.log(`現在のレベル: ${gameState.level}`);
+      formation = new Formation(gameState.level);
+      enemies = formation.enemies;
+      console.log(`敵の数: ${enemies.length}`);
+      
+      // 敵の位置とタイプを確認
+      enemies.forEach((enemy, index) => {
+        console.log(`敵 ${index}: タイプ=${enemy.type}, 位置=(${enemy.x}, ${enemy.y}), 体力=${enemy.health}`);
+      });
     }
 
     // =============
@@ -430,18 +876,60 @@
       if (!gameState.isStarted) return;
       if (e.key === 'ArrowLeft') keys.left = true;
       if (e.key === 'ArrowRight') keys.right = true;
-      if (e.key === ' ' || e.key === 'Space') shootBeam('yellow');  // スペースキーでの発射
+      if (e.key === ' ' || e.key === 'Space') keys.shoot = true;  // 連射対応
       if (e.key === 'h' || e.key === 'H') togglePause();
+      
+      // For testing
+      console.log("Key pressed:", e.key, "keys.shoot:", keys.shoot);
+    });
+    
+    // バックアップの直接キーコード処理（特にスペースバー用）
+    document.addEventListener('keydown', function(e) {
+      if (!gameState.isStarted) return;
+      // スペースキー (keyCode: 32)
+      if (e.keyCode === 32 || e.which === 32) {
+        keys.shoot = true;
+        console.log("Space key detected via keyCode! keys.shoot:", keys.shoot);
+        
+        // 直接ビーム発射（緊急対応）
+        if (player.weaponCooldown <= 0) {
+          shootBeam('#00ffff');
+          player.weaponCooldown = 15;
+        }
+      }
     });
 
     document.addEventListener('keyup', (e) => {
       if (e.key === 'ArrowLeft') keys.left = false;
       if (e.key === 'ArrowRight') keys.right = false;
+      if (e.key === ' ' || e.key === 'Space') keys.shoot = false;
+      
+      // For testing
+      console.log("Key released:", e.key, "keys.shoot:", keys.shoot);
     });
 
     // スマホコントロール
-    document.getElementById('yellowBeamBtn').addEventListener('click', () => shootBeam('yellow'));
-    document.getElementById('blueBeamBtn').addEventListener('click', () => shootBeam('cyan'));
+    document.getElementById('yellowBeamBtn').addEventListener('touchstart', () => keys.shoot = true);
+    document.getElementById('yellowBeamBtn').addEventListener('touchend', () => keys.shoot = false);
+    document.getElementById('blueBeamBtn').addEventListener('click', () => shootSpecialBeam());
+    
+    // クリックでも射撃（緊急対応）
+    canvas.addEventListener('click', function() {
+      if (!gameState.isStarted || gameState.isPaused || gameState.isGameOver) return;
+      
+      console.log("Canvas clicked - emergency shooting");
+      if (player.weaponCooldown <= 0) {
+        shootBeam('#00ffff');
+        
+        // パワーアップ状態による特殊攻撃
+        if (player.powerUp === 'TRIPLE') {
+          shootBeam('#00ffff', -20);
+          shootBeam('#00ffff', 20);
+        }
+        
+        player.weaponCooldown = 15;
+      }
+    });
 
     // スタートボタン
     document.getElementById('startBtn').addEventListener('click', startGame);
@@ -456,37 +944,140 @@
       createStarfield();
       // 最初の集団を生成
       createNewFormation();
-      createBarriers();
       requestAnimationFrame(gameLoop);
     }
 
     function createStarfield() {
-      for (let i = 0; i < 100; i++) {
+      // 小さな星
+      for (let i = 0; i < 200; i++) {
         stars.push({
           x: Math.random() * canvas.width,
           y: Math.random() * canvas.height,
-          speed: 0.5 + Math.random() * 2,
-          size: Math.random() * 2
+          speed: 0.2 + Math.random() * 1.0,
+          size: 0.5 + Math.random() * 1.5,
+          twinkle: Math.random() > 0.7,  // 点滅する星かどうか
+          twinkleSpeed: 0.02 + Math.random() * 0.05,
+          brightness: Math.random(),
+          type: 'small'
         });
       }
+      
+      // 大きな星（少数）
+      for (let i = 0; i < 30; i++) {
+        stars.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          speed: 0.05 + Math.random() * 0.1,
+          size: 2 + Math.random() * 2,
+          color: getRandomStarColor(),
+          type: 'big'
+        });
+      }
+      
+      // 遠い背景の星団
+      for (let i = 0; i < 8; i++) {
+        stars.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          speed: 0.01 + Math.random() * 0.02,
+          size: 30 + Math.random() * 80,
+          opacity: 0.01 + Math.random() * 0.1,
+          type: 'cluster'
+        });
+      }
+      
+      // 星雲
+      for (let i = 0; i < 3; i++) {
+        stars.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          speed: 0.005,
+          size: 150 + Math.random() * 200,
+          opacity: 0.05 + Math.random() * 0.1,
+          color: getRandomNebulaColor(),
+          type: 'nebula'
+        });
+      }
+    }
+    
+    function getRandomStarColor() {
+      const colors = [
+        '#ffffff', // 白
+        '#ffffdd', // 明るい黄色
+        '#ddddff', // 明るい青
+        '#ffdddd'  // 明るい赤
+      ];
+      return colors[Math.floor(Math.random() * colors.length)];
+    }
+    
+    function getRandomNebulaColor() {
+      const colors = [
+        'rgba(100, 100, 255, 0.1)', // 青い星雲
+        'rgba(255, 100, 100, 0.1)', // 赤い星雲
+        'rgba(100, 255, 100, 0.1)', // 緑の星雲
+        'rgba(255, 100, 255, 0.1)'  // 紫の星雲
+      ];
+      return colors[Math.floor(Math.random() * colors.length)];
     }
 
     function updateStars() {
       stars.forEach(star => {
         star.y += star.speed;
+        
+        // 画面外に出たら上に戻す
         if (star.y > canvas.height) {
           star.y = 0;
           star.x = Math.random() * canvas.width;
+        }
+        
+        // 点滅効果の更新
+        if (star.twinkle) {
+          star.brightness += star.twinkleSpeed;
+          if (star.brightness > 1 || star.brightness < 0.2) {
+            star.twinkleSpeed *= -1;
+          }
         }
       });
     }
 
     function drawStars() {
-      ctx.fillStyle = 'white';
       stars.forEach(star => {
-        ctx.beginPath();
-        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.save();
+        
+        if (star.type === 'small') {
+          // 小さな星
+          const opacity = star.twinkle ? star.brightness : 1;
+          ctx.globalAlpha = opacity;
+          ctx.fillStyle = 'white';
+          ctx.beginPath();
+          ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+          ctx.fill();
+        } 
+        else if (star.type === 'big') {
+          // 大きな星（発光効果付き）
+          ctx.shadowBlur = 5;
+          ctx.shadowColor = star.color;
+          ctx.fillStyle = star.color;
+          ctx.beginPath();
+          ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        else if (star.type === 'cluster') {
+          // 星団（ぼやけた背景の星雲）
+          const gradient = ctx.createRadialGradient(
+            star.x, star.y, 0,
+            star.x, star.y, star.size
+          );
+          gradient.addColorStop(0, `rgba(100, 100, 255, ${star.opacity})`);
+          gradient.addColorStop(1, 'rgba(100, 100, 255, 0)');
+          
+          ctx.fillStyle = gradient;
+          ctx.beginPath();
+          ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        
+        ctx.restore();
       });
     }
 
@@ -523,6 +1114,18 @@
       }
     }
 
+    // 衝突判定用の関数
+    function collides(obj1, obj2) {
+      return obj1.x < obj2.x + obj2.width &&
+             obj1.x + obj1.width > obj2.x &&
+             obj1.y < obj2.y + obj2.height &&
+             obj1.y + obj1.height > obj2.y;
+    }
+    
+    function checkCollision(obj1, obj2) {
+      return collides(obj1, obj2);
+    }
+
     function activatePowerUp(type) {
       player.powerUp = type;
       player.powerUpTimer = powerUpTypes[type].duration;
@@ -543,14 +1146,23 @@
 
     function createParticles(x, y, color, count) {
       for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 1 + Math.random() * 3;
+        const size = 1 + Math.random() * 3;
+        const life = 30 + Math.random() * 60;
+        
         particles.push({
           x,
           y,
-          speed: Math.random() * 4 - 2,
-          angle: Math.random() * Math.PI * 2,
-          size: Math.random() * 3,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          size,
           color,
-          life: 60
+          life,
+          maxLife: life,
+          gravity: 0.05,
+          rotation: Math.random() * Math.PI * 2,
+          rotationSpeed: (Math.random() - 0.5) * 0.2
         });
       }
     }
@@ -558,10 +1170,21 @@
     function updateParticles() {
       for (let i = particles.length - 1; i >= 0; i--) {
         const particle = particles[i];
-        particle.x += Math.cos(particle.angle) * particle.speed;
-        particle.y += Math.sin(particle.angle) * particle.speed;
+        
+        // 位置の更新
+        particle.x += particle.vx;
+        particle.y += particle.vy;
+        
+        // 重力の影響
+        particle.vy += particle.gravity;
+        
+        // 回転の更新
+        particle.rotation += particle.rotationSpeed;
+        
+        // ライフタイムの減少
         particle.life--;
 
+        // 寿命が尽きたパーティクルを削除
         if (particle.life <= 0) {
           particles.splice(i, 1);
         }
@@ -570,134 +1193,233 @@
 
     function drawParticles() {
       particles.forEach(particle => {
-        ctx.fillStyle = particle.color;
-        ctx.globalAlpha = particle.life / 60;
-        ctx.beginPath();
-        ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.save();
+        
+        if (particle.type === 'smoke') {
+          // 煙のパーティクル
+          ctx.globalAlpha = particle.life / particle.maxLife * 0.7;
+          ctx.fillStyle = particle.color;
+          
+          ctx.translate(particle.x, particle.y);
+          ctx.rotate(particle.rotation);
+          ctx.beginPath();
+          ctx.arc(0, 0, particle.size, 0, Math.PI * 2);
+          ctx.fill();
+        } 
+        else if (particle.type === 'wave') {
+          // 爆発の波紋
+          const progress = 1 - particle.life / particle.maxLife;
+          const currentSize = particle.size + (particle.maxSize - particle.size) * progress;
+          
+          ctx.strokeStyle = particle.color;
+          ctx.globalAlpha = (1 - progress) * 0.7;
+          ctx.lineWidth = 3;
+          
+          ctx.beginPath();
+          ctx.arc(particle.x, particle.y, currentSize, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        else {
+          // 通常のパーティクル
+          ctx.translate(particle.x, particle.y);
+          ctx.rotate(particle.rotation);
+          
+          // 寿命に応じて透明度を設定
+          const alpha = particle.life / particle.maxLife;
+          ctx.globalAlpha = alpha;
+          
+          // パーティクルの描画
+          ctx.fillStyle = particle.color;
+          ctx.fillRect(-particle.size/2, -particle.size/2, particle.size, particle.size);
+        }
+        
+        ctx.restore();
       });
-      ctx.globalAlpha = 1;
     }
 
-    function shootBeam(color) {
+    function shootBeam(color, offsetX = 0) {
       if (!gameState.isStarted || gameState.isPaused) return;
 
-      const createBeam = (offsetX = 0) => {
-        beams.push({
-          x: player.x + player.width / 2 + offsetX,
-          y: player.y,
-          radius: 8,
-          speed: 10,
-          color: color,
-          power: 1
-        });
-      };
+      console.log("Shooting beam!", player.x, player.y);
+      
+      beams.push({
+        x: player.x + player.width / 2 + offsetX,
+        y: player.y,
+        width: 6,           // ビームの幅
+        height: 20,         // ビームの高さ
+        speed: 15,          // スピードを上げる
+        color: color,
+        power: 1,
+        glowIntensity: 1.0  // 発光の強さ
+      });
+      
+      console.log("Beam created, total beams:", beams.length);
 
-      createBeam();
+      sounds.shoot.currentTime = 0;
+      sounds.shoot.play();
+    }
+    
+    function shootSpecialBeam() {
+      if (!gameState.isStarted || gameState.isPaused || player.weaponCooldown > 0) return;
+      
+      // 特殊ビーム（広範囲攻撃）
+      beams.push({
+        x: player.x - 50,
+        y: player.y,
+        width: 150,
+        height: 50,
+        speed: 10,
+        color: '#ff0000',
+        power: 3,
+        isSpecial: true,
+        lifetime: 15
+      });
+      
+      // 長めのクールダウン
+      player.weaponCooldown = 60;
+      
       sounds.shoot.currentTime = 0;
       sounds.shoot.play();
     }
 
     function updateGame() {
-      if (!gameState.isStarted || gameState.isPaused) return;
-
-      // 勝利条件チェック
-      if (gameState.score >= 5000) {
-        victory();
-        return;
-      }
-
-      // プレイヤー移動（左右のみ）
+      if (!gameState.isStarted || gameState.isPaused || gameState.isGameOver) return;
+      
+      const currentTime = Date.now();
+      const elapsedTime = currentTime - lastUpdateTime;
+      lastUpdateTime = currentTime;
+      
+      // プレイヤーの移動
       if (keys.left) player.x -= player.speed;
       if (keys.right) player.x += player.speed;
       
-      // 画面端の処理
-      player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
-      player.y = canvas.height - 100;  // Y座標を固定
-
-      // パワーアップと無敵の更新
-      if (player.powerUp) {
-        player.powerUpTimer--;
-        if (player.powerUpTimer <= 0) {
-          player.powerUp = null;
-          updatePowerUpStatus();
+      // プレイヤーが画面外に出ないようにする
+      if (player.x < 0) player.x = 0;
+      if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+      
+      // 射撃処理
+      if (keys.shoot && player.weaponCooldown <= 0) {
+        console.log("Attempting to shoot! keys.shoot:", keys.shoot, "cooldown:", player.weaponCooldown);
+        
+        // 通常ショット
+        shootBeam('#00ffff');
+        
+        // パワーアップ状態による特殊攻撃
+        if (player.powerUp === 'TRIPLE') {
+          shootBeam('#00ffff', -20);
+          shootBeam('#00ffff', 20);
+        } else if (player.powerUp === 'RAPID') {
+          player.weaponCooldown = 5;  // 通常より短いクールダウン
+        } else {
+          player.weaponCooldown = 15; // 通常のクールダウン
         }
       }
-
+      
+      // 武器のクールダウン更新
+      if (player.weaponCooldown > 0) {
+        player.weaponCooldown--;
+      }
+      
+      // プレイヤーの無敵時間を更新
       if (player.invincible) {
         player.invincibleTimer--;
         if (player.invincibleTimer <= 0) {
           player.invincible = false;
         }
       }
-
-      // 集団の更新
-      if (currentFormation) {
-        currentFormation.update();
-
-        // 敵が画面下部に到達したらゲームオーバー
-        if (enemies.some(enemy => enemy.y + enemy.height > canvas.height - 100)) {
-          gameOver();
-          return;
-        }
-      }
-
-      // 全ての敵を倒したら次のレベルへ
+      
+      // エネミー編成の更新
+      formation.update(elapsedTime);
+      
+      // 次のレベルへ移行するかチェック
       if (enemies.length === 0) {
+        console.log("All enemies defeated! Moving to next level.");
         levelUp();
       }
-
-      // 敵更新
-      for (let i = enemies.length - 1; i >= 0; i--) {
-        const enemy = enemies[i];
-        enemy.y += enemy.speed;
-
-        // 画面外チェック - 見逃してもペナルティなし
-        if (enemy.y > canvas.height) {
-          enemies.splice(i, 1);
-          continue;
+      
+      // プレイヤービームの更新
+      for (let i = beams.length - 1; i >= 0; i--) {
+        const beam = beams[i];
+        
+        // 特殊ビームの場合は寿命がある
+        if (beam.isSpecial) {
+          beam.lifetime--;
+          if (beam.lifetime <= 0) {
+            beams.splice(i, 1);
+            continue;
+          }
+        } else {
+          // 通常のビームは移動する
+          beam.y -= beam.speed * elapsedTime;
+          
+          // 画面外に出たら削除
+          if (beam.y + beam.height < 0) {
+            beams.splice(i, 1);
+            continue;
+          }
         }
-
-        // プレイヤーとの当たり判定
-        if (!player.invincible && collides(player, enemy)) {
-          enemies.splice(i, 1);
-          createParticles(enemy.x + enemy.width/2, enemy.y + enemy.height/2, enemy.color, 20);
-          sounds.explosion.currentTime = 0;
-          sounds.explosion.play();
-          loseLife();
-          continue;
-        }
-
-        // ビームとの当たり判定
-        let hitByBeam = false;
-        for (let j = beams.length - 1; j >= 0; j--) {
-          const beam = beams[j];
-          if (collides(beam, enemy)) {  // ビームを第一引数にして判定
-            // 敵とビームを消す
-            enemies.splice(i, 1);
-            beams.splice(j, 1);
-            
-            // スコアとエフェクト
-            gameState.score += enemy.points;
-            updateScore();
-            createParticles(enemy.x + enemy.width/2, enemy.y + enemy.height/2, enemy.color, 20);
-            
-            // パワーアップの出現チェック
-            if (Math.random() < 0.1) {
-              spawnPowerUp(enemy.x + enemy.width/2, enemy.y + enemy.height/2);
+        
+        // 敵との衝突判定
+        for (let j = enemies.length - 1; j >= 0; j--) {
+          const enemy = enemies[j];
+          
+          if (checkCollision(beam, enemy)) {
+            // 特殊ビームか通常のビームかで処理を変える
+            if (beam.isSpecial) {
+              // 特殊ビームは敵を即座に破壊
+              enemy.health = 0;
+            } else {
+              // 通常のビームは敵の体力を減らす
+              enemy.health -= beam.power;
+              // 通常のビームは衝突したら消える
+              beams.splice(i, 1);
             }
             
-            // 効果音
-            sounds.explosion.currentTime = 0;
-            sounds.explosion.play();
+            // 敵の破壊チェック
+            if (enemy.health <= 0) {
+              // スコア加算
+              gameState.score += enemy.points;
+              updateScore();
+              
+              // パーティクルエフェクト
+              createParticles(
+                enemy.x + enemy.width / 2,
+                enemy.y + enemy.height / 2,
+                enemy.color,
+                20
+              );
+              
+              // 敵を削除
+              enemies.splice(j, 1);
+              const index = formation.enemies.indexOf(enemy);
+              if (index !== -1) {
+                formation.enemies.splice(index, 1);
+              }
+              
+              // 爆発音
+              sounds.explosion.currentTime = 0;
+              sounds.explosion.play();
+              
+              // パワーアップアイテムをドロップする確率
+              if (Math.random() < 0.1) {
+                const type = Math.random() < 0.3 ? 'health' : 'power';
+                const powerUp = {
+                  x: enemy.x + enemy.width / 2 - 15,
+                  y: enemy.y + enemy.height / 2,
+                  width: 30,
+                  height: 30,
+                  type: type,
+                  speed: 1
+                };
+                powerUps.push(powerUp);
+              }
+            }
             
-            hitByBeam = true;
             break;
           }
         }
-        if (hitByBeam) continue;  // この敵は既に処理済み
       }
-
+      
       // パワーアップアイテム更新
       updatePowerUps();
       
@@ -710,10 +1432,28 @@
       // 敵の弾の更新
       for (let i = enemyBeams.length - 1; i >= 0; i--) {
         const beam = enemyBeams[i];
-        beam.y += beam.speed;
+        
+        // レーザーの場合の特殊更新
+        if (beam.isLaser) {
+          beam.lifetime--;
+          if (beam.lifetime <= 0) {
+            enemyBeams.splice(i, 1);
+            continue;
+          }
+        } else {
+          // 通常の弾
+          if (beam.angle !== undefined) {
+            // 角度付きの弾
+            beam.x += Math.cos(beam.angle) * beam.speed;
+            beam.y += Math.sin(beam.angle) * beam.speed;
+          } else {
+            // 下方向の弾
+            beam.y += beam.speed;
+          }
+        }
 
         // 画面外チェック
-        if (beam.y > canvas.height) {
+        if (beam.y > canvas.height || beam.x < 0 || beam.x > canvas.width) {
           enemyBeams.splice(i, 1);
           continue;
         }
@@ -723,31 +1463,6 @@
           enemyBeams.splice(i, 1);
           loseLife();
           continue;
-        }
-
-        // バリアとの当たり判定
-        for (let j = barriers.length - 1; j >= 0; j--) {
-          const barrier = barriers[j];
-          if (collides(beam, barrier)) {
-            enemyBeams.splice(i, 1);
-            barrier.health--;
-            if (barrier.health <= 0) {
-              barriers.splice(j, 1);
-            }
-            break;
-          }
-        }
-      }
-
-      // プレイヤーのビームとバリアの当たり判定
-      for (let i = beams.length - 1; i >= 0; i--) {
-        const beam = beams[i];
-        for (let j = barriers.length - 1; j >= 0; j--) {
-          const barrier = barriers[j];
-          if (collides(beam, barrier)) {
-            beams.splice(i, 1);
-            break;
-          }
         }
       }
     }
@@ -760,65 +1475,444 @@
 
       // プレイヤーの描画
       if (!player.invincible || Math.floor(Date.now() / 100) % 2) {
-        ctx.fillStyle = 'white';
-        ctx.fillRect(player.x, player.y, player.width, player.height);
+        ctx.save();
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = '#00ffff';
         
-        // プレイヤーの装飾
-        ctx.fillStyle = '#ff0000';
+        // 宇宙船の本体
+        ctx.fillStyle = '#3366ff';
         ctx.beginPath();
         ctx.moveTo(player.x + player.width/2, player.y);
         ctx.lineTo(player.x + player.width, player.y + player.height);
         ctx.lineTo(player.x, player.y + player.height);
         ctx.closePath();
         ctx.fill();
+        
+        // コックピット部分
+        ctx.fillStyle = '#aaddff';
+        ctx.beginPath();
+        ctx.moveTo(player.x + player.width/2, player.y + 10);
+        ctx.lineTo(player.x + player.width/2 + 10, player.y + 25);
+        ctx.lineTo(player.x + player.width/2 - 10, player.y + 25);
+        ctx.closePath();
+        ctx.fill();
+        
+        // エンジン炎のエフェクト
+        ctx.fillStyle = '#ff9900';
+        ctx.beginPath();
+        const flameHeight = 10 + Math.sin(Date.now() / 100) * 5;
+        ctx.moveTo(player.x + player.width/2 - 10, player.y + player.height);
+        ctx.lineTo(player.x + player.width/2 + 10, player.y + player.height);
+        ctx.lineTo(player.x + player.width/2, player.y + player.height + flameHeight);
+        ctx.closePath();
+        ctx.fill();
+        
+        ctx.restore();
       }
 
       // ビームの描画
       beams.forEach(beam => {
-        ctx.beginPath();
-        ctx.arc(beam.x, beam.y, beam.radius, 0, Math.PI * 2);
+        // ビームの外側の発光エフェクト
+        ctx.save();
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = beam.color;
         ctx.fillStyle = beam.color;
-        ctx.fill();
+        
+        // ビームの本体（長方形）
+        ctx.fillRect(beam.x - beam.width/2, beam.y - beam.height, beam.width, beam.height);
+        
+        // ビームの先端（三角形）
+        ctx.beginPath();
+        ctx.moveTo(beam.x - beam.width/2, beam.y - beam.height);
+        ctx.lineTo(beam.x + beam.width/2, beam.y - beam.height);
+        ctx.lineTo(beam.x, beam.y - beam.height - 10);
         ctx.closePath();
+        ctx.fill();
+        
+        ctx.restore();
       });
 
       // 敵の描画
       enemies.forEach(enemy => {
-        ctx.fillStyle = enemy.color;
-        ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+        ctx.save();
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = enemy.color;
         
-        // 体力バー
-        const maxHealth = enemyTypes[enemy.type].health;
-        const healthPercentage = enemy.health / maxHealth;
-        ctx.fillStyle = 'red';
-        ctx.fillRect(enemy.x, enemy.y - 5, enemy.width * healthPercentage, 3);
+        if (enemy.isBoss) {
+          // ボスの描画
+          const centerX = enemy.x + enemy.width/2;
+          const centerY = enemy.y + enemy.height/2;
+          
+          // ボスの本体（大きな円）
+          ctx.fillStyle = enemy.color;
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, enemy.width/2, 0, Math.PI * 2);
+          ctx.fill();
+          
+          // 中央コア
+          const coreGradient = ctx.createRadialGradient(
+            centerX, centerY, 0,
+            centerX, centerY, enemy.width/4
+          );
+          coreGradient.addColorStop(0, '#ffffff');
+          coreGradient.addColorStop(0.2, '#ff00ff');
+          coreGradient.addColorStop(1, enemy.color);
+          
+          ctx.fillStyle = coreGradient;
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, enemy.width/4, 0, Math.PI * 2);
+          ctx.fill();
+          
+          // 装飾部品
+          ctx.fillStyle = '#333333';
+          for (let i = 0; i < 8; i++) {
+            const angle = (i / 8) * Math.PI * 2;
+            ctx.beginPath();
+            ctx.arc(
+              centerX + Math.cos(angle) * enemy.width/2.5,
+              centerY + Math.sin(angle) * enemy.width/2.5,
+              enemy.width/10,
+              0, Math.PI * 2
+            );
+            ctx.fill();
+          }
+          
+          // エネルギー波動
+          ctx.strokeStyle = '#ff00ff';
+          ctx.lineWidth = 2;
+          const waveSize = enemy.width/2 + 10 + Math.sin(Date.now() / 200) * 5;
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, waveSize, 0, Math.PI * 2);
+          ctx.stroke();
+        } else {
+          // 敵タイプによって異なるデザイン
+          if (enemy.type === 'TANK') {
+            // タンク型の敵（強い）
+            ctx.fillStyle = enemy.color;
+            
+            // 本体（六角形）
+            ctx.beginPath();
+            const centerX = enemy.x + enemy.width/2;
+            const centerY = enemy.y + enemy.height/2;
+            const radius = enemy.width/2;
+            
+            for (let i = 0; i < 6; i++) {
+              const angle = (i / 6) * Math.PI * 2;
+              const x = centerX + Math.cos(angle) * radius;
+              const y = centerY + Math.sin(angle) * radius;
+              if (i === 0) ctx.moveTo(x, y);
+              else ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+            ctx.fill();
+            
+            // 中央コア
+            ctx.fillStyle = '#ffaa00';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius/2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 砲台
+            ctx.fillStyle = '#333333';
+            ctx.fillRect(centerX - radius/4, centerY - radius, radius/2, radius/2);
+          }
+          else if (enemy.type === 'BOMBER') {
+            // ボンバー型の敵（爆発攻撃）
+            const centerX = enemy.x + enemy.width/2;
+            const centerY = enemy.y + enemy.height/2;
+            const radius = enemy.width/2;
+            
+            // 本体（ダイヤモンド形）
+            ctx.fillStyle = enemy.color;
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY - radius);
+            ctx.lineTo(centerX + radius, centerY);
+            ctx.lineTo(centerX, centerY + radius);
+            ctx.lineTo(centerX - radius, centerY);
+            ctx.closePath();
+            ctx.fill();
+            
+            // 中央コア（脈動エフェクト）
+            const pulseSize = 0.6 + Math.sin(Date.now() / 200) * 0.2;
+            ctx.fillStyle = '#ffff00';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius * pulseSize / 2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 装飾（角の強調）
+            ctx.fillStyle = '#ff00ff';
+            for (let i = 0; i < 4; i++) {
+              const angle = (i / 4) * Math.PI * 2 + Math.PI / 4;
+              ctx.beginPath();
+              ctx.arc(
+                centerX + Math.cos(angle) * radius * 0.7,
+                centerY + Math.sin(angle) * radius * 0.7,
+                radius * 0.15,
+                0, Math.PI * 2
+              );
+              ctx.fill();
+            }
+          }
+          else if (enemy.type === 'ELITE') {
+            // エリート型の敵（強力な攻撃）
+            const centerX = enemy.x + enemy.width/2;
+            const centerY = enemy.y + enemy.height/2;
+            const radius = enemy.width/2;
+            
+            // 本体（八角形）
+            ctx.fillStyle = enemy.color;
+            ctx.beginPath();
+            for (let i = 0; i < 8; i++) {
+              const angle = (i / 8) * Math.PI * 2;
+              const x = centerX + Math.cos(angle) * radius;
+              const y = centerY + Math.sin(angle) * radius;
+              if (i === 0) ctx.moveTo(x, y);
+              else ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+            ctx.fill();
+            
+            // 中央コア（脈動エフェクト）
+            const coreGradient = ctx.createRadialGradient(
+              centerX, centerY, 0,
+              centerX, centerY, radius * 0.4
+            );
+            coreGradient.addColorStop(0, '#ffffff');
+            coreGradient.addColorStop(0.5, '#00ff00');
+            coreGradient.addColorStop(1, enemy.color);
+            
+            ctx.fillStyle = coreGradient;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius * 0.4, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 装飾（電磁パルス効果）
+            ctx.strokeStyle = '#00ff00';
+            ctx.lineWidth = 2;
+            const pulseSize = radius * (0.8 + Math.sin(Date.now() / 150) * 0.2);
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, pulseSize, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // 武器ユニット
+            for (let i = 0; i < 4; i++) {
+              const angle = (i / 4) * Math.PI * 2 + Math.PI / 4;
+              ctx.fillStyle = '#006600';
+              ctx.beginPath();
+              ctx.arc(
+                centerX + Math.cos(angle) * radius * 0.7,
+                centerY + Math.sin(angle) * radius * 0.7,
+                radius * 0.15,
+                0, Math.PI * 2
+              );
+              ctx.fill();
+            }
+          }
+          else if (enemy.type === 'SPEEDER') {
+            // スピード型の敵（速い）
+            ctx.fillStyle = enemy.color;
+            
+            // 細長い本体
+            ctx.beginPath();
+            ctx.ellipse(
+              enemy.x + enemy.width/2, 
+              enemy.y + enemy.height/2, 
+              enemy.width/2, 
+              enemy.height/4, 
+              0, 0, Math.PI * 2
+            );
+            ctx.fill();
+            
+            // 先端
+            ctx.beginPath();
+            ctx.moveTo(enemy.x, enemy.y + enemy.height/2);
+            ctx.lineTo(enemy.x + enemy.width/2, enemy.y);
+            ctx.lineTo(enemy.x + enemy.width, enemy.y + enemy.height/2);
+            ctx.closePath();
+            ctx.fill();
+            
+            // エンジン
+            ctx.fillStyle = '#00ffff';
+            ctx.beginPath();
+            ctx.arc(enemy.x + enemy.width/2, enemy.y + enemy.height * 0.7, enemy.width/5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          else {
+            // 基本的なUFO型
+            // UFO型の敵を描画
+            ctx.fillStyle = enemy.color;
+            ctx.beginPath();
+            ctx.ellipse(
+              enemy.x + enemy.width/2, 
+              enemy.y + enemy.height/2, 
+              enemy.width/2, 
+              enemy.height/3, 
+              0, 0, Math.PI * 2
+            );
+            ctx.fill();
+            
+            // UFOのドーム部分
+            ctx.beginPath();
+            ctx.ellipse(
+              enemy.x + enemy.width/2, 
+              enemy.y + enemy.height/3, 
+              enemy.width/3, 
+              enemy.height/4, 
+              0, 0, Math.PI
+            );
+            ctx.fillStyle = 'rgba(200, 200, 255, 0.7)';
+            ctx.fill();
+            
+            // UFOの光
+            const time = Date.now() / 300;
+            for (let i = 0; i < 3; i++) {
+              const angle = time + (i * Math.PI * 2) / 3;
+              const lightX = enemy.x + enemy.width/2 + Math.cos(angle) * enemy.width/3;
+              const lightY = enemy.y + enemy.height/2 + Math.sin(angle) * enemy.height/6;
+              
+              ctx.fillStyle = '#ffff00';
+              ctx.beginPath();
+              ctx.arc(lightX, lightY, enemy.width/10, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+        }
+        
+        ctx.restore();
+        
+        // 体力バー（ボスと一般敵で表示を変更）
+        if (enemy.isBoss) {
+          // ボスの体力バー（画面上部に大きく表示）
+          const barWidth = canvas.width * 0.6;
+          const barX = (canvas.width - barWidth) / 2;
+          const barY = 50;
+          const barHeight = 15;
+          
+          // 背景
+          ctx.fillStyle = 'rgba(50, 50, 50, 0.7)';
+          ctx.fillRect(barX, barY, barWidth, barHeight);
+          
+          // 体力
+          const healthPercentage = enemy.health / enemy.maxHealth;
+          let barColor;
+          if (healthPercentage > 0.6) barColor = '#00ff00';
+          else if (healthPercentage > 0.3) barColor = '#ffff00';
+          else barColor = '#ff0000';
+          
+          ctx.fillStyle = barColor;
+          ctx.fillRect(barX, barY, barWidth * healthPercentage, barHeight);
+          
+          // テキスト
+          ctx.fillStyle = 'white';
+          ctx.font = '12px Arial';
+          ctx.textAlign = 'center';
+          ctx.fillText('BOSS', canvas.width/2, barY + barHeight + 15);
+        } else {
+          // 通常の敵の体力バー
+          const healthPercentage = enemy.health / enemy.maxHealth;
+          ctx.fillStyle = 'rgba(50, 50, 50, 0.7)';
+          ctx.fillRect(enemy.x, enemy.y - 8, enemy.width, 5);
+          
+          let barColor;
+          if (healthPercentage > 0.6) barColor = '#00ff00';
+          else if (healthPercentage > 0.3) barColor = '#ffff00';
+          else barColor = '#ff0000';
+          
+          ctx.fillStyle = barColor;
+          ctx.fillRect(enemy.x, enemy.y - 8, enemy.width * healthPercentage, 5);
+        }
       });
 
       // パワーアップアイテムの描画
       powerUps.forEach(powerUp => {
-        ctx.fillStyle = powerUpTypes[powerUp.type].color;
+        ctx.save();
+        
+        // 発光エフェクト
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = powerUpTypes[powerUp.type].color;
+        
+        // グラデーション
+        const gradient = ctx.createRadialGradient(
+          powerUp.x + powerUp.width/2, powerUp.y + powerUp.height/2, 0,
+          powerUp.x + powerUp.width/2, powerUp.y + powerUp.height/2, powerUp.width/2
+        );
+        gradient.addColorStop(0, 'white');
+        gradient.addColorStop(0.5, powerUpTypes[powerUp.type].color);
+        gradient.addColorStop(1, 'rgba(0, 0, 0, 0.5)');
+        
+        ctx.fillStyle = gradient;
         ctx.beginPath();
         ctx.arc(powerUp.x + powerUp.width/2, powerUp.y + powerUp.height/2, 
                 powerUp.width/2, 0, Math.PI * 2);
         ctx.fill();
+        
+        // 文字
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 14px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        // パワーアップのタイプによって表示文字を変更
+        let symbol;
+        switch(powerUp.type) {
+          case 'SHIELD': symbol = 'S'; break;
+          case 'RAPID': symbol = 'R'; break;
+          case 'TRIPLE': symbol = 'T'; break;
+          case 'LASER': symbol = 'L'; break;
+          default: symbol = '?';
+        }
+        
+        ctx.fillText(symbol, powerUp.x + powerUp.width/2, powerUp.y + powerUp.height/2);
+        
+        ctx.restore();
       });
 
       // パーティクルの描画
       drawParticles();
 
-      // バリアの描画
-      barriers.forEach(barrier => {
-        ctx.fillStyle = barrier.color;
-        const alpha = barrier.health / 4;  // 耐久度に応じて透明度を変更
-        ctx.globalAlpha = alpha;
-        ctx.fillRect(barrier.x, barrier.y, barrier.width, barrier.height);
-      });
-      ctx.globalAlpha = 1;
-
       // 敵の弾の描画
       enemyBeams.forEach(beam => {
-        ctx.fillStyle = beam.color;
-        ctx.fillRect(beam.x, beam.y, beam.width, beam.height);
+        ctx.save();
+        
+        if (beam.isLaser) {
+          // レーザービーム
+          const gradient = ctx.createLinearGradient(beam.x, 0, beam.x + beam.width, 0);
+          gradient.addColorStop(0, 'rgba(255, 0, 0, 0.1)');
+          gradient.addColorStop(0.5, 'rgba(255, 0, 0, 0.7)');
+          gradient.addColorStop(1, 'rgba(255, 0, 0, 0.1)');
+          
+          ctx.fillStyle = gradient;
+          ctx.fillRect(beam.x, beam.y, beam.width, beam.height);
+          
+          // レーザーの中心線
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(beam.x + beam.width/2, beam.y);
+          ctx.lineTo(beam.x + beam.width/2, beam.y + beam.height);
+          ctx.stroke();
+        } else {
+          // 通常の弾
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = beam.color;
+          ctx.fillStyle = beam.color;
+          
+          // 弾の形状
+          ctx.beginPath();
+          if (beam.angle !== undefined) {
+            // 角度付きの弾は円形
+            ctx.arc(beam.x, beam.y, beam.width/2, 0, Math.PI * 2);
+          } else {
+            // 下向きの弾は円と細長い形
+            ctx.moveTo(beam.x, beam.y);
+            ctx.lineTo(beam.x + beam.width, beam.y);
+            ctx.lineTo(beam.x + beam.width/2, beam.y + beam.height);
+            ctx.closePath();
+          }
+          ctx.fill();
+        }
+        
+        ctx.restore();
       });
     }
 
@@ -829,32 +1923,150 @@
     }
 
     function levelUp() {
-      gameState.level++;
-      document.getElementById('level').textContent = `Level: ${gameState.level}`;
+      if (gameState.isGameOver) return;
       
-      // ライフ回復（最大5）
-      if (gameState.lives < 5) {
-        gameState.lives++;
-        updateLives();
+      gameState.level++;
+      console.log(`Level up! Now at level ${gameState.level}`);
+      
+      // レベルアップの表示
+      const levelUpDisplay = document.createElement('div');
+      levelUpDisplay.className = 'level-up';
+      levelUpDisplay.textContent = `LEVEL ${gameState.level}`;
+      document.body.appendChild(levelUpDisplay);
+      
+      // ボスレベルの場合は特別な表示
+      if (gameState.level % 5 === 0) {
+        const bossAlert = document.createElement('div');
+        bossAlert.className = 'boss-alert';
+        bossAlert.textContent = 'BOSS APPROACHING';
+        document.body.appendChild(bossAlert);
+        
+        setTimeout(() => {
+          bossAlert.remove();
+        }, 3000);
       }
+      
+      // 一定時間後に表示を消す
+      setTimeout(() => {
+        levelUpDisplay.remove();
+      }, 2000);
+      
+      // レベル表示を更新
+      updateLevel();
+      
+      // ボーナスポイント
+      gameState.score += gameState.level * 100;
+      updateScore();
+      
+      // 新しい敵の編成を作成
+      formation = new Formation(gameState.level);
+      
+      // コンソールで確認
+      console.log(`New formation created for level ${gameState.level}. Enemy count: ${enemies.length}`);
+      enemies.forEach((enemy, index) => {
+        console.log(`Enemy ${index}: type=${enemy.type}, health=${enemy.health}, position=(${enemy.x},${enemy.y})`);
+      });
+    }
 
-      // 新しい集団を生成（より速く、より強く）
-      createNewFormation();
+    function resetGame() {
+      if (gameState.isGameOver) {
+        gameState.isGameOver = false;
+        gameState.score = 0;
+        gameState.level = 1;
+        gameState.lives = 3;
+        gameState.invincibleTime = 0;
+        
+        player.x = canvas.width / 2 - player.width / 2;
+        player.y = canvas.height - player.height - 20;
+        player.invincible = false;
+        player.invincibleTimer = 0;
+        
+        beams = [];
+        enemies = [];
+        enemyBeams = [];
+        powerUps = [];
+        particles = [];
+        
+        formation = new Formation(gameState.level);
+        console.log(`Game reset: Created level ${gameState.level} formation with ${enemies.length} enemies`);
+        
+        updateScore();
+        updateLevel();
+        updateLives();
+        
+        document.getElementById('game-over').style.display = 'none';
+      }
     }
 
     function loseLife() {
-      if (player.invincible) return;
-      
+      // プレイヤーの体力を減らす
       gameState.lives--;
       updateLives();
       
+      // 画面を揺らすエフェクト
+      document.body.style.animation = 'shake 0.5s';
+      setTimeout(() => {
+        document.body.style.animation = '';
+      }, 500);
+      
+      // プレイヤーを無敵状態にする（一時的に）
+      player.invincible = true;
+      player.invincibleTimer = 120;
+      
+      // ゲームオーバー判定
       if (gameState.lives <= 0) {
         gameOver();
-      } else {
-        // 無敵時間を設定（4秒間）
-        player.invincible = true;
-        player.invincibleTimer = 240; // 120から240に変更（2秒から4秒に）
       }
+    }
+    
+    function gameOver() {
+      gameState.isGameOver = true;
+      
+      // ゲームオーバー表示
+      const gameOverElement = document.createElement('div');
+      gameOverElement.id = 'game-over';
+      gameOverElement.style.position = 'fixed';
+      gameOverElement.style.top = '50%';
+      gameOverElement.style.left = '50%';
+      gameOverElement.style.transform = 'translate(-50%, -50%)';
+      gameOverElement.style.fontSize = '48px';
+      gameOverElement.style.color = 'red';
+      gameOverElement.style.textShadow = '0 0 10px red';
+      gameOverElement.style.zIndex = '1000';
+      gameOverElement.innerHTML = 'GAME OVER<br><span style="font-size: 24px">クリックしてリスタート</span>';
+      document.body.appendChild(gameOverElement);
+      
+      // クリックでリスタート
+      document.addEventListener('click', resetGame, { once: true });
+    }
+
+    function init() {
+      // キャンバスを画面サイズに合わせる
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      
+      // プレイヤーの初期化
+      player.x = canvas.width / 2 - player.width / 2;
+      player.y = canvas.height - 100;
+      player.invincible = false;
+      player.invincibleTimer = 0;
+      player.powerUp = null;
+      player.powerUpTimer = 0;
+      
+      // 敵の編成を作成
+      formation = new Formation(gameState.level);
+      
+      // スコア・レベル・ライフの初期表示
+      updateScore();
+      updateLevel();
+      updateLives();
+      
+      // 星の初期化
+      createStars();
+      
+      // ゲームループの開始
+      lastUpdateTime = Date.now();
+      requestAnimationFrame(gameLoop);
     }
 
     function updateLives() {
@@ -864,6 +2076,10 @@
     function updateScore() {
       document.getElementById('score').textContent = `Score: ${gameState.score}`;
     }
+    
+    function updateLevel() {
+      document.getElementById('level').textContent = `Level: ${gameState.level}`;
+    }
 
     function togglePause() {
       gameState.isPaused = !gameState.isPaused;
@@ -871,75 +2087,9 @@
         gameState.isPaused ? 'flex' : 'none';
     }
 
-    function gameOver() {
-      gameState.isGameOver = true;
-      alert(`ゲームオーバー!\nスコア: ${gameState.score}\nレベル: ${gameState.level}`);
-      resetGame();
-    }
-
-    function victory() {
-      gameState.isGameOver = true;
-      alert(`おめでとう！ゲームクリア！\nスコア: ${gameState.score}\nレベル: ${gameState.level}`);
-      resetGame();
-    }
-
-    function resetGame() {
-      gameState = {
-        level: 1,
-        score: 0,
-        lives: 5,
-        isPaused: false,
-        isGameOver: false,
-        isStarted: true
-      };
-      
-      player.x = canvas.width / 2;
-      player.y = canvas.height - 100;
-      player.powerUp = null;
-      player.powerUpTimer = 0;
-      player.invincible = false;
-      
-      enemies = [];
-      beams = [];
-      enemyBeams = [];  // 敵の弾をリセット
-      powerUps = [];
-      particles = [];
-      
-      updateScore();
-      updateLives();
-      document.getElementById('level').textContent = `Level: ${gameState.level}`;
-      document.getElementById('powerUpStatus').textContent = '';
-      
-      createNewFormation();
-      createBarriers();
-    }
-
-    function collides(obj1, obj2) {
-      // ビームと敵の当たり判定（ビームは円、敵は四角形）
-      if (obj1.radius !== undefined) {
-        const circle = obj1;
-        const rect = obj2;
-        
-        // ビームの中心から敵の四角形までの距離を計算
-        const distX = Math.abs(circle.x - (rect.x + rect.width/2));
-        const distY = Math.abs(circle.y - (rect.y + rect.height/2));
-        
-        // より緩い当たり判定
-        return distX <= (rect.width/2 + circle.radius) &&
-               distY <= (rect.height/2 + circle.radius);
-      }
-      
-      // 四角形同士の当たり判定（プレイヤーと敵、パワーアップ）
-      const margin = 10;  // マージンを大きくして当たり判定を緩く
-      return obj1.x + margin < obj2.x + obj2.width &&
-             obj1.x + obj1.width - margin > obj2.x &&
-             obj1.y + margin < obj2.y + obj2.height &&
-             obj1.y + obj1.height - margin > obj2.y;
-    }
-
-    // 「ゲーム選択に戻る」ボタンの処理
+    // Add return to game selection button functionality
     document.getElementById('reloadBtn').addEventListener('click', () => {
-      location.href = 'index.html';
+      window.location.href = 'index.html';
     });
   </script>
 </body>
