@@ -10,11 +10,15 @@
       padding: 0;
       background: #000;
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
       height: 100vh;
       color: #fff;
       font-family: sans-serif;
+      overflow: hidden;
+      user-select: none;
+      -webkit-user-select: none;
     }
     #myCanvas {
       background: #111;
@@ -35,12 +39,68 @@
       font-size: 16px;
       z-index: 11;
     }
+
+    /* Mobile controls */
+    #mobileControls {
+      display: none;
+      width: 480px;
+      max-width: 100vw;
+      justify-content: space-between;
+      margin-top: 12px;
+      gap: 20px;
+      padding: 0 10px;
+      box-sizing: border-box;
+    }
+    .ctrl-btn {
+      flex: 1;
+      height: 64px;
+      border: none;
+      border-radius: 14px;
+      font-size: 28px;
+      font-weight: bold;
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      transition: background 0.1s;
+    }
+    .ctrl-btn:active {
+      transform: scale(0.95);
+    }
+    #btnLeft {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+    }
+    #btnLeft:active, #btnLeft.pressed {
+      background: linear-gradient(135deg, #5a6fd6, #6a3f96);
+    }
+    #btnRight {
+      background: linear-gradient(135deg, #f093fb, #f5576c);
+    }
+    #btnRight:active, #btnRight.pressed {
+      background: linear-gradient(135deg, #d87de0, #e04a5e);
+    }
+
+    /* Show mobile controls on touch devices / narrow screens */
+    @media (max-width: 768px), (pointer: coarse) {
+      #mobileControls {
+        display: flex;
+      }
+    }
   </style>
 </head>
 <body>
   <button id="reloadBtn">ゲーム選択に戻る</button>
   <!-- The Canvas -->
   <canvas id="myCanvas" width="480" height="320"></canvas>
+
+  <!-- Mobile Controls -->
+  <div id="mobileControls">
+    <button class="ctrl-btn" id="btnLeft">◀ 左</button>
+    <button class="ctrl-btn" id="btnRight">右 ▶</button>
+  </div>
 
   <script>
     const canvas = document.getElementById("myCanvas");
@@ -110,6 +170,34 @@
         leftPressed = false;
       }
     }
+
+    // --- Mobile button controls ---
+    const btnLeft = document.getElementById("btnLeft");
+    const btnRight = document.getElementById("btnRight");
+
+    // Helper: attach both touch and mouse press/release
+    function addPressEvents(btn, onPress, onRelease) {
+      // Touch events
+      btn.addEventListener("touchstart", (e) => { e.preventDefault(); onPress(); btn.classList.add("pressed"); }, { passive: false });
+      btn.addEventListener("touchend",   (e) => { e.preventDefault(); onRelease(); btn.classList.remove("pressed"); }, { passive: false });
+      btn.addEventListener("touchcancel",(e) => { e.preventDefault(); onRelease(); btn.classList.remove("pressed"); }, { passive: false });
+      // Mouse fallback (for desktop testing)
+      btn.addEventListener("mousedown", () => { onPress(); btn.classList.add("pressed"); });
+      btn.addEventListener("mouseup",   () => { onRelease(); btn.classList.remove("pressed"); });
+      btn.addEventListener("mouseleave",() => { onRelease(); btn.classList.remove("pressed"); });
+    }
+
+    addPressEvents(btnLeft,
+      () => { leftPressed = true; },
+      () => { leftPressed = false; }
+    );
+    addPressEvents(btnRight,
+      () => { rightPressed = true; },
+      () => { rightPressed = false; }
+    );
+
+    // Prevent page scroll / zoom on canvas touch
+    canvas.addEventListener("touchmove", (e) => { e.preventDefault(); }, { passive: false });
 
     // Collision detection between the ball and bricks
     function collisionDetection() {
