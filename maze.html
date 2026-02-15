@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>迷路ゲーム</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: #0a0a0f;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            color: #e0e0e0;
+        }
+
+        /* Animated background grid */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                linear-gradient(rgba(0, 255, 200, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 200, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            animation: gridPulse 4s ease-in-out infinite;
+            z-index: 0;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(ellipse at center, rgba(0, 255, 200, 0.05) 0%, transparent 50%);
+            animation: auraSpin 20s linear infinite;
+            z-index: 0;
+        }
+
+        @keyframes gridPulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes auraSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* ===== MENU SCREEN ===== */
+        #menu-screen {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            animation: fadeSlideIn 0.8s ease-out;
+        }
+
+        @keyframes fadeSlideIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3.5em;
+            font-weight: 900;
+            letter-spacing: 0.15em;
+            color: #00ffc8;
+            text-shadow:
+                0 0 10px rgba(0, 255, 200, 0.8),
+                0 0 30px rgba(0, 255, 200, 0.4),
+                0 0 60px rgba(0, 255, 200, 0.2);
+            margin-bottom: 8px;
+        }
+
+        .title-sub {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9em;
+            letter-spacing: 0.5em;
+            color: rgba(0, 255, 200, 0.4);
+            margin-bottom: 50px;
+            text-transform: uppercase;
+        }
+
+        .difficulty-label {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1em;
+            letter-spacing: 0.3em;
+            color: rgba(0, 255, 200, 0.6);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .difficulty-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .diff-btn {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1em;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            padding: 16px 36px;
+            border: 2px solid;
+            border-radius: 4px;
+            cursor: pointer;
+            background: transparent;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+        }
+
+        .diff-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            transition: left 0.3s ease;
+            z-index: -1;
+        }
+
+        .diff-btn:hover::before {
+            left: 0;
+        }
+
+        .diff-btn.easy {
+            color: #00ffc8;
+            border-color: #00ffc8;
+            box-shadow: 0 0 15px rgba(0, 255, 200, 0.2);
+        }
+        .diff-btn.easy::before { background: rgba(0, 255, 200, 0.15); }
+        .diff-btn.easy:hover {
+            box-shadow: 0 0 30px rgba(0, 255, 200, 0.5);
+            transform: translateY(-3px);
+        }
+
+        .diff-btn.medium {
+            color: #ffaa00;
+            border-color: #ffaa00;
+            box-shadow: 0 0 15px rgba(255, 170, 0, 0.2);
+        }
+        .diff-btn.medium::before { background: rgba(255, 170, 0, 0.15); }
+        .diff-btn.medium:hover {
+            box-shadow: 0 0 30px rgba(255, 170, 0, 0.5);
+            transform: translateY(-3px);
+        }
+
+        .diff-btn.hard {
+            color: #ff3366;
+            border-color: #ff3366;
+            box-shadow: 0 0 15px rgba(255, 51, 102, 0.2);
+        }
+        .diff-btn.hard::before { background: rgba(255, 51, 102, 0.15); }
+        .diff-btn.hard:hover {
+            box-shadow: 0 0 30px rgba(255, 51, 102, 0.5);
+            transform: translateY(-3px);
+        }
+
+        .diff-info {
+            display: block;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.65em;
+            font-weight: 300;
+            letter-spacing: 0.05em;
+            margin-top: 6px;
+            opacity: 0.7;
+        }
+
+        .controls-hint {
+            margin-top: 40px;
+            font-size: 0.85em;
+            color: rgba(255, 255, 255, 0.3);
+            letter-spacing: 0.1em;
+        }
+
+        .controls-hint kbd {
+            display: inline-block;
+            padding: 3px 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.85em;
+            margin: 0 2px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* ===== GAME SCREEN ===== */
+        #game-screen {
+            display: none;
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            animation: fadeSlideIn 0.6s ease-out;
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding: 0 4px;
+            max-width: 90vmin;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .game-stat {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.85em;
+            letter-spacing: 0.1em;
+        }
+
+        .game-stat .label {
+            color: rgba(0, 255, 200, 0.5);
+            font-size: 0.7em;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .game-stat .value {
+            color: #00ffc8;
+            font-weight: 700;
+            text-shadow: 0 0 8px rgba(0, 255, 200, 0.5);
+        }
+
+        #maze-canvas {
+            border: 2px solid rgba(0, 255, 200, 0.3);
+            border-radius: 4px;
+            box-shadow:
+                0 0 20px rgba(0, 255, 200, 0.1),
+                inset 0 0 20px rgba(0, 0, 0, 0.5);
+            display: block;
+            margin: 0 auto;
+            max-width: 90vmin;
+            max-height: 70vmin;
+        }
+
+        .game-footer {
+            margin-top: 16px;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .game-btn {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.75em;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            padding: 10px 24px;
+            border: 1px solid rgba(0, 255, 200, 0.4);
+            border-radius: 3px;
+            background: rgba(0, 255, 200, 0.05);
+            color: #00ffc8;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        .game-btn:hover {
+            background: rgba(0, 255, 200, 0.15);
+            box-shadow: 0 0 15px rgba(0, 255, 200, 0.3);
+        }
+
+        /* ===== GENERATING overlay text ===== */
+        .generating-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8em;
+            letter-spacing: 0.3em;
+            color: rgba(0, 255, 200, 0.6);
+            margin-bottom: 12px;
+            height: 24px;
+            text-transform: uppercase;
+        }
+
+        .generating-text.hidden {
+            visibility: hidden;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .generating-text .dots {
+            animation: blink 1s ease-in-out infinite;
+        }
+
+        /* ===== CLEAR SCREEN ===== */
+        #clear-screen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        #clear-screen.show {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .clear-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3em;
+            font-weight: 900;
+            color: #00ffc8;
+            text-shadow:
+                0 0 20px rgba(0, 255, 200, 0.8),
+                0 0 60px rgba(0, 255, 200, 0.4);
+            margin-bottom: 10px;
+            animation: clearPulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes clearPulse {
+            0%, 100% { text-shadow: 0 0 20px rgba(0, 255, 200, 0.8), 0 0 60px rgba(0, 255, 200, 0.4); }
+            50% { text-shadow: 0 0 30px rgba(0, 255, 200, 1), 0 0 80px rgba(0, 255, 200, 0.6), 0 0 120px rgba(0, 255, 200, 0.3); }
+        }
+
+        .clear-time {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5em;
+            color: #ffaa00;
+            margin-bottom: 8px;
+        }
+
+        .clear-moves {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.1em;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 30px;
+            letter-spacing: 0.1em;
+        }
+
+        .clear-buttons {
+            display: flex;
+            gap: 14px;
+        }
+
+        .clear-btn {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.85em;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            padding: 14px 32px;
+            border: 2px solid #00ffc8;
+            border-radius: 4px;
+            background: transparent;
+            color: #00ffc8;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        .clear-btn:hover {
+            background: rgba(0, 255, 200, 0.15);
+            box-shadow: 0 0 25px rgba(0, 255, 200, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .clear-btn.secondary {
+            border-color: rgba(255, 255, 255, 0.3);
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .clear-btn.secondary:hover {
+            border-color: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+        }
+
+        /* Mobile touch controls */
+        .touch-controls {
+            display: none;
+            margin-top: 16px;
+            gap: 4px;
+        }
+
+        .touch-row {
+            display: flex;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .touch-btn {
+            width: 56px;
+            height: 56px;
+            border: 2px solid rgba(0, 255, 200, 0.4);
+            border-radius: 6px;
+            background: rgba(0, 255, 200, 0.08);
+            color: #00ffc8;
+            font-size: 1.4em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        .touch-btn:active {
+            background: rgba(0, 255, 200, 0.25);
+            box-shadow: 0 0 15px rgba(0, 255, 200, 0.4);
+        }
+
+        .touch-btn.invisible {
+            visibility: hidden;
+        }
+
+        @media (pointer: coarse) {
+            .touch-controls {
+                display: grid;
+                grid-template-columns: repeat(3, 56px);
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .title { font-size: 2.2em; }
+            .diff-btn { padding: 12px 24px; font-size: 0.85em; }
+            .clear-title { font-size: 2em; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- MENU SCREEN -->
+    <div id="menu-screen">
+        <div class="title">MAZE</div>
+        <div class="title-sub">迷路ゲーム</div>
+
+        <div class="difficulty-label">難易度を選んでください</div>
+        <div class="difficulty-buttons">
+            <button class="diff-btn easy" onclick="startGame('easy')">
+                かんたん
+                <span class="diff-info">11 × 11</span>
+            </button>
+            <button class="diff-btn medium" onclick="startGame('medium')">
+                ふつう
+                <span class="diff-info">21 × 21</span>
+            </button>
+            <button class="diff-btn hard" onclick="startGame('hard')">
+                むずかしい
+                <span class="diff-info">31 × 31</span>
+            </button>
+        </div>
+
+        <div class="controls-hint">
+            <kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd> または <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> で移動
+        </div>
+    </div>
+
+    <!-- GAME SCREEN -->
+    <div id="game-screen">
+        <div class="game-header">
+            <div class="game-stat">
+                <span class="label">TIME</span>
+                <span class="value" id="timer">00:00</span>
+            </div>
+            <div class="game-stat">
+                <span class="label">DIFFICULTY</span>
+                <span class="value" id="diff-display">-</span>
+            </div>
+            <div class="game-stat">
+                <span class="label">MOVES</span>
+                <span class="value" id="moves">0</span>
+            </div>
+        </div>
+
+        <div class="generating-text hidden" id="gen-text">GENERATING<span class="dots">...</span></div>
+
+        <canvas id="maze-canvas"></canvas>
+
+        <!-- Touch controls for mobile -->
+        <div class="touch-controls">
+            <div class="touch-btn invisible"></div>
+            <div class="touch-btn" ontouchstart="movePlayer(0,-1);event.preventDefault();" onmousedown="movePlayer(0,-1)">▲</div>
+            <div class="touch-btn invisible"></div>
+
+            <div class="touch-btn" ontouchstart="movePlayer(-1,0);event.preventDefault();" onmousedown="movePlayer(-1,0)">◀</div>
+            <div class="touch-btn invisible"></div>
+            <div class="touch-btn" ontouchstart="movePlayer(1,0);event.preventDefault();" onmousedown="movePlayer(1,0)">▶</div>
+
+            <div class="touch-btn invisible"></div>
+            <div class="touch-btn" ontouchstart="movePlayer(0,1);event.preventDefault();" onmousedown="movePlayer(0,1)">▼</div>
+            <div class="touch-btn invisible"></div>
+        </div>
+
+        <div class="game-footer">
+            <button class="game-btn" onclick="restartSameDifficulty()">もう一回</button>
+            <button class="game-btn" onclick="backToMenu()">メニューへ</button>
+        </div>
+    </div>
+
+    <!-- CLEAR SCREEN -->
+    <div id="clear-screen">
+        <div class="clear-title">CLEAR!</div>
+        <div class="clear-time" id="clear-time">00:00</div>
+        <div class="clear-moves" id="clear-moves">0 歩</div>
+        <div class="clear-buttons">
+            <button class="clear-btn" onclick="restartSameDifficulty()">もう一回</button>
+            <button class="clear-btn secondary" onclick="backToMenu()">メニューへ</button>
+        </div>
+    </div>
+
+<script>
+// ===== GAME STATE =====
+let maze = [];
+let rows = 0;
+let cols = 0;
+let playerX = 1;
+let playerY = 1;
+let goalX = 0;
+let goalY = 0;
+let moveCount = 0;
+let timerInterval = null;
+let startTime = 0;
+let currentDifficulty = '';
+let gameActive = false;
+let trail = [];
+let generating = false;
+let genTimer = null;
+
+const canvas = document.getElementById('maze-canvas');
+const ctx = canvas.getContext('2d');
+
+// ===== DIFFICULTY SETTINGS =====
+const DIFFICULTY = {
+    easy:   { rows: 11, cols: 11, name: 'かんたん', color: '#00ffc8',  genSpeed: 3 },
+    medium: { rows: 21, cols: 21, name: 'ふつう',   color: '#ffaa00',  genSpeed: 8 },
+    hard:   { rows: 31, cols: 31, name: 'むずかしい', color: '#ff3366', genSpeed: 15 }
+};
+
+// ===== CANVAS SIZING =====
+function getCellSize() {
+    const maxW = Math.min(window.innerWidth * 0.9, 600);
+    const maxH = Math.min(window.innerHeight * 0.55, 600);
+    return Math.floor(Math.min(maxW / cols, maxH / rows));
+}
+
+// ===== ANIMATED MAZE GENERATION (iterative backtracking with visual steps) =====
+// Based on the blog post approach: step-by-step DFS with timer callbacks
+
+let genPosX = 1;   // current carving row (maze array index)
+let genPosY = 1;   // current carving col (maze array index)
+let genMoves = [];  // backtracking stack
+
+function initMazeGrid() {
+    maze = [];
+    for (let i = 0; i < rows; i++) {
+        maze[i] = [];
+        for (let j = 0; j < cols; j++) {
+            maze[i][j] = 1; // all walls
+        }
+    }
+    // Start position open
+    genPosX = 1;
+    genPosY = 1;
+    maze[genPosX][genPosY] = 0;
+    genMoves = [];
+    genMoves.push(genPosY + genPosX * cols);
+}
+
+// One step of the maze generation (carve one cell)
+// Returns true if generation is still in progress, false when done
+function mazeGenStep() {
+    // Find possible directions (2 cells away)
+    let possibleDirections = "";
+
+    // South (row+2)
+    if (genPosX + 2 > 0 && genPosX + 2 < rows - 1 && maze[genPosX + 2][genPosY] === 1) {
+        possibleDirections += "S";
+    }
+    // North (row-2)
+    if (genPosX - 2 > 0 && genPosX - 2 < rows - 1 && maze[genPosX - 2][genPosY] === 1) {
+        possibleDirections += "N";
+    }
+    // West (col-2)
+    if (genPosY - 2 > 0 && genPosY - 2 < cols - 1 && maze[genPosX][genPosY - 2] === 1) {
+        possibleDirections += "W";
+    }
+    // East (col+2)
+    if (genPosY + 2 > 0 && genPosY + 2 < cols - 1 && maze[genPosX][genPosY + 2] === 1) {
+        possibleDirections += "E";
+    }
+
+    if (possibleDirections.length > 0) {
+        // Pick random direction
+        const moveIdx = Math.floor(Math.random() * possibleDirections.length);
+        const dir = possibleDirections[moveIdx];
+
+        switch (dir) {
+            case "N":
+                maze[genPosX - 2][genPosY] = 0;
+                maze[genPosX - 1][genPosY] = 0;
+                genPosX -= 2;
+                break;
+            case "S":
+                maze[genPosX + 2][genPosY] = 0;
+                maze[genPosX + 1][genPosY] = 0;
+                genPosX += 2;
+                break;
+            case "W":
+                maze[genPosX][genPosY - 2] = 0;
+                maze[genPosX][genPosY - 1] = 0;
+                genPosY -= 2;
+                break;
+            case "E":
+                maze[genPosX][genPosY + 2] = 0;
+                maze[genPosX][genPosY + 1] = 0;
+                genPosY += 2;
+                break;
+        }
+        genMoves.push(genPosY + genPosX * cols);
+        return true; // still generating
+    } else {
+        // Backtrack
+        if (genMoves.length > 0) {
+            const back = genMoves.pop();
+            genPosX = Math.floor(back / cols);
+            genPosY = back % cols;
+            return true; // still backtracking
+        }
+        return false; // done!
+    }
+}
+
+// Draw the maze during generation (with current position highlight)
+function drawMazeGenerating() {
+    const cellSize = getCellSize();
+    canvas.width = cols * cellSize;
+    canvas.height = rows * cellSize;
+
+    const diffColor = DIFFICULTY[currentDifficulty].color;
+
+    // Background
+    ctx.fillStyle = '#0a0a0f';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Draw cells
+    for (let i = 0; i < rows; i++) {
+        for (let j = 0; j < cols; j++) {
+            if (maze[i][j] === 1) {
+                // Wall
+                ctx.fillStyle = '#1a1a2e';
+                ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+                ctx.strokeStyle = 'rgba(0, 255, 200, 0.04)';
+                ctx.lineWidth = 0.5;
+                ctx.strokeRect(j * cellSize, i * cellSize, cellSize, cellSize);
+            } else {
+                // Carved path
+                ctx.fillStyle = '#0d0d18';
+                ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+
+                // Subtle glow on carved path
+                ctx.fillStyle = 'rgba(0, 255, 200, 0.04)';
+                ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+            }
+        }
+    }
+
+    // Draw current carving position with glow
+    const pulse = 0.5 + 0.5 * Math.sin(Date.now() / 150);
+    ctx.shadowColor = diffColor;
+    ctx.shadowBlur = 10 + pulse * 8;
+    ctx.fillStyle = diffColor;
+    ctx.beginPath();
+    ctx.arc(
+        genPosY * cellSize + cellSize / 2,
+        genPosX * cellSize + cellSize / 2,
+        cellSize * 0.35,
+        0, Math.PI * 2
+    );
+    ctx.fill();
+    ctx.shadowBlur = 0;
+}
+
+// Draw the maze during gameplay
+function drawMaze() {
+    const cellSize = getCellSize();
+    canvas.width = cols * cellSize;
+    canvas.height = rows * cellSize;
+
+    const diffColor = DIFFICULTY[currentDifficulty].color;
+
+    // Background
+    ctx.fillStyle = '#0a0a0f';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Draw cells
+    for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+            if (maze[y][x] === 1) {
+                // Wall
+                ctx.fillStyle = '#1a1a2e';
+                ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                ctx.strokeStyle = 'rgba(0, 255, 200, 0.06)';
+                ctx.lineWidth = 0.5;
+                ctx.strokeRect(x * cellSize, y * cellSize, cellSize, cellSize);
+            } else {
+                // Path
+                ctx.fillStyle = '#0d0d18';
+                ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+            }
+        }
+    }
+
+    // Draw trail
+    for (let i = 0; i < trail.length; i++) {
+        const t = trail[i];
+        const alpha = 0.08 + (i / trail.length) * 0.15;
+        ctx.fillStyle = `rgba(0, 255, 200, ${alpha})`;
+        ctx.fillRect(t.x * cellSize + 1, t.y * cellSize + 1, cellSize - 2, cellSize - 2);
+    }
+
+    // Draw goal with pulse
+    const pulse = 0.5 + 0.5 * Math.sin(Date.now() / 300);
+    const goalGlow = Math.floor(10 + pulse * 15);
+
+    ctx.shadowColor = '#ffaa00';
+    ctx.shadowBlur = goalGlow;
+    ctx.fillStyle = `rgba(255, 170, 0, ${0.6 + pulse * 0.4})`;
+    const goalPad = cellSize * 0.15;
+    ctx.beginPath();
+    ctx.arc(
+        goalX * cellSize + cellSize / 2,
+        goalY * cellSize + cellSize / 2,
+        (cellSize - goalPad * 2) / 2,
+        0, Math.PI * 2
+    );
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Draw player
+    ctx.shadowColor = diffColor;
+    ctx.shadowBlur = 12;
+    ctx.fillStyle = diffColor;
+    const pad = cellSize * 0.12;
+    ctx.beginPath();
+    ctx.arc(
+        playerX * cellSize + cellSize / 2,
+        playerY * cellSize + cellSize / 2,
+        (cellSize - pad * 2) / 2,
+        0, Math.PI * 2
+    );
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Inner glow on player
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.beginPath();
+    ctx.arc(
+        playerX * cellSize + cellSize / 2 - cellSize * 0.08,
+        playerY * cellSize + cellSize / 2 - cellSize * 0.08,
+        (cellSize - pad * 2) / 5,
+        0, Math.PI * 2
+    );
+    ctx.fill();
+}
+
+// ===== ANIMATION LOOPS =====
+let animFrame = null;
+
+function genAnimLoop() {
+    if (!generating) return;
+    drawMazeGenerating();
+    animFrame = requestAnimationFrame(genAnimLoop);
+}
+
+function gameLoop() {
+    drawMaze();
+    if (gameActive) {
+        animFrame = requestAnimationFrame(gameLoop);
+    }
+}
+
+// ===== PLAYER MOVEMENT =====
+function movePlayer(dx, dy) {
+    if (!gameActive) return;
+
+    const nx = playerX + dx;
+    const ny = playerY + dy;
+
+    // Note: maze array is [row][col] = [y][x]
+    if (ny >= 0 && ny < rows && nx >= 0 && nx < cols && maze[ny][nx] === 0) {
+        trail.push({ x: playerX, y: playerY });
+        if (trail.length > rows * cols * 0.3) {
+            trail.shift();
+        }
+
+        playerX = nx;
+        playerY = ny;
+        moveCount++;
+        document.getElementById('moves').textContent = moveCount;
+
+        // Check win
+        if (playerX === goalX && playerY === goalY) {
+            winGame();
+        }
+    }
+}
+
+// ===== KEYBOARD INPUT =====
+document.addEventListener('keydown', (e) => {
+    switch (e.key) {
+        case 'ArrowUp':    case 'w': case 'W': movePlayer(0, -1); e.preventDefault(); break;
+        case 'ArrowDown':  case 's': case 'S': movePlayer(0, 1);  e.preventDefault(); break;
+        case 'ArrowLeft':  case 'a': case 'A': movePlayer(-1, 0); e.preventDefault(); break;
+        case 'ArrowRight': case 'd': case 'D': movePlayer(1, 0);  e.preventDefault(); break;
+    }
+});
+
+// ===== TIMER =====
+function startTimer() {
+    startTime = Date.now();
+    timerInterval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        document.getElementById('timer').textContent = formatTime(elapsed);
+    }, 100);
+}
+
+function stopTimer() {
+    clearInterval(timerInterval);
+}
+
+function formatTime(ms) {
+    const totalSec = Math.floor(ms / 1000);
+    const min = Math.floor(totalSec / 60);
+    const sec = totalSec % 60;
+    return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+}
+
+// ===== GAME FLOW =====
+function startGame(difficulty) {
+    // Clean up any previous state
+    stopTimer();
+    clearInterval(genTimer);
+    if (animFrame) cancelAnimationFrame(animFrame);
+    gameActive = false;
+
+    currentDifficulty = difficulty;
+    const settings = DIFFICULTY[difficulty];
+    rows = settings.rows;
+    cols = settings.cols;
+
+    // Reset game state
+    playerX = 1;
+    playerY = 1;
+    goalX = cols - 2;
+    goalY = rows - 2;
+    moveCount = 0;
+    trail = [];
+
+    // Update UI
+    document.getElementById('moves').textContent = '0';
+    document.getElementById('timer').textContent = '00:00';
+    document.getElementById('diff-display').textContent = settings.name;
+    document.getElementById('diff-display').style.color = settings.color;
+
+    // Switch screens
+    document.getElementById('menu-screen').style.display = 'none';
+    document.getElementById('game-screen').style.display = 'block';
+    document.getElementById('game-screen').style.animation = 'none';
+    void document.getElementById('game-screen').offsetHeight;
+    document.getElementById('game-screen').style.animation = 'fadeSlideIn 0.6s ease-out';
+
+    // Show generating text
+    const genTextEl = document.getElementById('gen-text');
+    genTextEl.classList.remove('hidden');
+
+    // Initialize maze grid (all walls)
+    initMazeGrid();
+
+    // Start animated generation
+    generating = true;
+    genAnimLoop();
+
+    // Step-by-step generation using setInterval
+    // genSpeed = how many steps per interval tick (faster for larger mazes)
+    const stepsPerTick = settings.genSpeed;
+
+    genTimer = setInterval(() => {
+        for (let i = 0; i < stepsPerTick; i++) {
+            const stillGoing = mazeGenStep();
+            if (!stillGoing) {
+                // Maze generation complete!
+                clearInterval(genTimer);
+                generating = false;
+                if (animFrame) cancelAnimationFrame(animFrame);
+
+                // Ensure start and goal are open
+                maze[1][1] = 0;
+                maze[rows - 2][cols - 2] = 0;
+
+                // Hide generating text
+                genTextEl.classList.add('hidden');
+
+                // Brief pause, then start game
+                setTimeout(() => {
+                    gameActive = true;
+                    startTimer();
+                    gameLoop();
+                }, 300);
+
+                return;
+            }
+        }
+    }, 16); // ~60fps tick rate
+}
+
+function winGame() {
+    gameActive = false;
+    stopTimer();
+    if (animFrame) cancelAnimationFrame(animFrame);
+
+    const elapsed = Date.now() - startTime;
+    document.getElementById('clear-time').textContent = formatTime(elapsed);
+    document.getElementById('clear-moves').textContent = `${moveCount} 歩`;
+    document.getElementById('clear-screen').classList.add('show');
+
+    // Final draw
+    drawMaze();
+}
+
+function restartSameDifficulty() {
+    document.getElementById('clear-screen').classList.remove('show');
+    stopTimer();
+    clearInterval(genTimer);
+    generating = false;
+    if (animFrame) cancelAnimationFrame(animFrame);
+    startGame(currentDifficulty);
+}
+
+function backToMenu() {
+    document.getElementById('clear-screen').classList.remove('show');
+    document.getElementById('game-screen').style.display = 'none';
+    document.getElementById('menu-screen').style.display = 'block';
+    document.getElementById('menu-screen').style.animation = 'none';
+    void document.getElementById('menu-screen').offsetHeight;
+    document.getElementById('menu-screen').style.animation = 'fadeSlideIn 0.8s ease-out';
+    stopTimer();
+    clearInterval(genTimer);
+    generating = false;
+    gameActive = false;
+    if (animFrame) cancelAnimationFrame(animFrame);
+}
+</script>
+
+</body>
+</html>
