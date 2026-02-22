@@ -940,9 +940,9 @@
     function startGame() {
       document.getElementById('startScreen').style.display = 'none';
       gameState.isStarted = true;
+      lastUpdateTime = Date.now();
       resetGame();
       createStarfield();
-      // 最初の集団を生成
       createNewFormation();
       requestAnimationFrame(gameLoop);
     }
@@ -1350,7 +1350,7 @@
           }
         } else {
           // 通常のビームは移動する
-          beam.y -= beam.speed * elapsedTime;
+          beam.y -= beam.speed;
           
           // 画面外に出たら削除
           if (beam.y + beam.height < 0) {
@@ -1363,7 +1363,14 @@
         for (let j = enemies.length - 1; j >= 0; j--) {
           const enemy = enemies[j];
           
-          if (checkCollision(beam, enemy)) {
+          const beamHitbox = beam.isSpecial ? beam : {
+            x: beam.x - beam.width / 2,
+            y: beam.y - beam.height,
+            width: beam.width,
+            height: beam.height
+          };
+          
+          if (checkCollision(beamHitbox, enemy)) {
             // 特殊ビームか通常のビームかで処理を変える
             if (beam.isSpecial) {
               // 特殊ビームは敵を即座に破壊
