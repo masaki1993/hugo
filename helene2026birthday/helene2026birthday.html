@@ -1,0 +1,1511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Helene — Edition N° 32 · April 2026</title>
+<meta name="description" content="A small magazine for a big year. Happy 32nd Birthday, Helene.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,700;0,6..96,900;1,6..96,400;1,6..96,700;1,6..96,900&family=Caveat:wght@400;500;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700;0,9..144,900;1,9..144,500;1,9..144,700&display=swap" rel="stylesheet">
+
+<link rel="preload" as="image" href="S__6996032_0.jpg">
+
+<style>
+:root {
+  --paper:        #f1e6d0;
+  --paper-2:      #e9dcc1;
+  --paper-deep:   #d8c8a4;
+  --ink:          #1a1411;
+  --ink-soft:     #4a3d33;
+  --burgundy:     #7c2723;
+  --burgundy-deep:#4a1715;
+  --gold:         #b08540;
+  --gold-light:   #d4ae6f;
+  --sage:         #6b7758;
+  --max-w:        1320px;
+  --gutter:       clamp(20px, 4vw, 60px);
+}
+
+*,
+*::before,
+*::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "EB Garamond", Georgia, "Times New Roman", serif;
+  font-size: 18px;
+  line-height: 1.65;
+  overflow-x: hidden;
+  position: relative;
+  font-feature-settings: "kern", "liga", "onum";
+  -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background:
+    radial-gradient(ellipse at 50% 0%,   rgba(180,138,80,0.10), transparent 70%),
+    radial-gradient(ellipse at 50% 100%, rgba(124,39,35,0.07), transparent 60%);
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.08;
+  mix-blend-mode: multiply;
+  z-index: 999;
+  background-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+
+img { display: block; max-width: 100%; height: auto; }
+
+.eyebrow {
+  font-family: "EB Garamond", serif;
+  text-transform: uppercase;
+  letter-spacing: 0.32em;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--burgundy);
+}
+
+.wrap {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding-left: var(--gutter);
+  padding-right: var(--gutter);
+  position: relative;
+  z-index: 2;
+}
+
+section { position: relative; z-index: 2; }
+
+/* progress */
+.progress {
+  position: fixed;
+  top: 0; left: 0;
+  height: 3px;
+  background: var(--burgundy);
+  width: 0%;
+  z-index: 60;
+  transition: width 0.1s linear;
+}
+
+/* ===== TOP BAR ===== */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 16px var(--gutter);
+  background: rgba(241, 230, 208, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(26,20,17,0.10);
+  font-size: 11px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.topbar > :nth-child(2) {
+  font-family: "Bodoni Moda", serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--burgundy);
+}
+.topbar > :last-child { text-align: right; }
+
+@media (max-width: 640px) {
+  .topbar { grid-template-columns: 1fr; text-align: center; gap: 4px; }
+  .topbar > :last-child { text-align: center; }
+}
+
+/* ===== HERO ===== */
+.hero {
+  padding: 70px 0 100px;
+  position: relative;
+}
+.hero .stamp {
+  position: absolute;
+  top: 90px;
+  right: var(--gutter);
+  border: 1.5px solid var(--burgundy);
+  padding: 10px 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.28em;
+  font-size: 11px;
+  color: var(--burgundy);
+  transform: rotate(8deg);
+  border-radius: 2px;
+  z-index: 5;
+  background: rgba(241,230,208,0.4);
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: 60px;
+  align-items: end;
+}
+
+.hero h1 {
+  font-family: "Fraunces", serif;
+  font-variation-settings: "opsz" 144, "SOFT" 100;
+  font-weight: 900;
+  font-size: clamp(72px, 13vw, 220px);
+  line-height: 0.86;
+  letter-spacing: -0.045em;
+  margin-top: 18px;
+}
+.hero h1 .it {
+  font-family: "Bodoni Moda", serif;
+  font-style: italic;
+  font-weight: 700;
+  display: inline-block;
+}
+.hero h1 .name {
+  display: block;
+  color: var(--burgundy);
+}
+
+.hero .subtitle {
+  margin-top: 36px;
+  font-family: "Bodoni Moda", serif;
+  font-style: italic;
+  font-size: clamp(18px, 1.6vw, 22px);
+  color: var(--ink-soft);
+  max-width: 36ch;
+}
+
+.hero .meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 36px;
+  margin-top: 36px;
+  font-size: 11px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.hero .meta strong {
+  display: block;
+  font-family: "Bodoni Moda", serif;
+   font-style: italic;
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink);
+  margin-top: 4px;
+}
+
+.hero-photo {
+  position: relative;
+  aspect-ratio: 3/4;
+  border-radius: 3px;
+  overflow: hidden;
+  box-shadow:
+    0 30px 80px rgba(26,20,17,0.22),
+    0 4px 14px rgba(26,20,17,0.10);
+}
+.hero-photo img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  filter: contrast(1.05) saturate(0.92) sepia(0.05);
+}
+.hero-photo .badge {
+  position: absolute;
+  bottom: 14px;
+  left: 14px;
+  background: var(--paper);
+  padding: 6px 10px;
+  font-size: 10px;
+  letter-spacing: 0.32em;
+  color: var(--burgundy);
+  text-transform: uppercase;
+}
+
+/* ===== MARQUEE ===== */
+.marquee {
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+  overflow: hidden;
+  padding: 16px 0;
+  position: relative;
+  z-index: 3;
+}
+.marquee-track {
+  display: flex;
+  gap: 56px;
+  white-space: nowrap;
+  font-family: "Bodoni Moda", serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: clamp(20px, 2.6vw, 30px);
+  animation: marquee 38s linear infinite;
+  width: max-content;
+}
+.marquee-track > span { display: inline-flex; align-items: center; gap: 56px; }
+.marquee-track .dot {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: var(--gold);
+  display: inline-block;
+}
+@keyframes marquee {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* ===== LETTER ===== */
+.letter {
+  padding: 110px 0;
+  border-bottom: 1px solid rgba(26,20,17,0.12);
+}
+.letter-grid {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 60px;
+  align-items: start;
+}
+.letter .side {
+  font-family: "Bodoni Moda", serif;
+  font-style: italic;
+  font-size: 13px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--burgundy);
+}
+.letter .side .num {
+  display: block;
+  font-size: 64px;
+  letter-spacing: 0;
+  margin-top: 6px;
+  color: var(--burgundy);
+  line-height: 1;
+}
+.letter h2 {
+  font-family: "Fraunces", serif;
+  font-weight: 700;
+  font-size: clamp(34px, 5vw, 64px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  margin-bottom: 36px;
+}
+.letter h2 em {
+  font-family: "Bodoni Moda", serif;
+  font-style: italic;
+  font-weight: 700;
+  color: var(--burgundy);
+}
+.letter p {
+  font-size: 19px;
+  line-height: 1.85;
+  color: var(--ink-soft);
+  max-width: 56ch;
+}
+.letter p + p { margin-top: 1em; }
+.letter .dropcap::first-letter {
+  font-family: "Bodoni Moda", serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: 5em;
+  float: left;
+  line-height: 0.82;
+  margin: 0.08em 0.12em 0 0;
+  color: var(--burgundy);
+}
+.letter .signoff {
+  margin-top: 42px;
+  font-family: "Caveat", cursive;
+  font-size: 30px;
+  color: var(--ink);
+}
+
+/* ===== CHAPTERS (GIFTS) ===== */
+.chapters {
+  padding: 110px 0;
+  border-bottom: 1px solid rgba(26,20,17,0.12);
+}
+.chapters .heading {
+  margin-bottom: 80px;
+  text-align: center;
+}
+.chapters .heading h2 {
+  font-family: "Fraunces", serif;
+  font-weight: 900;
+  font-size: clamp(56px, 9vw, 120px);
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  margin-top: 18px;
+}
+.chapters .heading em {
+  font-family: "Bodoni Moda", serif;
+  font-style: italic;
+  font-weight: 700;
+  color: var(--burgundy);
+}
+
+.chapter {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 70px;
+  align-items: center;
+  padding: 70px 0;
+  border-top: 1px solid rgba(26,20,17,0.18);
+}
+.chapter:last-child { border-bottom: 1px solid rgba(26,20,17,0.18); }
+.chapter:nth-child(even) .chapter-photo { order: 2; }
+.chapter:nth-child(even) .chapter-text  { order: 1; }
+
+.chapter-photo {
+  position: relative;
+  aspect-ratio: 4/5;
+  background: #fffaf0;
+  padding: 18px 18px 60px;
+  box-shadow: 0 24px 50px rgba(26,20,17,0.16);
+  transform: rotate(-1.5deg);
+  transition: transform 0.6s cubic-bezier(.2,.8,.2,1);
+}
+.chapter:nth-child(even) .chapter-photo { transform: rotate(1.5deg); }
+.chapter-photo:hover { transform: rotate(0) scale(1.01); }
+
+.chapter-photo img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  filter: contrast(1.05) saturate(0.92);
+}
+.chapter-photo .caption {
+  position: absolute;
+  bottom: 18px; left: 0; right: 0;
+  text-align: center;
+  font-family: "Caveat", cursive;
+  font-size: 24px;
+  color: var(--ink);
+}
+
+/* Aladdin poster: keep full artwork visible, blend with poster's own purple */
+.aladdin-photo {
+  background: #3a1d6b;
+}
+.aladdin-photo img {
+  object-fit: contain !important;
+  filter: none !important;
+}
+.aladdin-photo .caption {
+  color: #f0d97a;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+}
+
+/* Ristorante ASO: landscape composition, deep dusk-forest matte */
+.aso-photo {
+  aspect-ratio: 16/11;
+  background: #1c2018;
+}
+.aso-photo img {
+  object-fit: contain !important;
+  filter: contrast(1.05) saturate(1.02);
+}
+.aso-photo .caption {
+  color: #d4ae6f;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+}
+
+/* Mayumi's coffee: landscape, deep roasted-bean matte */
+.coffee-photo {
+  aspect-ratio: 5/4;
+  background: #2b1d12;
+}
+.coffee-photo img {
+  filter: contrast(1.06) saturate(1.04);
+}
+.coffee-photo .caption {
+  color: #e6c89a;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+
+.chapter-text .num {
+  font-family: "Bodoni Moda", serif;
+  font-style: italic;
+  font-size: clamp(64px, 9vw, 110px);
+  font-weight: 900;
+  color: var(--burgundy);
+  line-height: 1;
+  margin-bottom: 18px;
+}
+.chapter-text .label {
+  font-size: 11px;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 18px;
+}
+.chapter-text h3 {
+  font-family: "Fraunces", serif;
+  font-weight: 700;
+  font-size: clamp(34px, 4.4vw, 56px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  margin-bottom: 14px;
+}
+.chapter-text h3 em {
+  font-family: "Bodoni Moda", serif;
+  font-style: italic;
+  color: var(--burgundy);
+}
+.chapter-text .date-pill {
+  display: inline-block;
+  margin: 18px 0;
+  padding: 8px 18px;
+  background: var(--burgundy);
+  color: var(--paper);
+  font-family: "Bodoni Moda", serif;
+  font-style: italic;
+  font-size: 14px;
+  letter-spacing: 0.05em;
+  border-radius: 100px;
+}
+.chapter-text p {
+  font-size: 18px;
+  line-height: 1.75;
+  color: var(--ink-soft);
+  max-width: 50ch;
+}
+
+/* ===== AUDIO NOTE (voice memo) ===== */
+.audio-note {
+  position: relative;
+  margin-top: 30px;
+  padding: 20px 22px 18px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  max-width: 460px;
+  background:
+    linear-gradient(180deg, rgba(255,250,240,0.65), rgba(255,250,240,0.35));
+  border: 1px solid rgba(124,39,35,0.22);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,250,240,0.4),
+    0 14px 30px -18px rgba(26,20,17,0.35);
+  border-radius: 2px;
+}
+
+.audio-note__label {
+  position: absolute;
+  top: -9px;
+  left: 22px;
+  padding: 0 10px;
+  background: var(--paper);
+  font-family: "Bodoni Moda", serif;
+  font-style: italic;
+  font-size: 10px;
+  letter-spacing: 0.36em;
+  text-transform: uppercase;
+  color: var(--burgundy);
+}
+
+.audio-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--burgundy);
+  border: none;
+  color: var(--paper);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+  transition: background 0.3s ease, transform 0.3s cubic-bezier(.2,.8,.2,1);
+  box-shadow:
+    0 6px 14px -4px rgba(124,39,35,0.55),
+    inset 0 1px 0 rgba(255,255,255,0.18);
+}
+.audio-btn::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border: 1px solid rgba(124,39,35,0.35);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.audio-btn:hover {
+  background: var(--burgundy-deep);
+  transform: scale(1.04);
+}
+.audio-btn:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 4px;
+}
+.audio-btn svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+  display: block;
+}
+.audio-btn .icon-pause { display: none; }
+.audio-btn.is-playing .icon-play  { display: none; }
+.audio-btn.is-playing .icon-pause { display: block; }
+
+.audio-meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.audio-title {
+  font-family: "Bodoni Moda", serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 15px;
+  color: var(--ink);
+  letter-spacing: 0.005em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.audio-bar {
+  position: relative;
+  height: 3px;
+  background: rgba(26,20,17,0.14);
+  border-radius: 2px;
+  overflow: hidden;
+  cursor: pointer;
+}
+.audio-progress {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0%;
+  background: linear-gradient(90deg, var(--gold) 0%, var(--gold-light) 100%);
+  transition: width 0.12s linear;
+}
+.audio-progress::after {
+  content: "";
+  position: absolute;
+  right: -4px;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  background: var(--gold);
+  border-radius: 50%;
+  transform: translateY(-50%);
+  box-shadow: 0 0 0 2px var(--paper);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.audio-note:hover .audio-progress::after,
+.audio-btn.is-playing ~ .audio-meta .audio-progress::after {
+  opacity: 1;
+}
+.audio-time {
+  font-family: "Bodoni Moda", serif;
+  font-style: italic;
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+}
+.audio-time .sep {
+  margin: 0 4px;
+  color: rgba(26,20,17,0.4);
+}
+
+@media (max-width: 600px) {
+  .audio-note { padding: 18px 16px 16px; gap: 14px; }
+  .audio-btn  { width: 42px; height: 42px; }
+  .audio-title { font-size: 14px; }
+}
+
+/* ===== MOSAIC (Album) ===== */
+.mosaic {
+  padding: 120px 0 70px;
+}
+.mosaic .heading {
+  text-align: center;
+  margin-bottom: 60px;
+}
+.mosaic .heading h2 {
+  font-family: "Bodoni Moda", serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: clamp(40px, 6vw, 80px);
+  margin-top: 14px;
+  letter-spacing: -0.01em;
+}
+.mosaic .heading h2 em {
+  color: var(--burgundy);
+}
+
+.mosaic-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-auto-rows: 92px;
+  gap: 14px;
+}
+.mosaic-grid .item {
+  overflow: hidden;
+  position: relative;
+  border-radius: 2px;
+  background: var(--paper-2);
+}
+.mosaic-grid img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  filter: contrast(1.04) saturate(0.95);
+  transition: transform 0.6s ease, filter 0.5s ease;
+}
+.mosaic-grid .item:hover img {
+  transform: scale(1.06);
+  filter: contrast(1.1) saturate(1.05);
+}
+
+/* Editorial mosaic — fully tiled, 12 cols × 10 rows */
+.m-1  { grid-column:  1 /  7; grid-row:  1 /  6; }   /* hero feature, 6×5 */
+.m-2  { grid-column:  7 / 10; grid-row:  1 /  4; }   /* square 3×3 */
+.m-3  { grid-column: 10 / 13; grid-row:  1 /  4; }   /* square 3×3 */
+.m-4  { grid-column:  7 / 13; grid-row:  4 /  6; }   /* wide banner 6×2 */
+.m-5  { grid-column:  1 /  4; grid-row:  6 / 11; }   /* portrait 3×5 */
+.m-6  { grid-column:  4 / 10; grid-row:  6 /  9; }   /* landscape 6×3 */
+.m-7  { grid-column: 10 / 13; grid-row:  6 /  9; }   /* square 3×3 */
+.m-8  { grid-column:  4 /  7; grid-row:  9 / 11; }   /* landscape 3×2 */
+.m-9  { grid-column:  7 / 10; grid-row:  9 / 11; }   /* landscape 3×2 */
+.m-10 { grid-column: 10 / 13; grid-row:  9 / 11; }   /* landscape 3×2 */
+
+/* ===== POLAROIDS ===== */
+.polaroids {
+  padding: 110px 0 130px;
+  background: var(--paper-2);
+  border-top: 1px solid rgba(26,20,17,0.10);
+  border-bottom: 1px solid rgba(26,20,17,0.10);
+  position: relative;
+}
+.polaroids .heading {
+  text-align: center;
+  margin-bottom: 70px;
+}
+.polaroids .heading h2 {
+  font-family: "Caveat", cursive;
+  font-size: clamp(56px, 8vw, 100px);
+  color: var(--burgundy);
+  font-weight: 700;
+  line-height: 1;
+}
+.polaroid-scatter {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 50px 30px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.polaroid {
+  background: #fffaf0;
+  padding: 14px 14px 54px;
+  box-shadow: 0 18px 38px rgba(26,20,17,0.18);
+  position: relative;
+  transition: transform 0.5s cubic-bezier(.2,.8,.2,1);
+  will-change: transform;
+}
+.polaroid:nth-child(1) { transform: rotate(-3.2deg); }
+.polaroid:nth-child(2) { transform: rotate(2.4deg) translateY(22px); }
+.polaroid:nth-child(3) { transform: rotate(-1.6deg); }
+.polaroid:nth-child(4) { transform: rotate(2.8deg); }
+.polaroid:nth-child(5) { transform: rotate(-2.1deg) translateY(16px); }
+.polaroid:nth-child(6) { transform: rotate(1.2deg); }
+.polaroid:nth-child(7) { transform: rotate(-2.6deg); }
+.polaroid:nth-child(8) { transform: rotate(1.9deg) translateY(10px); }
+.polaroid:nth-child(9) { transform: rotate(-1.3deg); }
+.polaroid:hover {
+  transform: rotate(0) scale(1.05) !important;
+  z-index: 5;
+}
+.polaroid img {
+  width: 100%;
+  aspect-ratio: 4/5;
+  object-fit: cover;
+  filter: contrast(1.05) saturate(0.92) sepia(0.05);
+}
+.polaroid .cap {
+  position: absolute;
+  bottom: 14px; left: 0; right: 0;
+  text-align: center;
+  font-family: "Caveat", cursive;
+  font-size: 22px;
+  color: var(--ink);
+}
+
+/* ===== TOTO'S LETTER (No 03) ===== */
+.toto-letter {
+  padding: 130px 0 140px;
+  background:
+    linear-gradient(180deg, var(--paper) 0%, var(--paper-2) 100%);
+  border-bottom: 1px solid rgba(26,20,17,0.12);
+  position: relative;
+}
+.toto-letter .card {
+  max-width: 660px;
+  margin: 0 auto;
+  background: #fffaf0;
+  padding: 80px 64px 72px;
+  box-shadow:
+    0 30px 70px rgba(26,20,17,0.20),
+    0 8px 18px rgba(26,20,17,0.08);
+  position: relative;
+  transform: rotate(-0.8deg);
+  transition: transform 0.6s cubic-bezier(.2,.8,.2,1);
+}
+.toto-letter .card:hover { transform: rotate(0); }
+
+.toto-letter .card::before {
+  content: "";
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  width: 110px;
+  height: 26px;
+  transform: translateX(-50%) rotate(-3deg);
+  background: rgba(176,133,64,0.35);
+  box-shadow: 0 2px 6px rgba(26,20,17,0.08);
+}
+
+.toto-letter .stamp {
+  position: absolute;
+  top: 26px;
+  right: 26px;
+  font-family: "Bodoni Moda", serif;
+  font-style: italic;
+  font-size: 10px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--burgundy);
+  border: 1px solid var(--burgundy);
+  padding: 5px 10px;
+  border-radius: 2px;
+  transform: rotate(7deg);
+  background: rgba(255,250,240,0.6);
+}
+
+.toto-letter .head {
+  text-align: center;
+  margin-bottom: 36px;
+}
+.toto-letter h3 {
+  font-family: "Caveat", cursive;
+  font-size: clamp(38px, 5vw, 58px);
+  color: var(--burgundy);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.005em;
+}
+.toto-letter .from {
+  font-family: "Bodoni Moda", serif;
+  font-style: italic;
+  font-size: 11px;
+  letter-spacing: 0.36em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-top: 10px;
+}
+
+.toto-letter p {
+  font-family: "EB Garamond", serif;
+  font-size: 18px;
+  line-height: 1.85;
+  color: var(--ink);
+  margin-bottom: 1em;
+}
+.toto-letter p.dropcap-personal::first-letter {
+  font-family: "Bodoni Moda", serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: 4.2em;
+  float: left;
+  line-height: 0.84;
+  margin: 0.05em 0.12em 0 0;
+  color: var(--burgundy);
+}
+
+.toto-letter .sign {
+  margin-top: 36px;
+  text-align: right;
+  font-family: "Caveat", cursive;
+  font-size: clamp(34px, 3.4vw, 42px);
+  color: var(--burgundy);
+  line-height: 1.15;
+}
+.toto-letter .ps {
+  margin-top: 28px;
+  text-align: right;
+  font-family: "EB Garamond", serif;
+  font-style: italic;
+  font-size: 15px;
+  color: var(--ink-soft);
+}
+.toto-letter .byline {
+  margin-top: 16px;
+  text-align: right;
+  font-family: "Bodoni Moda", serif;
+  font-style: italic;
+  font-size: 10px;
+  letter-spacing: 0.36em;
+  text-transform: uppercase;
+  color: rgba(26,20,17,0.4);
+}
+
+@media (max-width: 700px) {
+  .toto-letter { padding: 80px 0 100px; }
+  .toto-letter .card { padding: 64px 28px 52px; }
+  .toto-letter .stamp { top: 16px; right: 16px; transform: rotate(7deg) scale(0.9); }
+}
+
+/* ===== CINEMA ===== */
+.cinema {
+  position: relative;
+  height: clamp(540px, 90vh, 820px);
+  overflow: hidden;
+  display: grid;
+  align-items: end;
+}
+.cinema .bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+.cinema .bg img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  filter: brightness(0.62) contrast(1.1) saturate(0.85);
+  transform: scale(1.05);
+}
+.cinema::after {
+  content: "";
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(180deg,
+      rgba(0,0,0,0.35) 0%,
+      transparent 30%,
+      transparent 55%,
+      rgba(0,0,0,0.75) 100%);
+  z-index: 1;
+}
+.cinema .content {
+  position: relative;
+  z-index: 2;
+  padding: 80px var(--gutter);
+  color: var(--paper);
+  max-width: var(--max-w);
+  margin: 0 auto;
+  width: 100%;
+}
+.cinema .eyebrow { color: var(--gold-light); }
+.cinema h2 {
+  font-family: "Bodoni Moda", serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: clamp(44px, 7.5vw, 110px);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  max-width: 16ch;
+  margin-top: 14px;
+}
+.cinema h2 em {
+  color: var(--gold-light);
+  font-style: italic;
+}
+.cinema .small {
+  margin-top: 28px;
+  font-family: "Caveat", cursive;
+  font-size: 28px;
+  color: var(--gold-light);
+}
+
+/* ===== QUOTE ===== */
+.quote {
+  padding: 130px 0;
+  text-align: center;
+}
+.quote blockquote {
+  font-family: "Fraunces", serif;
+  font-weight: 500;
+  font-size: clamp(30px, 4.4vw, 60px);
+  line-height: 1.18;
+  letter-spacing: -0.01em;
+  max-width: 18ch;
+  margin: 0 auto;
+}
+.quote blockquote em {
+  font-family: "Bodoni Moda", serif;
+  font-style: italic;
+  font-weight: 700;
+  color: var(--burgundy);
+}
+.quote cite {
+  display: block;
+  margin-top: 40px;
+  font-style: normal;
+  font-size: 11px;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+/* ===== CLOSING ===== */
+.closing {
+  padding: 60px 0 120px;
+}
+.closing-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+.closing-grid img {
+  width: 100%;
+  aspect-ratio: 1/1;
+  object-fit: cover;
+  filter: contrast(1.04) saturate(0.92);
+  transition: filter 0.45s ease, transform 0.45s ease;
+  border-radius: 2px;
+}
+.closing-grid img:hover {
+  filter: none;
+  transform: scale(1.025);
+}
+
+/* ===== FOOTER ===== */
+.foot {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 110px var(--gutter) 80px;
+  text-align: center;
+  position: relative;
+}
+.foot h2 {
+  font-family: "Fraunces", serif;
+  font-weight: 700;
+  font-size: clamp(40px, 6vw, 80px);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+}
+.foot h2 em {
+  font-family: "Bodoni Moda", serif;
+  font-style: italic;
+  color: var(--gold-light);
+}
+.foot .hr {
+  width: 90px; height: 1px;
+  background: var(--gold);
+  margin: 40px auto;
+}
+.foot p {
+  font-size: 18px;
+  color: rgba(241,230,208,0.8);
+  max-width: 50ch;
+  margin: 0 auto;
+  line-height: 1.85;
+}
+.signatures {
+  display: flex;
+  justify-content: center;
+  gap: clamp(34px, 6vw, 80px);
+  margin-top: 70px;
+  flex-wrap: wrap;
+}
+.signatures .sig {
+  font-family: "Caveat", cursive;
+  font-size: clamp(34px, 4vw, 44px);
+  color: var(--gold-light);
+  transform: rotate(-3deg);
+}
+.signatures .sig:nth-child(2) { transform: rotate(2deg); }
+.signatures .sig:nth-child(3) { transform: rotate(-1deg); }
+.foot .date-final {
+  margin-top: 70px;
+  font-family: "Bodoni Moda", serif;
+  font-style: italic;
+  font-size: 12px;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: rgba(241,230,208,0.55);
+}
+
+/* ===== ANIMATIONS ===== */
+.reveal {
+  opacity: 0;
+  transform: translateY(34px);
+  transition:
+    opacity 1.2s cubic-bezier(.2,.8,.2,1),
+    transform 1.2s cubic-bezier(.2,.8,.2,1);
+}
+.reveal.in {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-stagger > * {
+  opacity: 0;
+  transform: translateY(22px);
+  transition:
+    opacity 1s cubic-bezier(.2,.8,.2,1),
+    transform 1s cubic-bezier(.2,.8,.2,1);
+  transition-delay: calc(var(--i, 0) * 70ms);
+}
+.reveal-stagger.in > * {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .reveal, .reveal-stagger > * { opacity: 1; transform: none; }
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 980px) {
+  .hero-grid     { grid-template-columns: 1fr; gap: 40px; }
+  .hero h1       { font-size: clamp(64px, 17vw, 140px); }
+  .hero .stamp   { top: 20px; right: 16px; transform: rotate(8deg) scale(0.85); }
+  .letter-grid   { grid-template-columns: 1fr; gap: 24px; }
+  .chapter       { grid-template-columns: 1fr; gap: 36px; padding: 50px 0; }
+  .chapter:nth-child(even) .chapter-photo { order: 1; }
+  .chapter:nth-child(even) .chapter-text  { order: 2; }
+  .mosaic-grid {
+    grid-template-columns: 1fr 1fr;
+    grid-auto-rows: minmax(180px, 1fr);
+    gap: 12px;
+  }
+  .mosaic-grid .item {
+    grid-column: auto !important;
+    grid-row:    auto !important;
+  }
+  .mosaic-grid .m-1 {
+    grid-column: 1 / -1 !important;
+    grid-row: span 2 !important;
+  }
+  .polaroid-scatter { grid-template-columns: repeat(2, 1fr); gap: 36px 18px; }
+  .closing-grid  { grid-template-columns: repeat(4, 1fr); gap: 10px; }
+}
+
+@media (max-width: 600px) {
+  body { font-size: 17px; }
+  .closing-grid     { grid-template-columns: repeat(2, 1fr); }
+  .polaroid-scatter { grid-template-columns: 1fr; max-width: 320px; gap: 30px; }
+  .chapter-text .num { font-size: 64px; }
+  .marquee-track { font-size: 18px; gap: 36px; }
+  .marquee-track > span { gap: 36px; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<header class="topbar">
+  <div>Edition N° XXXII</div>
+  <div>Helene</div>
+  <div>April · MMXXVI</div>
+</header>
+
+<!-- ============== HERO ============== -->
+<section class="hero">
+  <div class="wrap">
+    <div class="stamp">29 · IV · 2026</div>
+
+    <div class="hero-grid">
+      <div>
+        <div class="eyebrow reveal">— Limited Birthday Edition —</div>
+
+        <h1>
+          <span class="reveal">Hap<span class="it">py</span></span><br>
+          <span class="reveal" style="transition-delay:.15s">Birth<span class="it">day,</span></span><br>
+          <span class="reveal name" style="transition-delay:.30s"><span class="it">Helene.</span></span>
+        </h1>
+
+        <p class="subtitle reveal" style="transition-delay:.45s">
+          — A small magazine, for a big year. <br>
+          All our love, in thirty-two little pages.
+        </p>
+
+        <div class="meta reveal" style="transition-delay:.6s">
+          <div>Volume<strong>XXXII</strong></div>
+          <div>Year<strong>2026</strong></div>
+          <div>Edited by<strong>Family</strong></div>
+        </div>
+      </div>
+
+      <div class="hero-photo reveal" style="transition-delay:.3s">
+        <img src="S__6996032_0.jpg" alt="Helene with the family" fetchpriority="high">
+        <div class="badge">Cover · N° 01</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== MARQUEE ============== -->
+<div class="marquee" aria-hidden="true">
+  <div class="marquee-track">
+    <span>Happy Birthday Helene <span class="dot"></span></span>
+    <span>32 Beautiful Years <span class="dot"></span></span>
+    <span>With All Our Love <span class="dot"></span></span>
+    <span>Toto · Hugo · Luca <span class="dot"></span></span>
+    <span>Happy Birthday Helene <span class="dot"></span></span>
+    <span>32 Beautiful Years <span class="dot"></span></span>
+    <span>With All Our Love <span class="dot"></span></span>
+    <span>Toto · Hugo · Luca <span class="dot"></span></span>
+  </div>
+</div>
+
+<!-- ============== LETTER ============== -->
+<section class="letter">
+  <div class="wrap">
+    <div class="letter-grid">
+      <div class="side">
+        — Letter —
+        <span class="num">02</span>
+      </div>
+
+      <div class="reveal">
+        <h2>To the woman who makes <em>every day</em> feel like home.</h2>
+
+        <p class="dropcap">Maman, happy birthday. The four of us — every one of us — feel so lucky to be sharing this day with you again. Your kindness, your warmth, the small bursts of laughter that slip out when you least expect them: they are what hold our every day together.</p>
+
+        <p>May your thirty-second year be filled, from morning to night, with every "thank you" and every "I love you" the world can hold — the best one yet.</p>
+
+        <div class="signoff">— with all our love.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== CHAPTERS / GIFTS ============== -->
+<section class="chapters">
+  <div class="wrap">
+
+    <div class="heading reveal">
+      <div class="eyebrow">— Three Gifts · Three Chapters —</div>
+      <h2>Three <em>little</em><br>surprises.</h2>
+    </div>
+
+    <article class="chapter">
+      <div class="chapter-photo aso-photo reveal">
+        <img src="aso.png" alt="Ristorante ASO — Daikanyama" loading="lazy">
+        <div class="caption">— a special evening —</div>
+      </div>
+      <div class="chapter-text reveal">
+        <div class="num">I.</div>
+        <div class="label">— From Toto —</div>
+        <h3>Ristorante <em>ASO.</em></h3>
+        <span class="date-pill">— April 29, 2026 —</span>
+        <p>An evening saved just for the two of you — slow, quiet, ours. On a small hill in Daikanyama, where time will hold its breath.</p>
+      </div>
+    </article>
+
+    <article class="chapter">
+      <div class="chapter-photo aladdin-photo reveal">
+        <img src="aladdin.png" alt="Disney Aladdin — The Hit Broadway Musical" loading="lazy">
+        <div class="caption">— a whole new world —</div>
+      </div>
+      <div class="chapter-text reveal">
+        <div class="num">II.</div>
+        <div class="label">— From Hugo —</div>
+        <h3>Aladdin, <em>the musical.</em></h3>
+        <span class="date-pill">— 2026年6月20日 (土) · 夜 —</span>
+        <p>The four of us, side by side, watching Aladdin together. A whole new world — and a day we'll keep, glowing, forever.</p>
+
+        <figure class="audio-note">
+          <span class="audio-note__label">— Voice memo · From Hugo —</span>
+          <button type="button" class="audio-btn" aria-label="Play voice memo from Hugo">
+            <svg class="icon-play"  viewBox="0 0 24 24" aria-hidden="true"><polygon points="6,4 20,12 6,20"/></svg>
+            <svg class="icon-pause" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="5" height="16" rx="0.5"/><rect x="14" y="4" width="5" height="16" rx="0.5"/></svg>
+          </button>
+          <div class="audio-meta">
+            <div class="audio-title">— a whole new world —</div>
+            <div class="audio-bar"><div class="audio-progress"></div></div>
+            <div class="audio-time">
+              <span class="audio-current">0:00</span>
+              <span class="sep">/</span>
+              <span class="audio-duration">—:—</span>
+            </div>
+          </div>
+          <audio preload="metadata" src="39%2C%20Higashiyurigaoka%202-Ch%C5%8Dme%203.m4a"></audio>
+        </figure>
+      </div>
+    </article>
+
+    <article class="chapter">
+      <div class="chapter-photo coffee-photo reveal">
+        <img src="coffee.png" alt="Mayumi's coffee" loading="lazy">
+        <div class="caption">— quiet mornings —</div>
+      </div>
+      <div class="chapter-text reveal">
+        <div class="num">III.</div>
+        <div class="label">— From Luca —</div>
+        <h3>Mayumi's <em>coffee.</em></h3>
+        <span class="date-pill">— Everyday Ritual —</span>
+        <p>Slow mornings, wrapped in a deep, familiar aroma. May this be the small ritual that lets your shoulders soften, and lets you breathe.</p>
+
+        <figure class="audio-note">
+          <span class="audio-note__label">— Voice memo · From Luca —</span>
+          <button type="button" class="audio-btn" aria-label="Play voice memo from Luca">
+            <svg class="icon-play"  viewBox="0 0 24 24" aria-hidden="true"><polygon points="6,4 20,12 6,20"/></svg>
+            <svg class="icon-pause" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="5" height="16" rx="0.5"/><rect x="14" y="4" width="5" height="16" rx="0.5"/></svg>
+          </button>
+          <div class="audio-meta">
+            <div class="audio-title">— quiet mornings —</div>
+            <div class="audio-bar"><div class="audio-progress"></div></div>
+            <div class="audio-time">
+              <span class="audio-current">0:00</span>
+              <span class="sep">/</span>
+              <span class="audio-duration">—:—</span>
+            </div>
+          </div>
+          <audio preload="metadata" src="39%2C%20Higashiyurigaoka%202-Ch%C5%8Dme%202.m4a"></audio>
+        </figure>
+      </div>
+    </article>
+
+  </div>
+</section>
+
+<!-- ============== MOSAIC / ALBUM ============== -->
+<section class="mosaic">
+  <div class="wrap">
+
+    <div class="heading reveal">
+      <div class="eyebrow">— Album —</div>
+      <h2>A year, in <em>moments.</em></h2>
+    </div>
+
+    <div class="mosaic-grid reveal-stagger">
+      <div class="item m-1"  style="--i:1"><img src="S__6996006_0.jpg" alt="" loading="lazy"></div>
+      <div class="item m-2"  style="--i:2"><img src="S__6996007_0.jpg" alt="" loading="lazy"></div>
+      <div class="item m-3"  style="--i:3"><img src="S__6996008_0.jpg" alt="" loading="lazy"></div>
+      <div class="item m-4"  style="--i:4"><img src="S__6996012_0.jpg" alt="" loading="lazy"></div>
+      <div class="item m-5"  style="--i:5"><img src="S__6996013_0.jpg" alt="" loading="lazy"></div>
+      <div class="item m-6"  style="--i:6"><img src="S__6996014_0.jpg" alt="" loading="lazy"></div>
+      <div class="item m-7"  style="--i:7"><img src="S__6996017_0.jpg" alt="" loading="lazy"></div>
+      <div class="item m-8"  style="--i:8"><img src="S__6996018_0.jpg" alt="" loading="lazy"></div>
+      <div class="item m-9"  style="--i:9"><img src="S__6996019_0.jpg" alt="" loading="lazy"></div>
+      <div class="item m-10" style="--i:10"><img src="S__6996020_0.jpg" alt="" loading="lazy"></div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============== POLAROIDS ============== -->
+<section class="polaroids">
+  <div class="wrap">
+    <div class="heading reveal">
+      <div class="eyebrow">— Memories Pinned —</div>
+      <h2>polaroids.</h2>
+    </div>
+
+    <div class="polaroid-scatter reveal-stagger">
+      <div class="polaroid" style="--i:1"><img src="S__6996021_0.jpg" alt="" loading="lazy"><div class="cap">smile :)</div></div>
+      <div class="polaroid" style="--i:2"><img src="S__6996022_0.jpg" alt="" loading="lazy"><div class="cap">our days</div></div>
+      <div class="polaroid" style="--i:3"><img src="S__6996023_0.jpg" alt="" loading="lazy"><div class="cap">together</div></div>
+      <div class="polaroid" style="--i:4"><img src="S__6996024_0.jpg" alt="" loading="lazy"><div class="cap">family</div></div>
+      <div class="polaroid" style="--i:5"><img src="S__6996025_0.jpg" alt="" loading="lazy"><div class="cap">love.</div></div>
+      <div class="polaroid" style="--i:6"><img src="S__6996027_0.jpg" alt="" loading="lazy"><div class="cap">always</div></div>
+      <div class="polaroid" style="--i:7"><img src="S__6996028_0.jpg" alt="" loading="lazy"><div class="cap">forever</div></div>
+      <div class="polaroid" style="--i:8"><img src="S__6996029_0.jpg" alt="" loading="lazy"><div class="cap">home</div></div>
+      <div class="polaroid" style="--i:9"><img src="S__6996030_0.jpg" alt="" loading="lazy"><div class="cap">us four</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== TOTO'S LETTER (Nº 03) ============== -->
+<section class="toto-letter">
+  <div class="wrap">
+    <div class="card reveal">
+      <div class="stamp">29 · IV · 2026</div>
+
+      <div class="head">
+        <h3>A note for my Helene.</h3>
+        <div class="from">— Letter Nº 03 · From Toto —</div>
+      </div>
+
+      <p class="dropcap-personal">My dearest Helene — what a year it has been. Truly, what a beautiful, full, joyful year. We did so many things together, didn't we?</p>
+
+      <p>Belgium was wonderful. Disneyland was wonderful. Wandering through Belgium with you — every small street, every small moment — was just as wonderful.</p>
+
+      <p>And then Mayu and Papu came all the way to Japan, and we got to show them so many of the places we love. We watched a quiet pile of movies, just the two of us, just the four of us. And this was the year your friends finally made it to Japan too — the house full of laughter we hadn't heard in too long.</p>
+
+      <p>I'm certain — between all of us — we made more happy memories this year than in any year before it. Thank you. For everything. For all of it.</p>
+
+      <div class="sign">— with all my love,<br>your Toto.</div>
+
+      <div class="ps">P.S. Happy thirty-second, mon amour.</div>
+      <div class="byline">— written by Yujiro —</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== CINEMA ============== -->
+<section class="cinema">
+  <div class="bg">
+    <img src="S__6996016_0.jpg" alt="" loading="lazy">
+  </div>
+  <div class="content">
+    <div class="eyebrow reveal">— A Year of Light —</div>
+    <h2 class="reveal" style="transition-delay:.15s">
+      Here's to the year<br>
+      that's <em>only just</em> begun.
+    </h2>
+    <div class="small reveal" style="transition-delay:.3s">— with love, your family —</div>
+  </div>
+</section>
+
+<!-- ============== QUOTE ============== -->
+<section class="quote">
+  <div class="wrap">
+    <blockquote class="reveal">
+      "<em>The best</em><br>is still <em>to come.</em>"
+    </blockquote>
+    <cite class="reveal" style="transition-delay:.2s">— for Helene, with love —</cite>
+  </div>
+</section>
+
+<!-- ============== CLOSING GRID ============== -->
+<section class="closing">
+  <div class="wrap">
+    <div class="closing-grid reveal-stagger">
+      <img style="--i:1"  src="S__6996031_0.jpg" alt="" loading="lazy">
+      <img style="--i:2"  src="S__6996005_0.jpg" alt="" loading="lazy">
+      <img style="--i:3"  src="S__6996033_0.jpg" alt="" loading="lazy">
+      <img style="--i:4"  src="S__6996034_0.jpg" alt="" loading="lazy">
+      <img style="--i:5"  src="S__6996035_0.jpg" alt="" loading="lazy">
+      <img style="--i:6"  src="S__6996036_0.jpg" alt="" loading="lazy">
+      <img style="--i:7"  src="S__6996038_0.jpg" alt="" loading="lazy">
+      <img style="--i:8"  src="S__6996039_0.jpg" alt="" loading="lazy">
+      <img style="--i:9"  src="S__6996009_0.jpg" alt="" loading="lazy">
+      <img style="--i:10" src="S__6996010_0.jpg" alt="" loading="lazy">
+      <img style="--i:11" src="S__6996011_0.jpg" alt="" loading="lazy">
+    </div>
+  </div>
+</section>
+
+<!-- ============== FOOTER ============== -->
+<footer class="foot">
+  <h2>The 32nd <em>chapter</em><br>starts <em>now.</em></h2>
+  <div class="hr" aria-hidden="true"></div>
+  <p>
+    Here's to laughing, to crying, to every warm and ordinary day — all of it, together.<br>
+    May your thirty-second year be the happiest one we've shared so far.
+  </p>
+  <div class="signatures" aria-label="signatures">
+    <div class="sig">Toto</div>
+    <div class="sig">Hugo</div>
+    <div class="sig">Luka</div>
+  </div>
+  <div class="date-final">— Edition N° XXXII · April 29, 2026 · with love —</div>
+</footer>
+
+<script>
+  // === Progress bar ===
+  const progress = document.getElementById('progress');
+  function updateProgress() {
+    const h = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = h > 0 ? (window.scrollY / h) * 100 : 0;
+    progress.style.width = pct + '%';
+  }
+  window.addEventListener('scroll', updateProgress, { passive: true });
+  updateProgress();
+
+  // === Reveal on scroll ===
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((e) => {
+      if (e.isIntersecting) {
+        e.target.classList.add('in');
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+
+  document.querySelectorAll('.reveal, .reveal-stagger').forEach((el) => io.observe(el));
+
+  // === Audio notes (voice memos) ===
+  const fmtTime = (s) => {
+    if (!isFinite(s) || s < 0) return '—:—';
+    const m = Math.floor(s / 60);
+    const r = Math.floor(s % 60);
+    return m + ':' + String(r).padStart(2, '0');
+  };
+
+  const audioNotes = document.querySelectorAll('.audio-note');
+  audioNotes.forEach((note) => {
+    const audio    = note.querySelector('audio');
+    const btn      = note.querySelector('.audio-btn');
+    const bar      = note.querySelector('.audio-bar');
+    const progress = note.querySelector('.audio-progress');
+    const cur      = note.querySelector('.audio-current');
+    const dur      = note.querySelector('.audio-duration');
+    if (!audio || !btn) return;
+
+    audio.addEventListener('loadedmetadata', () => {
+      dur.textContent = fmtTime(audio.duration);
+    });
+
+    audio.addEventListener('timeupdate', () => {
+      cur.textContent = fmtTime(audio.currentTime);
+      const pct = audio.duration ? (audio.currentTime / audio.duration) * 100 : 0;
+      progress.style.width = pct + '%';
+    });
+
+    audio.addEventListener('ended', () => {
+      btn.classList.remove('is-playing');
+      btn.setAttribute('aria-label', btn.getAttribute('aria-label').replace('Pause', 'Play'));
+      progress.style.width = '0%';
+      cur.textContent = '0:00';
+    });
+
+    btn.addEventListener('click', () => {
+      audioNotes.forEach((other) => {
+        if (other === note) return;
+        const a = other.querySelector('audio');
+        const b = other.querySelector('.audio-btn');
+        if (a && !a.paused) {
+          a.pause();
+          b.classList.remove('is-playing');
+        }
+      });
+
+      if (audio.paused) {
+        audio.play();
+        btn.classList.add('is-playing');
+        btn.setAttribute('aria-label', btn.getAttribute('aria-label').replace('Play', 'Pause'));
+      } else {
+        audio.pause();
+        btn.classList.remove('is-playing');
+        btn.setAttribute('aria-label', btn.getAttribute('aria-label').replace('Pause', 'Play'));
+      }
+    });
+
+    bar.addEventListener('click', (e) => {
+      if (!isFinite(audio.duration)) return;
+      const rect = bar.getBoundingClientRect();
+      const pct  = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+      audio.currentTime = pct * audio.duration;
+    });
+  });
+</script>
+
+</body>
+</html>
