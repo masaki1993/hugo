@@ -112,10 +112,10 @@
   /* Stage select */
   .stage-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
     gap: 14px;
     margin: 18px 0 10px;
-    max-width: 640px;
+    max-width: 720px;
     width: 100%;
   }
   .stage-card {
@@ -229,51 +229,52 @@
     box-shadow: 0 0 10px rgba(255, 211, 58, .6);
   }
   .math-progress-text {
-    font-family: "Press Start 2P", "Courier New", monospace;
-    font-size: 11px;
+    font-family: "Fredoka", "Hiragino Maru Gothic ProN", "Yu Gothic", system-ui, sans-serif;
+    font-size: clamp(13px, 2.6vw, 16px);
+    font-weight: 700;
     color: #fff;
-    margin-top: 8px;
-    letter-spacing: 1px;
-    text-shadow: 1px 1px 0 #000;
+    margin-top: 10px;
+    letter-spacing: 0.06em;
+    text-shadow: 0 1px 2px #000;
   }
   .math-question {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: clamp(8px, 1.6vw, 16px);
+    gap: clamp(12px, 2.2vw, 22px);
     flex-wrap: wrap;
-    padding: clamp(18px, 2.4vw, 28px) clamp(16px, 2.4vw, 28px);
-    background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(0,0,0,.45));
+    padding: clamp(22px, 3vw, 34px) clamp(18px, 2.8vw, 32px);
+    background: linear-gradient(180deg, rgba(255,255,255,.14), rgba(0,0,0,.38));
     border: 4px solid #fff;
     border-radius: 20px;
     box-shadow:
       0 8px 0 rgba(0,0,0,.45),
       0 14px 32px rgba(0,0,0,.5),
-      inset 0 0 0 2px rgba(255,255,255,.15);
+      inset 0 0 0 2px rgba(255,255,255,.2);
     font-family: "Fredoka", "M PLUS Rounded 1c", "Hiragino Maru Gothic ProN",
                  "Yu Gothic", system-ui, sans-serif;
     user-select: none;
     width: 100%;
-    max-width: 460px;
+    max-width: 520px;
   }
   .math-question .num,
   .math-question .qmark {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 1.4em;
-    padding: 6px 14px 8px;
+    min-width: 1.35em;
+    padding: 10px 18px 12px;
     background: #fff;
-    color: #1a1a1a;
-    border-radius: 14px;
+    color: #0d0d0d;
+    border-radius: 16px;
     border: 4px solid #1a1a1a;
-    font-size: clamp(44px, 8vw, 76px);
+    font-size: clamp(52px, 10vw, 96px);
     font-weight: 700;
     line-height: 1;
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum";
-    letter-spacing: 0;
-    box-shadow: 0 5px 0 rgba(0,0,0,.55);
+    letter-spacing: 0.02em;
+    box-shadow: 0 6px 0 rgba(0,0,0,.5);
     text-shadow: none;
   }
   .math-question .qmark {
@@ -289,12 +290,12 @@
   }
   .math-question .op,
   .math-question .eq {
-    font-size: clamp(38px, 6.8vw, 68px);
+    font-size: clamp(44px, 8vw, 80px);
     font-weight: 700;
     line-height: 1;
     color: #fff;
-    text-shadow: 2px 2px 0 #000, 4px 4px 0 rgba(0,0,0,.45);
-    padding: 0 2px;
+    text-shadow: 1px 1px 0 #000, 2px 2px 0 rgba(0,0,0,.5);
+    padding: 0 4px;
   }
   .math-question .op.minus { color: #ff8c8c; }
   .math-question .op.plus  { color: #88f088; }
@@ -312,10 +313,11 @@
     display: flex; gap: 10px; align-items: stretch;
   }
   .math-input-row input {
-    font-family: "Press Start 2P", "Courier New", monospace;
-    font-size: 22px;
-    padding: 10px 14px;
-    width: 150px;
+    font-family: "Fredoka", "Hiragino Maru Gothic ProN", "Yu Gothic", system-ui, sans-serif;
+    font-size: clamp(26px, 5vw, 34px);
+    font-weight: 700;
+    padding: 12px 16px;
+    width: clamp(140px, 38vw, 180px);
     border: 3px solid #fff;
     border-radius: 8px;
     background: #fff;
@@ -340,19 +342,22 @@
     font-size: 14px;
   }
   .math-feedback {
-    font-family: "Press Start 2P", "Courier New", monospace;
-    font-size: 14px;
-    min-height: 24px;
-    letter-spacing: 1px;
+    font-family: "Fredoka", "Hiragino Maru Gothic ProN", "Yu Gothic", system-ui, sans-serif;
+    font-size: clamp(16px, 3.2vw, 20px);
+    font-weight: 700;
+    min-height: 2.6em;
+    letter-spacing: 0.04em;
     text-align: center;
-    line-height: 1.4;
+    line-height: 1.45;
+    max-width: 100%;
+    padding: 0 8px;
   }
-  .math-feedback.correct { color: #6cf76c; text-shadow: 2px 2px 0 #1f6b1f, 4px 4px 0 #000; }
-  .math-feedback.wrong   { color: #ff8c8c; text-shadow: 2px 2px 0 #6e0000, 4px 4px 0 #000; }
+  .math-feedback.correct { color: #b8ffb8; text-shadow: 0 1px 2px #000, 0 0 12px rgba(108,247,108,.45); }
+  .math-feedback.wrong   { color: #ffc4c4; text-shadow: 0 1px 2px #000, 0 0 10px rgba(255,80,80,.35); }
   .math-feedback.celebrate {
     color: #ffd33a;
-    font-size: 20px;
-    text-shadow: 3px 3px 0 #b8860b, 6px 6px 0 #000;
+    font-size: clamp(18px, 3.5vw, 22px);
+    text-shadow: 0 1px 2px #000, 0 0 14px rgba(255, 211, 58, .4);
     animation: math-bounce 0.6s ease-in-out infinite alternate;
   }
   @keyframes math-bounce {
@@ -361,11 +366,14 @@
   }
   .math-quiz-content .math-stats {
     display: flex; gap: 18px;
-    font-family: "Press Start 2P", "Courier New", monospace;
-    font-size: 11px;
+    flex-wrap: wrap;
+    justify-content: center;
+    font-family: "Fredoka", "Hiragino Maru Gothic ProN", "Yu Gothic", system-ui, sans-serif;
+    font-size: clamp(12px, 2.4vw, 15px);
+    font-weight: 700;
     color: #fff;
-    text-shadow: 1px 1px 0 #000;
-    letter-spacing: 1px;
+    text-shadow: 0 1px 2px #000;
+    letter-spacing: 0.04em;
   }
   .math-quiz-content .math-stats .ok { color: #6cf76c; }
   .math-quiz-content .math-stats .ng { color: #ff8c8c; }
@@ -567,7 +575,7 @@
             <button id="mathSubmit">こたえる</button>
           </div>
 
-          <div class="math-feedback" id="mathFeedback">&nbsp;</div>
+          <div class="math-feedback" id="mathFeedback" role="status" aria-live="polite" aria-atomic="true">&nbsp;</div>
 
           <div class="math-stats">
             <span class="ok">⭕ せいかい <span id="mathOkCount">0</span></span>
@@ -896,12 +904,275 @@
   }
 
   // ====================================================================
+  // STAGE 1-4 : PIPE LINE — rhythm jumps between pipes, no early ambush
+  // ====================================================================
+  function buildStage4() {
+    const { grid, set, setRow, placePipe, placeFlag, finalize } = newGrid();
+    const pits = [[34, 3], [88, 4], [152, 3]];
+    for (let x = 0; x < LEVEL_W; x++) {
+      const inPit = pits.some(p => x >= p[0] && x < p[0] + p[1]);
+      if (!inPit) {
+        grid[11][x] = 'G'; grid[12][x] = 'X'; grid[13][x] = 'X';
+      }
+    }
+    setRow(8, 31, 'B');
+    setRow(7, 32, 'BB');
+    setRow(8, 86, 'B');
+    setRow(7, 87, 'BB?');
+    setRow(8, 150, 'B');
+    setRow(7, 151, 'BBB');
+
+    placePipe(18, 2);
+    placePipe(45, 3);
+    placePipe(62, 2);
+    placePipe(100, 2);
+    placePipe(118, 3);
+    placePipe(145, 2);
+    placePipe(165, 2);
+
+    setRow(6, 24, '?B?');
+    setRow(7, 52, 'BB?BB');
+    setRow(5, 108, 'BBB');
+    setRow(7, 132, '?M?');
+    setRow(6, 168, 'BB?BB');
+
+    [
+      [4, 25], [4, 27],
+      [5, 53], [5, 55],
+      [4, 109], [4, 111],
+      [5, 133], [5, 135],
+      [4, 169], [4, 171],
+    ].forEach(([y, x]) => set(y, x, 'c'));
+
+    [28, 52, 72, 108, 128, 155].forEach(x => set(GROUND_ROW - 1, x, 'g'));
+    [95, 172].forEach(x => set(GROUND_ROW - 1, x, 'k'));
+
+    placeFlag(192);
+    return finalize();
+  }
+
+  // ====================================================================
+  // STAGE 1-5 : CANOPY — layered branches, mushroom before a blind jump
+  // ====================================================================
+  function buildStage5() {
+    const { grid, set, setRow, placePipe, placeFlag, finalize } = newGrid();
+    const pits = [[115, 3]];
+    for (let x = 0; x < LEVEL_W; x++) {
+      const inPit = pits.some(p => x >= p[0] && x < p[0] + p[1]);
+      if (!inPit) {
+        grid[11][x] = 'G'; grid[12][x] = 'X'; grid[13][x] = 'X';
+      }
+    }
+    setRow(8, 112, 'B');
+    setRow(7, 113, 'BBB');
+    setRow(8, 119, 'B');
+
+    setRow(9, 14, 'BBB');
+    setRow(8, 22, 'BB?');
+    setRow(7, 30, 'BBBB');
+    setRow(6, 40, 'BB?B');
+    setRow(8, 50, 'BBBB');
+    setRow(7, 60, 'BB?M?');
+    setRow(5, 72, 'BBB');
+    setRow(8, 82, 'BBBB');
+    setRow(6, 92, 'BB?BB');
+    setRow(8, 104, 'BBBB');
+    setRow(7, 126, 'BBBBB');
+    setRow(6, 138, 'BB?B?BB');
+    setRow(8, 152, 'BBBB');
+    setRow(7, 164, '?M?');
+    setRow(8, 176, 'BB?BB');
+
+    placePipe(8, 2);
+    placePipe(175, 2);
+
+    [
+      [6, 15], [6, 16],
+      [5, 23], [5, 25],
+      [4, 41], [4, 43],
+      [5, 61], [5, 63], [5, 65],
+      [4, 93], [4, 95],
+      [5, 127], [5, 129],
+      [4, 139], [4, 141],
+      [5, 153], [5, 155],
+    ].forEach(([y, x]) => set(y, x, 'c'));
+
+    [18, 48, 88, 130, 158, 182].forEach(x => set(GROUND_ROW - 1, x, 'g'));
+    [105, 170].forEach(x => set(GROUND_ROW - 1, x, 'k'));
+
+    placeFlag(192);
+    return finalize();
+  }
+
+  // ====================================================================
+  // STAGE 1-6 : STEP PIT — coin trails over many short gaps
+  // ====================================================================
+  function buildStage6() {
+    const { grid, set, setRow, placePipe, placeFlag, finalize } = newGrid();
+    const pits = [[28, 2], [48, 2], [72, 3], [98, 2], [124, 3], [148, 2], [168, 4]];
+    for (let x = 0; x < LEVEL_W; x++) {
+      const inPit = pits.some(p => x >= p[0] && x < p[0] + p[1]);
+      if (!inPit) {
+        grid[11][x] = 'G'; grid[12][x] = 'X'; grid[13][x] = 'X';
+      }
+    }
+    setRow(8, 26, 'B');
+    setRow(8, 46, 'BB');
+    setRow(8, 71, 'B');
+    setRow(7, 72, 'B');
+    setRow(8, 96, 'B');
+    setRow(8, 122, 'BB');
+    setRow(8, 147, 'B');
+    setRow(7, 148, 'B');
+    setRow(8, 167, 'BBB');
+
+    setRow(7, 12, 'BB?BB');
+    setRow(5, 86, 'BBB');
+    setRow(7, 136, '?B?');
+    setRow(6, 156, 'BBBB');
+    setRow(7, 178, 'BB?M?BB');
+
+    placePipe(38, 2);
+    placePipe(110, 3);
+    placePipe(188, 2);
+
+    [
+      [6, 13], [6, 15],
+      [4, 29], [4, 30],
+      [4, 49], [4, 50],
+      [4, 73], [4, 74], [4, 75],
+      [4, 99], [4, 100],
+      [4, 125], [4, 126], [4, 127],
+      [4, 149], [4, 150],
+      [4, 169], [4, 170], [4, 171],
+      [5, 87], [5, 88],
+      [5, 137], [5, 139],
+    ].forEach(([y, x]) => set(y, x, 'c'));
+
+    [8, 34, 58, 92, 118, 142, 162, 184].forEach(x => set(GROUND_ROW - 1, x, 'g'));
+    [76, 132].forEach(x => set(GROUND_ROW - 1, x, 'k'));
+
+    placeFlag(192);
+    return finalize();
+  }
+
+  // ====================================================================
+  // STAGE 2-1 : SKY BRIDGE — longer sight-lines, one cruel gap with bailout
+  // ====================================================================
+  function buildStage7() {
+    const { grid, set, setRow, placePipe, placeFlag, finalize } = newGrid();
+    for (let x = 0; x <= 14; x++) {
+      grid[11][x] = 'G'; grid[12][x] = 'X'; grid[13][x] = 'X';
+    }
+    for (let x = 178; x < LEVEL_W; x++) {
+      grid[11][x] = 'G'; grid[12][x] = 'X'; grid[13][x] = 'X';
+    }
+
+    setRow(9, 18, 'BBBB');
+    setRow(8, 28, 'BB?B');
+    setRow(9, 38, 'BBBB');
+    setRow(7, 48, 'BB?M?');
+    setRow(8, 60, 'BBBBB');
+    setRow(6, 74, 'BBBB');
+    setRow(8, 86, 'BB?BB');
+    setRow(9, 98, 'BBBB');
+    setRow(7, 110, 'BBBBB');
+    setRow(8, 124, 'BB?B?BB');
+    setRow(9, 140, 'BBBB');
+    setRow(8, 152, 'BBBB');
+    setRow(7, 162, '?M?');
+    setRow(8, 170, 'BB?BB');
+
+    placePipe(184, 2);
+
+    [
+      [6, 19], [6, 21], [6, 23],
+      [5, 29], [5, 31],
+      [6, 39], [6, 41],
+      [5, 49], [5, 51], [5, 53],
+      [4, 61], [4, 63], [4, 65],
+      [5, 87], [5, 89],
+      [4, 111], [4, 113], [4, 115],
+      [5, 125], [5, 127],
+      [5, 153], [5, 155],
+      [5, 163], [5, 165],
+    ].forEach(([y, x]) => set(y, x, 'c'));
+
+    set(7 - 1, 62, 'g');
+    set(8 - 1, 100, 'k');
+    set(7 - 1, 142, 'g');
+    set(8 - 1, 158, 'k');
+
+    placeFlag(192);
+    return finalize();
+  }
+
+  // ====================================================================
+  // STAGE 2-2 : DARK KEEP — castle gauntlet, ceiling strips, tight pipes
+  // ====================================================================
+  function buildStage8() {
+    const { grid, set, setRow, placePipe, placeFlag, finalize } = newGrid();
+    const pits = [[44, 4], [102, 5], [158, 4]];
+    for (let x = 0; x < LEVEL_W; x++) {
+      const inPit = pits.some(p => x >= p[0] && x < p[0] + p[1]);
+      if (!inPit) {
+        grid[11][x] = 'G'; grid[12][x] = 'X'; grid[13][x] = 'X';
+      }
+    }
+    setRow(8, 41, 'B');
+    setRow(7, 42, 'BB');
+    setRow(8, 99, 'BB');
+    setRow(7, 101, 'B');
+    setRow(8, 155, 'BBB');
+
+    setRow(4, 24, 'BBBBBB');
+    setRow(4, 70, 'BBBB');
+    setRow(4, 118, 'BBBBBB');
+    setRow(4, 170, 'BBBB');
+
+    setRow(7, 12, '?M?');
+    setRow(7, 54, 'BB?BB');
+    setRow(6, 78, 'BBB');
+    setRow(7, 130, 'BB?B?BB');
+    setRow(5, 144, 'BBB');
+    setRow(7, 176, 'BB?M?BB');
+
+    placePipe(18, 2);
+    placePipe(32, 4);
+    placePipe(58, 2);
+    placePipe(88, 3);
+    placePipe(122, 2);
+    placePipe(138, 3);
+    placePipe(168, 2);
+    placePipe(186, 2);
+
+    [
+      [3, 25], [3, 27],
+      [3, 71], [3, 73],
+      [3, 119], [3, 121],
+      [3, 103], [3, 104],
+      [4, 145], [4, 146],
+    ].forEach(([y, x]) => set(y, x, 'c'));
+
+    [22, 36, 66, 95, 112, 150, 162, 180].forEach(x => set(GROUND_ROW - 1, x, 'g'));
+    [48, 82, 128, 172].forEach(x => set(GROUND_ROW - 1, x, 'k'));
+
+    placeFlag(192);
+    return finalize();
+  }
+
+  // ====================================================================
   // STAGE REGISTRY
   // ====================================================================
   const STAGES = [
     { id: '1-1', name: 'GREEN HILL', desc: 'はじまりの草原',     theme: 'overworld', build: buildStage1 },
     { id: '1-2', name: 'SKY HIGH',   desc: '空中アスレチック',   theme: 'sky',       build: buildStage2 },
     { id: '1-3', name: 'CASTLE',     desc: 'クッパじょう…！？', theme: 'castle',    build: buildStage3 },
+    { id: '1-4', name: 'PIPE LINE',  desc: 'パイプのリズム',     theme: 'overworld', build: buildStage4 },
+    { id: '1-5', name: 'CANOPY',     desc: 'きのえだコース',     theme: 'overworld', build: buildStage5 },
+    { id: '1-6', name: 'STEP PIT',   desc: 'あしばとコイン',     theme: 'overworld', build: buildStage6 },
+    { id: '2-1', name: 'SKY BRIDGE', desc: 'ながいきょり',       theme: 'sky',       build: buildStage7 },
+    { id: '2-2', name: 'DARK KEEP',  desc: 'てんじょうに注意',   theme: 'castle',    build: buildStage8 },
   ];
 
   let currentStage = 0;
@@ -967,6 +1238,33 @@
     walkPhase: 0,
   };
 
+  /** Push goombas / koopas (and stopped shells) out of the spawn box so respawn cannot overlap a shell. */
+  function ejectHostilesFromSpawnZone() {
+    const pad = 22;
+    const zoneHit = (e) =>
+      player.x - pad < e.x + e.w && player.x + player.w + pad > e.x &&
+      player.y - pad < e.y + e.h && player.y + player.h + pad > e.y;
+
+    for (const e of entities) {
+      if (!e.alive || (e.type !== 'goomba' && e.type !== 'koopa')) continue;
+      if (e.type === 'goomba' && e.deadTimer > 0) continue;
+      if (!zoneHit(e)) continue;
+      e.shellMoving = false;
+      let guard = 0;
+      while (zoneHit(e) && guard++ < 80) {
+        e.x += TILE * 0.5;
+      }
+      if (e.type === 'koopa' && e.shell) {
+        e.shell = false;
+        e.shellTimer = 0;
+        e.h = 32;
+        e.y -= 8;
+      }
+      if (e.type === 'goomba') e.vx = -0.6;
+      else if (e.type === 'koopa') e.vx = -0.5;
+    }
+  }
+
   function resetPlayer() {
     player.x = 64; player.y = (LEVEL_H - 4) * TILE;
     player.vx = 0; player.vy = 0;
@@ -974,12 +1272,13 @@
     player.big = false;
     player.w = SMALL_W; player.h = SMALL_H;
     player.growAnim = 0;
-    player.invuln = 0;
+    player.invuln = 90;
     player.deadTimer = 0;
     player.runFrame = 0;
     player.coyote = 0;
     player.jumpBuf = 0;
     player.jumpHold = 0;
+    ejectHostilesFromSpawnZone();
   }
 
   // ===== Camera =====
@@ -1426,20 +1725,13 @@
       }, 500);
     } else {
       mathWrong++;
-      fb.innerHTML = `❌ ちがうよ！ こたえは <b>${p.answer}</b>`;
+      fb.innerHTML = 'ちがうよ！<br><span style="font-size:0.92em;opacity:0.95">このもんだいを せいかいするまで もういちど いれてみて</span>';
       fb.className = 'math-feedback wrong';
       if (sfx && sfx.hurt) sfx.hurt();
       document.getElementById('mathNgCount').textContent = mathWrong;
-
-      mathLockInput = true;
-      inp.disabled = true;
-      setTimeout(() => {
-        mathLockInput = false;
-        mathCurrent = genMathProblem(mathCharacter);
-        renderMathQuestion();
-        fb.textContent = 'つぎの もんだい！';
-        fb.className = 'math-feedback';
-      }, 1500);
+      inp.value = '';
+      inp.disabled = false;
+      inp.focus();
     }
   }
 
