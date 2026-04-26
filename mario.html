@@ -532,9 +532,9 @@
 
     <div id="gameover" class="overlay" style="display:none;">
       <h1>GAME OVER</h1>
-      <div class="sub" id="gameoverSub">もういちど プレイするには さんすう 10もん せいかい！</div>
+      <div class="sub" id="gameoverSub">もういちど チャレンジ してね</div>
       <div class="actions-row">
-        <button id="retryBtn">さんすう チャレンジ</button>
+        <button id="retryBtn">もういちど プレイ</button>
         <button id="goSelectBtn" class="secondary">ステージセレクト</button>
       </div>
     </div>
@@ -542,7 +542,7 @@
     <div id="mathQuiz" class="overlay" style="display:none;">
       <div class="math-quiz-content">
         <h1 id="mathTitle">さんすう チャレンジ</h1>
-        <div class="sub" id="mathSub">10もん せいかい したら<br>もういちど あそべるよ！</div>
+        <div class="sub" id="mathSub">10もん せいかい したら<br>つぎのステージへ すすめるよ！</div>
 
         <div id="mathCharSelect" class="math-char-select">
           <div class="math-char-prompt">だれと チャレンジ する？</div>
@@ -1544,6 +1544,8 @@
     document.getElementById('title').style.display = 'none';
     document.getElementById('gameover').style.display = 'none';
     document.getElementById('clear').style.display = 'none';
+    document.getElementById('mathQuiz').style.display = 'none';
+    mathQuizForStageAdvance = false;
     ensureAudio();
     if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
     startBGM();
@@ -1554,6 +1556,8 @@
     state = STATE.TITLE;
     document.getElementById('gameover').style.display = 'none';
     document.getElementById('clear').style.display = 'none';
+    document.getElementById('mathQuiz').style.display = 'none';
+    mathQuizForStageAdvance = false;
     document.getElementById('title').style.display = 'flex';
     renderStageSelect();
     // Reload current stage tiles so the title screen background looks fresh
@@ -1576,7 +1580,7 @@
     const subEl = document.getElementById('gameoverSub');
     subEl.innerHTML =
       `スコア ${String(score).padStart(6,'0')} ／ コイン ${coins}<br>` +
-      `<span style="color:#ffd33a;">もういちど プレイするには<br>さんすう 10もん せいかい！</span>`;
+      `<span style="color:#ffd33a;">もういちど プレイ してね</span>`;
     document.getElementById('gameover').style.display = 'flex';
   }
 
@@ -1587,6 +1591,8 @@
   let mathCurrent = null;     // { a, b, op, answer }
   let mathLockInput = false;  // brief lock between questions
   let mathCharacter = null;   // 'hugo' | 'luca'
+  /** When true, finishing the quiz reveals the stage-clear overlay (next stage locked until then). */
+  let mathQuizForStageAdvance = false;
 
   function genMathProblem(character) {
     if (character === 'luca') {
@@ -1617,7 +1623,8 @@
     document.getElementById('mathFeedback').textContent = '\u00A0';
     document.getElementById('mathFeedback').className = 'math-feedback';
     document.getElementById('mathTitle').textContent = 'さんすう チャレンジ';
-    document.getElementById('mathSub').innerHTML = '10もん せいかい したら<br>もういちど あそべるよ！';
+    document.getElementById('mathSub').innerHTML =
+      '10もん せいかい したら<br><span style="color:#ffd33a">つぎのステージ</span>へ いけるよ！';
 
     // Show character selection first; hide quiz body until a character is chosen.
     document.getElementById('mathCharSelect').style.display = 'flex';
@@ -1629,14 +1636,13 @@
   function selectMathCharacter(char) {
     mathCharacter = char;
     const subEl = document.getElementById('mathSub');
+    const tail = '10もん せいかい したら <span style="color:#ffd33a">つぎのステージ</span>へ！';
     if (char === 'hugo') {
       subEl.innerHTML =
-        '<span style="color:#ff8c8c;">Hugo</span> モード ・ 2けた − 2けた<br>' +
-        '10もん せいかい したら もういちど あそべるよ！';
+        '<span style="color:#ff8c8c;">Hugo</span> モード ・ 2けた − 2けた<br>' + tail;
     } else {
       subEl.innerHTML =
-        '<span style="color:#ffd33a;">Luca</span> モード ・ 1けた ＋ 1けた<br>' +
-        '10もん せいかい したら もういちど あそべるよ！';
+        '<span style="color:#ffd33a;">Luca</span> モード ・ 1けた ＋ 1けた<br>' + tail;
     }
     document.getElementById('mathCharSelect').style.display = 'none';
     document.getElementById('mathQuizBody').style.display = 'flex';
@@ -1745,9 +1751,17 @@
     qEl.textContent = '✨ NICE! ✨';
     document.getElementById('mathInputRow').style.display = 'none';
     const fb = document.getElementById('mathFeedback');
-    fb.textContent = 'もういちど プレイ できるよ！';
+    fb.textContent = 'ステージクリアがめんへ すすもう！';
     fb.className = 'math-feedback celebrate';
-    document.getElementById('mathClearActions').style.display = 'flex';
+    document.getElementById('mathClearActions').style.display = 'none';
+
+    setTimeout(() => {
+      hideMathQuiz();
+      clearAnimT = 0;
+      state = STATE.CLEAR;
+      mathQuizForStageAdvance = false;
+      document.getElementById('clear').style.display = 'flex';
+    }, 1400);
   }
 
   function hideMathQuiz() {
@@ -1779,7 +1793,8 @@
       nextBtn.textContent = `つぎへ ▶ ${next.id} ${next.name}`;
     }
     setTimeout(() => {
-      document.getElementById('clear').style.display = 'flex';
+      mathQuizForStageAdvance = true;
+      startMathQuiz();
     }, 1500);
   }
 
@@ -2867,8 +2882,7 @@
 
   // ===== Boot =====
   // (No #startBtn anymore — title shows the stage select grid instead.)
-  // After GAME OVER you must clear the math challenge before retrying.
-  document.getElementById('retryBtn').addEventListener('click', startMathQuiz);
+  document.getElementById('retryBtn').addEventListener('click', () => startGame(currentStage));
   document.getElementById('replayBtn').addEventListener('click', () => startGame(currentStage));
   document.getElementById('nextBtn').addEventListener('click', () => {
     const nextIdx = currentStage + 1;
@@ -2897,6 +2911,7 @@
   });
   document.getElementById('mathSelectBtn').addEventListener('click', () => {
     hideMathQuiz();
+    mathQuizForStageAdvance = false;
     showStageSelect();
   });
   // Character selection cards (Hugo / Luca)
