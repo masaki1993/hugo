@@ -198,6 +198,118 @@
   }
   .overlay .reset-progress:hover { color: #fff; border-color: #fff; }
 
+  /* ===== Math quiz ===== */
+  .math-quiz-content {
+    max-width: 480px;
+    width: 100%;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 14px;
+  }
+  .math-progress-wrap {
+    width: 100%;
+    margin-top: 4px;
+  }
+  .math-progress-bar {
+    width: 100%;
+    height: 16px;
+    background: rgba(255,255,255,.15);
+    border: 3px solid #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,.3);
+  }
+  .math-progress-bar > div {
+    height: 100%;
+    background: linear-gradient(to right, #ffd33a, #ff8c2a);
+    width: 0%;
+    transition: width .35s ease-out;
+    box-shadow: 0 0 10px rgba(255, 211, 58, .6);
+  }
+  .math-progress-text {
+    font-family: "Press Start 2P", "Courier New", monospace;
+    font-size: 11px;
+    color: #fff;
+    margin-top: 8px;
+    letter-spacing: 1px;
+    text-shadow: 1px 1px 0 #000;
+  }
+  .math-question {
+    font-family: "Press Start 2P", "Courier New", monospace;
+    font-size: clamp(28px, 5.5vw, 46px);
+    color: #fff;
+    text-shadow:
+      3px 3px 0 #d40000,
+      6px 6px 0 #000;
+    letter-spacing: 4px;
+    padding: 18px 28px;
+    background: rgba(0,0,0,.3);
+    border: 3px solid #fff;
+    border-radius: 12px;
+    box-shadow: 0 6px 0 rgba(0,0,0,.3), 0 10px 24px rgba(0,0,0,.4);
+    user-select: none;
+  }
+  .math-input-row {
+    display: flex; gap: 10px; align-items: stretch;
+  }
+  .math-input-row input {
+    font-family: "Press Start 2P", "Courier New", monospace;
+    font-size: 22px;
+    padding: 10px 14px;
+    width: 150px;
+    border: 3px solid #fff;
+    border-radius: 8px;
+    background: #fff;
+    color: #000;
+    text-align: center;
+    outline: none;
+    box-shadow: 0 6px 0 rgba(0,0,0,.3);
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+  .math-input-row input::-webkit-outer-spin-button,
+  .math-input-row input::-webkit-inner-spin-button {
+    -webkit-appearance: none; margin: 0;
+  }
+  .math-input-row input:focus {
+    border-color: #ffd33a;
+    box-shadow: 0 0 0 3px rgba(255, 211, 58, .35), 0 6px 0 rgba(0,0,0,.3);
+  }
+  .math-input-row button {
+    margin: 0;
+    padding: 10px 18px;
+    font-size: 14px;
+  }
+  .math-feedback {
+    font-family: "Press Start 2P", "Courier New", monospace;
+    font-size: 14px;
+    min-height: 24px;
+    letter-spacing: 1px;
+    text-align: center;
+    line-height: 1.4;
+  }
+  .math-feedback.correct { color: #6cf76c; text-shadow: 2px 2px 0 #1f6b1f, 4px 4px 0 #000; }
+  .math-feedback.wrong   { color: #ff8c8c; text-shadow: 2px 2px 0 #6e0000, 4px 4px 0 #000; }
+  .math-feedback.celebrate {
+    color: #ffd33a;
+    font-size: 20px;
+    text-shadow: 3px 3px 0 #b8860b, 6px 6px 0 #000;
+    animation: math-bounce 0.6s ease-in-out infinite alternate;
+  }
+  @keyframes math-bounce {
+    from { transform: scale(1); }
+    to   { transform: scale(1.08); }
+  }
+  .math-quiz-content .math-stats {
+    display: flex; gap: 18px;
+    font-family: "Press Start 2P", "Courier New", monospace;
+    font-size: 11px;
+    color: #fff;
+    text-shadow: 1px 1px 0 #000;
+    letter-spacing: 1px;
+  }
+  .math-quiz-content .math-stats .ok { color: #6cf76c; }
+  .math-quiz-content .math-stats .ng { color: #ff8c8c; }
+
   /* Touch controls */
   #touch {
     position: absolute; left: 0; right: 0; bottom: 0;
@@ -277,10 +389,41 @@
 
     <div id="gameover" class="overlay" style="display:none;">
       <h1>GAME OVER</h1>
-      <div class="sub" id="gameoverSub">もういちど ちょうせん しよう！</div>
+      <div class="sub" id="gameoverSub">もういちど プレイするには さんすう 10もん せいかい！</div>
       <div class="actions-row">
-        <button id="retryBtn">RETRY</button>
+        <button id="retryBtn">さんすう チャレンジ</button>
         <button id="goSelectBtn" class="secondary">ステージセレクト</button>
+      </div>
+    </div>
+
+    <div id="mathQuiz" class="overlay" style="display:none;">
+      <div class="math-quiz-content">
+        <h1 id="mathTitle">さんすう チャレンジ</h1>
+        <div class="sub" id="mathSub">10もん せいかい したら<br>もういちど あそべるよ！</div>
+
+        <div class="math-progress-wrap">
+          <div class="math-progress-bar"><div id="mathProgressFill"></div></div>
+          <div class="math-progress-text" id="mathProgressText">0 / 10  せいかい</div>
+        </div>
+
+        <div class="math-question" id="mathQuestion">— − — = ?</div>
+
+        <div class="math-input-row" id="mathInputRow">
+          <input id="mathAnswer" type="number" inputmode="numeric" placeholder="?" autocomplete="off" />
+          <button id="mathSubmit">こたえる</button>
+        </div>
+
+        <div class="math-feedback" id="mathFeedback">&nbsp;</div>
+
+        <div class="math-stats">
+          <span class="ok">⭕ せいかい <span id="mathOkCount">0</span></span>
+          <span class="ng">❌ まちがい <span id="mathNgCount">0</span></span>
+        </div>
+
+        <div class="actions-row" id="mathClearActions" style="display:none;">
+          <button id="mathRetryBtn">もういちど プレイ！</button>
+          <button id="mathSelectBtn" class="secondary">ステージセレクト</button>
+        </div>
       </div>
     </div>
 
@@ -688,7 +831,7 @@
   const camera = { x: 0, y: 0 };
 
   // ===== Game state =====
-  const STATE = { TITLE: 'title', PLAY: 'play', DEAD: 'dead', GAMEOVER: 'gameover', CLEAR: 'clear' };
+  const STATE = { TITLE: 'title', PLAY: 'play', DEAD: 'dead', GAMEOVER: 'gameover', CLEAR: 'clear', MATH: 'math' };
   let state = STATE.TITLE;
   let score = 0;
   let coins = 0;
@@ -976,8 +1119,159 @@
   function gameOver() {
     stopBGM();
     state = STATE.GAMEOVER;
-    document.getElementById('gameoverSub').textContent = `スコア ${String(score).padStart(6,'0')} ／ コイン ${coins}`;
+    const subEl = document.getElementById('gameoverSub');
+    subEl.innerHTML =
+      `スコア ${String(score).padStart(6,'0')} ／ コイン ${coins}<br>` +
+      `<span style="color:#ffd33a;">もういちど プレイするには<br>さんすう 10もん せいかい！</span>`;
     document.getElementById('gameover').style.display = 'flex';
+  }
+
+  // ===== Math quiz =====
+  const MATH_QUESTIONS_REQUIRED = 10;
+  let mathCorrect = 0;
+  let mathWrong = 0;
+  let mathCurrent = null;     // { a, b, answer }
+  let mathLockInput = false;  // brief lock between questions
+
+  function genMathProblem() {
+    // 50% chance: 2-digit minus 2-digit (with possible borrowing)
+    // 50% chance: 3-digit minus 2-digit
+    const isThreeDigit = Math.random() < 0.5;
+    let a, b;
+    if (isThreeDigit) {
+      a = 100 + Math.floor(Math.random() * 900); // 100..999
+      b = 10  + Math.floor(Math.random() * 90);  // 10..99
+    } else {
+      a = 20  + Math.floor(Math.random() * 80);  // 20..99
+      // b in [10..a] so result is non-negative
+      b = 10  + Math.floor(Math.random() * (a - 10 + 1));
+    }
+    return { a, b, answer: a - b };
+  }
+
+  function startMathQuiz() {
+    state = STATE.MATH;
+    mathCorrect = 0;
+    mathWrong = 0;
+    mathLockInput = false;
+    mathCurrent = genMathProblem();
+
+    document.getElementById('gameover').style.display = 'none';
+    document.getElementById('clear').style.display = 'none';
+    document.getElementById('title').style.display = 'none';
+    document.getElementById('mathClearActions').style.display = 'none';
+    document.getElementById('mathInputRow').style.display = 'flex';
+    document.getElementById('mathFeedback').textContent = '\u00A0';
+    document.getElementById('mathFeedback').className = 'math-feedback';
+    document.getElementById('mathTitle').textContent = 'さんすう チャレンジ';
+    document.getElementById('mathSub').innerHTML = '10もん せいかい したら<br>もういちど あそべるよ！';
+
+    document.getElementById('mathQuiz').style.display = 'flex';
+    renderMathQuestion();
+
+    // Defer focus so iOS keyboards stay sane
+    setTimeout(() => {
+      const inp = document.getElementById('mathAnswer');
+      if (inp) inp.focus();
+    }, 80);
+  }
+
+  function renderMathQuestion() {
+    const p = mathCurrent;
+    document.getElementById('mathQuestion').textContent = `${p.a} − ${p.b} = ?`;
+    document.getElementById('mathProgressText').textContent =
+      `${mathCorrect} / ${MATH_QUESTIONS_REQUIRED}  せいかい`;
+    document.getElementById('mathProgressFill').style.width =
+      `${(mathCorrect / MATH_QUESTIONS_REQUIRED) * 100}%`;
+    document.getElementById('mathOkCount').textContent = mathCorrect;
+    document.getElementById('mathNgCount').textContent = mathWrong;
+
+    const inp = document.getElementById('mathAnswer');
+    inp.value = '';
+    inp.disabled = false;
+    inp.focus();
+  }
+
+  function submitMathAnswer() {
+    if (mathLockInput) return;
+    if (state !== STATE.MATH) return;
+
+    const inp = document.getElementById('mathAnswer');
+    const fb  = document.getElementById('mathFeedback');
+    const raw = inp.value.trim();
+    if (raw === '') {
+      fb.textContent = 'すうじを いれてね';
+      fb.className = 'math-feedback wrong';
+      return;
+    }
+    const ans = parseInt(raw, 10);
+    if (isNaN(ans)) {
+      fb.textContent = 'すうじを いれてね';
+      fb.className = 'math-feedback wrong';
+      return;
+    }
+
+    const p = mathCurrent;
+    if (ans === p.answer) {
+      mathCorrect++;
+      fb.textContent = '⭕ せいかい！';
+      fb.className = 'math-feedback correct';
+      if (sfx && sfx.coin) sfx.coin();
+
+      // Spawn celebratory sparkles in feedback (visual via DOM)
+      document.getElementById('mathOkCount').textContent = mathCorrect;
+      document.getElementById('mathProgressFill').style.width =
+        `${(mathCorrect / MATH_QUESTIONS_REQUIRED) * 100}%`;
+      document.getElementById('mathProgressText').textContent =
+        `${mathCorrect} / ${MATH_QUESTIONS_REQUIRED}  せいかい`;
+
+      if (mathCorrect >= MATH_QUESTIONS_REQUIRED) {
+        finishMathQuiz();
+        return;
+      }
+      mathLockInput = true;
+      inp.disabled = true;
+      setTimeout(() => {
+        mathLockInput = false;
+        mathCurrent = genMathProblem();
+        renderMathQuestion();
+        fb.textContent = '\u00A0';
+        fb.className = 'math-feedback';
+      }, 500);
+    } else {
+      mathWrong++;
+      fb.innerHTML = `❌ ちがうよ！ こたえは <b>${p.answer}</b>`;
+      fb.className = 'math-feedback wrong';
+      if (sfx && sfx.hurt) sfx.hurt();
+      document.getElementById('mathNgCount').textContent = mathWrong;
+
+      mathLockInput = true;
+      inp.disabled = true;
+      setTimeout(() => {
+        mathLockInput = false;
+        mathCurrent = genMathProblem();
+        renderMathQuestion();
+        fb.textContent = 'つぎの もんだい！';
+        fb.className = 'math-feedback';
+      }, 1500);
+    }
+  }
+
+  function finishMathQuiz() {
+    if (sfx && sfx.clear) sfx.clear();
+    document.getElementById('mathTitle').textContent = '⭐ クリア！ ⭐';
+    document.getElementById('mathSub').innerHTML =
+      `せいかい ${mathCorrect}もん ／ まちがい ${mathWrong}もん<br>よく がんばったね！`;
+    document.getElementById('mathQuestion').textContent = '✨ NICE! ✨';
+    document.getElementById('mathInputRow').style.display = 'none';
+    const fb = document.getElementById('mathFeedback');
+    fb.textContent = 'もういちど プレイ できるよ！';
+    fb.className = 'math-feedback celebrate';
+    document.getElementById('mathClearActions').style.display = 'flex';
+  }
+
+  function hideMathQuiz() {
+    document.getElementById('mathQuiz').style.display = 'none';
   }
   function stageClear() {
     stopBGM();
@@ -2093,7 +2387,8 @@
 
   // ===== Boot =====
   // (No #startBtn anymore — title shows the stage select grid instead.)
-  document.getElementById('retryBtn').addEventListener('click', () => startGame(currentStage));
+  // After GAME OVER you must clear the math challenge before retrying.
+  document.getElementById('retryBtn').addEventListener('click', startMathQuiz);
   document.getElementById('replayBtn').addEventListener('click', () => startGame(currentStage));
   document.getElementById('nextBtn').addEventListener('click', () => {
     const nextIdx = currentStage + 1;
@@ -2106,6 +2401,23 @@
     if (confirm('クリア状況をリセットしますか？\n（ステージ 1-1 だけ あそべる じょうたいに もどります）')) {
       resetProgress();
     }
+  });
+
+  // ===== Math quiz buttons =====
+  document.getElementById('mathSubmit').addEventListener('click', submitMathAnswer);
+  document.getElementById('mathAnswer').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      submitMathAnswer();
+    }
+  });
+  document.getElementById('mathRetryBtn').addEventListener('click', () => {
+    hideMathQuiz();
+    startGame(currentStage);
+  });
+  document.getElementById('mathSelectBtn').addEventListener('click', () => {
+    hideMathQuiz();
+    showStageSelect();
   });
 
   // First frame: draw a static title scene behind overlay
