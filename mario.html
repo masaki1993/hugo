@@ -310,6 +310,81 @@
   .math-quiz-content .math-stats .ok { color: #6cf76c; }
   .math-quiz-content .math-stats .ng { color: #ff8c8c; }
 
+  /* Character selection */
+  .math-char-select {
+    width: 100%;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 16px;
+    margin-top: 4px;
+  }
+  .math-char-prompt {
+    font-family: "Press Start 2P", "Courier New", monospace;
+    font-size: 13px;
+    color: #fff;
+    text-shadow: 2px 2px 0 #000;
+    letter-spacing: 1.5px;
+  }
+  .math-char-cards {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .math-char-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 20px 24px 16px;
+    border: 4px solid #fff;
+    border-radius: 16px;
+    cursor: pointer;
+    font-family: "Press Start 2P", "Courier New", monospace;
+    color: #fff;
+    box-shadow: 0 8px 0 rgba(0,0,0,.45), 0 14px 30px rgba(0,0,0,.4);
+    transition: transform .12s, filter .15s, box-shadow .12s;
+    min-width: 170px;
+    user-select: none;
+  }
+  .math-char-card:hover { transform: translateY(-3px); filter: brightness(1.12); }
+  .math-char-card:active {
+    transform: translateY(4px);
+    box-shadow: 0 2px 0 rgba(0,0,0,.45), 0 6px 14px rgba(0,0,0,.4);
+  }
+  .math-char-card.hugo {
+    background: linear-gradient(135deg, #ff3838 0%, #8a0000 100%);
+    border-color: #ffe0e0;
+  }
+  .math-char-card.luca {
+    background: linear-gradient(135deg, #ffd33a 0%, #ff8c2a 100%);
+    color: #2a1500;
+    border-color: #fff7d6;
+  }
+  .math-char-card .char-icon {
+    font-size: 40px;
+    line-height: 1;
+    margin-bottom: 2px;
+    filter: drop-shadow(2px 2px 0 rgba(0,0,0,.35));
+  }
+  .math-char-card .char-name {
+    font-size: 20px;
+    letter-spacing: 2px;
+    text-shadow: 2px 2px 0 #000;
+  }
+  .math-char-card.luca .char-name { text-shadow: 2px 2px 0 #6e4a00; }
+  .math-char-card .char-difficulty {
+    font-size: 11px;
+    letter-spacing: 1.2px;
+    margin-top: 4px;
+  }
+  .math-char-card .char-hint {
+    font-size: 9px;
+    opacity: .9;
+    letter-spacing: 1px;
+    font-family: "Hiragino Maru Gothic ProN", "Yu Gothic", "Press Start 2P", monospace;
+  }
+
   /* Touch controls */
   #touch {
     position: absolute; left: 0; right: 0; bottom: 0;
@@ -401,28 +476,48 @@
         <h1 id="mathTitle">さんすう チャレンジ</h1>
         <div class="sub" id="mathSub">10もん せいかい したら<br>もういちど あそべるよ！</div>
 
-        <div class="math-progress-wrap">
-          <div class="math-progress-bar"><div id="mathProgressFill"></div></div>
-          <div class="math-progress-text" id="mathProgressText">0 / 10  せいかい</div>
+        <div id="mathCharSelect" class="math-char-select">
+          <div class="math-char-prompt">だれと チャレンジ する？</div>
+          <div class="math-char-cards">
+            <button type="button" class="math-char-card hugo" data-char="hugo">
+              <div class="char-icon">👦</div>
+              <div class="char-name">Hugo</div>
+              <div class="char-difficulty">2けた − 2けた</div>
+              <div class="char-hint">ひきざん</div>
+            </button>
+            <button type="button" class="math-char-card luca" data-char="luca">
+              <div class="char-icon">🧒</div>
+              <div class="char-name">Luca</div>
+              <div class="char-difficulty">1けた ＋ 1けた</div>
+              <div class="char-hint">たしざん</div>
+            </button>
+          </div>
         </div>
 
-        <div class="math-question" id="mathQuestion">— − — = ?</div>
+        <div id="mathQuizBody" style="display:none; flex-direction:column; align-items:center; gap:14px; width:100%;">
+          <div class="math-progress-wrap">
+            <div class="math-progress-bar"><div id="mathProgressFill"></div></div>
+            <div class="math-progress-text" id="mathProgressText">0 / 10  せいかい</div>
+          </div>
 
-        <div class="math-input-row" id="mathInputRow">
-          <input id="mathAnswer" type="number" inputmode="numeric" placeholder="?" autocomplete="off" />
-          <button id="mathSubmit">こたえる</button>
-        </div>
+          <div class="math-question" id="mathQuestion">— − — = ?</div>
 
-        <div class="math-feedback" id="mathFeedback">&nbsp;</div>
+          <div class="math-input-row" id="mathInputRow">
+            <input id="mathAnswer" type="number" inputmode="numeric" placeholder="?" autocomplete="off" />
+            <button id="mathSubmit">こたえる</button>
+          </div>
 
-        <div class="math-stats">
-          <span class="ok">⭕ せいかい <span id="mathOkCount">0</span></span>
-          <span class="ng">❌ まちがい <span id="mathNgCount">0</span></span>
-        </div>
+          <div class="math-feedback" id="mathFeedback">&nbsp;</div>
 
-        <div class="actions-row" id="mathClearActions" style="display:none;">
-          <button id="mathRetryBtn">もういちど プレイ！</button>
-          <button id="mathSelectBtn" class="secondary">ステージセレクト</button>
+          <div class="math-stats">
+            <span class="ok">⭕ せいかい <span id="mathOkCount">0</span></span>
+            <span class="ng">❌ まちがい <span id="mathNgCount">0</span></span>
+          </div>
+
+          <div class="actions-row" id="mathClearActions" style="display:none;">
+            <button id="mathRetryBtn">もういちど プレイ！</button>
+            <button id="mathSelectBtn" class="secondary">ステージセレクト</button>
+          </div>
         </div>
       </div>
     </div>
@@ -1130,23 +1225,21 @@
   const MATH_QUESTIONS_REQUIRED = 10;
   let mathCorrect = 0;
   let mathWrong = 0;
-  let mathCurrent = null;     // { a, b, answer }
+  let mathCurrent = null;     // { a, b, op, answer }
   let mathLockInput = false;  // brief lock between questions
+  let mathCharacter = null;   // 'hugo' | 'luca'
 
-  function genMathProblem() {
-    // 50% chance: 2-digit minus 2-digit (with possible borrowing)
-    // 50% chance: 3-digit minus 2-digit
-    const isThreeDigit = Math.random() < 0.5;
-    let a, b;
-    if (isThreeDigit) {
-      a = 100 + Math.floor(Math.random() * 900); // 100..999
-      b = 10  + Math.floor(Math.random() * 90);  // 10..99
-    } else {
-      a = 20  + Math.floor(Math.random() * 80);  // 20..99
-      // b in [10..a] so result is non-negative
-      b = 10  + Math.floor(Math.random() * (a - 10 + 1));
+  function genMathProblem(character) {
+    if (character === 'luca') {
+      // 1-digit plus 1-digit (1..9 + 1..9)
+      const a = 1 + Math.floor(Math.random() * 9);
+      const b = 1 + Math.floor(Math.random() * 9);
+      return { a, b, op: '+', answer: a + b };
     }
-    return { a, b, answer: a - b };
+    // hugo (default): 2-digit minus 2-digit, result non-negative
+    const a = 20 + Math.floor(Math.random() * 80);  // 20..99
+    const b = 10 + Math.floor(Math.random() * (a - 10 + 1)); // 10..a
+    return { a, b, op: '−', answer: a - b };
   }
 
   function startMathQuiz() {
@@ -1154,7 +1247,8 @@
     mathCorrect = 0;
     mathWrong = 0;
     mathLockInput = false;
-    mathCurrent = genMathProblem();
+    mathCharacter = null;
+    mathCurrent = null;
 
     document.getElementById('gameover').style.display = 'none';
     document.getElementById('clear').style.display = 'none';
@@ -1166,7 +1260,29 @@
     document.getElementById('mathTitle').textContent = 'さんすう チャレンジ';
     document.getElementById('mathSub').innerHTML = '10もん せいかい したら<br>もういちど あそべるよ！';
 
+    // Show character selection first; hide quiz body until a character is chosen.
+    document.getElementById('mathCharSelect').style.display = 'flex';
+    document.getElementById('mathQuizBody').style.display = 'none';
+
     document.getElementById('mathQuiz').style.display = 'flex';
+  }
+
+  function selectMathCharacter(char) {
+    mathCharacter = char;
+    const subEl = document.getElementById('mathSub');
+    if (char === 'hugo') {
+      subEl.innerHTML =
+        '<span style="color:#ff8c8c;">Hugo</span> モード ・ 2けた − 2けた<br>' +
+        '10もん せいかい したら もういちど あそべるよ！';
+    } else {
+      subEl.innerHTML =
+        '<span style="color:#ffd33a;">Luca</span> モード ・ 1けた ＋ 1けた<br>' +
+        '10もん せいかい したら もういちど あそべるよ！';
+    }
+    document.getElementById('mathCharSelect').style.display = 'none';
+    document.getElementById('mathQuizBody').style.display = 'flex';
+
+    mathCurrent = genMathProblem(mathCharacter);
     renderMathQuestion();
 
     // Defer focus so iOS keyboards stay sane
@@ -1178,7 +1294,7 @@
 
   function renderMathQuestion() {
     const p = mathCurrent;
-    document.getElementById('mathQuestion').textContent = `${p.a} − ${p.b} = ?`;
+    document.getElementById('mathQuestion').textContent = `${p.a} ${p.op} ${p.b} = ?`;
     document.getElementById('mathProgressText').textContent =
       `${mathCorrect} / ${MATH_QUESTIONS_REQUIRED}  せいかい`;
     document.getElementById('mathProgressFill').style.width =
@@ -1233,7 +1349,7 @@
       inp.disabled = true;
       setTimeout(() => {
         mathLockInput = false;
-        mathCurrent = genMathProblem();
+        mathCurrent = genMathProblem(mathCharacter);
         renderMathQuestion();
         fb.textContent = '\u00A0';
         fb.className = 'math-feedback';
@@ -1249,7 +1365,7 @@
       inp.disabled = true;
       setTimeout(() => {
         mathLockInput = false;
-        mathCurrent = genMathProblem();
+        mathCurrent = genMathProblem(mathCharacter);
         renderMathQuestion();
         fb.textContent = 'つぎの もんだい！';
         fb.className = 'math-feedback';
@@ -2418,6 +2534,16 @@
   document.getElementById('mathSelectBtn').addEventListener('click', () => {
     hideMathQuiz();
     showStageSelect();
+  });
+  // Character selection cards (Hugo / Luca)
+  document.querySelectorAll('.math-char-card').forEach((card) => {
+    card.addEventListener('click', () => {
+      const ch = card.getAttribute('data-char');
+      if (ch === 'hugo' || ch === 'luca') {
+        if (sfx && sfx.coin) sfx.coin();
+        selectMathCharacter(ch);
+      }
+    });
   });
 
   // First frame: draw a static title scene behind overlay
