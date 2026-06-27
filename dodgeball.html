@@ -392,6 +392,8 @@
                 vy: 0,
                 r: 13,
                 holder: null,
+                thrower: null,
+                target: null,
                 lastTeam: null,
                 cooldown: 0,
                 spin: 0
@@ -470,8 +472,9 @@
             if (keys.has('arrowup') || keys.has('w')) ay -= 1;
             if (keys.has('arrowdown') || keys.has('s')) ay += 1;
             const len = Math.hypot(ax, ay) || 1;
-            player.vx = (ax / len) * player.speed;
-            player.vy = (ay / len) * player.speed;
+            const lastBoost = isLastInner(player) ? 1.35 : 1;
+            player.vx = (ax / len) * player.speed * lastBoost;
+            player.vy = (ay / len) * player.speed * lastBoost;
             player.x += player.vx * dt;
             player.y += player.vy * dt;
 
@@ -498,7 +501,7 @@
                 const target = passOrThrowTarget(player, enemies);
                 player.targetX = player.x + (player.team === 'ally' ? 10 : -22);
                 player.targetY = target.y + Math.sin(performance.now() * 0.004 + player.aiTimer) * 26;
-                if (player.throwTimer <= 0) throwBall(player, target.x, target.y);
+                if (player.throwTimer <= 0) throwBall(player, target.x, target.y, target);
             } else if (!ball.holder && chaser === player) {
                 player.targetX = ball.x;
                 player.targetY = ball.y;
@@ -523,14 +526,23 @@
 
         function ballChaser(team) {
             if (!ball || ball.holder) return null;
+            if (isProtectedOutfieldPass(team)) return null;
             const candidates = teams.filter(player => !player.isUser && player.team === team && canReachBall(player));
             return nearest(ball, candidates);
+        }
+
+        function isProtectedOutfieldPass(team) {
+            return team === 'rival'
+                && ball.lastTeam === 'ally'
+                && ball.target
+                && ball.target.isUser
+                && !ball.target.active;
         }
 
         function bestThrowTarget(player, enemies) {
             const activeEnemies = enemies.filter(enemy => enemy.active);
             const list = activeEnemies.length ? activeEnemies : enemies;
-            const user = list.find(enemy => enemy.isUser);
+            const user = enemies.find(enemy => enemy.isUser);
             if (player.team === 'rival' && user) return user;
 
             let best = null;
@@ -549,10 +561,24 @@
 
         function passOrThrowTarget(player, enemies) {
             if (player.team === 'ally' && !player.isUser) {
-                const user = teams.find(member => member.isUser && member.active);
-                return user || nearest(player, enemies) || { x: court.x + court.w * 0.25, y: court.y + court.h / 2 };
+                const user = teams.find(member => member.isUser);
+                const activeEnemies = enemies.filter(enemy => enemy.active);
+                return user || bestThrowTarget(player, activeEnemies) || { x: court.x + court.w * 0.25, y: court.y + court.h / 2 };
+            }
+            if (player.team === 'rival' && isUserInOutfield()) {
+                return ownOutfieldTarget(player) || nearest(player, teams.filter(member => member.team === player.team && member !== player));
             }
             return bestThrowTarget(player, enemies);
+        }
+
+        function isUserInOutfield() {
+            const user = teams.find(member => member.isUser);
+            return Boolean(user && !user.active);
+        }
+
+        function ownOutfieldTarget(player) {
+            const outfieldMate = nearest(player, teams.filter(member => member.team === player.team && !member.active));
+            return outfieldMate || null;
         }
 
         function chooseSupportPosition(player) {
@@ -654,43 +680,58 @@
 
         function holdBall(player) {
             ball.holder = player;
+            ball.thrower = null;
+            ball.target = null;
             ball.lastTeam = player.team;
             ball.cooldown = 0.18;
-            player.throwTimer = player.team === 'ally' && !player.isUser
-                ? 0.22
-                : enemyThrowDelay();
+            player.throwTimer = nextThrowDelay(player);
             player.blink = 0.12;
         }
 
-        function throwBall(player, tx, ty) {
+        function throwBall(player, tx, ty, target = null) {
             if (ball.holder !== player || gameOver) return;
             const angle = Math.atan2(ty - player.y, tx - player.x);
             const power = throwPower(player);
             ball.holder = null;
+            ball.thrower = player;
+            ball.target = target;
             ball.lastTeam = player.team;
             ball.vx = Math.cos(angle) * power;
             ball.vy = Math.sin(angle) * power;
             ball.x = player.x + Math.cos(angle) * (player.r + ball.r + 6);
             ball.y = player.y + Math.sin(angle) * (player.r + ball.r + 6);
             ball.cooldown = player.team === 'ally' && !player.isUser ? 0.18 : 0.08;
-            player.throwTimer = player.team === 'rival' ? enemyThrowDelay() : 0.95;
+            player.throwTimer = nextThrowDelay(player);
             shake = 4;
             for (let i = 0; i < 16; i++) addSpark(ball.x, ball.y, angle + Math.PI + (Math.random() - 0.5) * 1.2);
         }
 
         function throwPower(player) {
-            if (player.team === 'ally' && !player.isUser) return 300;
-            if (player.isUser) return keys.has(' ') ? 560 : 485;
+            const lastBoost = isLastInner(player) ? 1.32 : 1;
+            if (player.team === 'ally' && !player.isUser) {
+                const user = teams.find(member => member.isUser);
+                return (user ? 300 : 455) * lastBoost;
+            }
+            if (player.isUser) return (keys.has(' ') ? 560 : 485) * lastBoost;
             const ramp = Math.min(1, matchTime / 95);
-            return 390 + ramp * 115 + Math.random() * 45;
+            return (390 + ramp * 115 + Math.random() * 45) * lastBoost;
         }
 
-        function enemyThrowDelay() {
+        function nextThrowDelay(player) {
+            if (player.team === 'ally' && !player.isUser) {
+                const user = teams.find(member => member.isUser);
+                return user ? 0.22 : (isLastInner(player) ? 0.35 : 0.62);
+            }
             const ramp = Math.min(1, matchTime / 90);
-            return 1.45 - ramp * 0.65 + Math.random() * 0.55;
+            const lastBonus = isLastInner(player) ? 0.35 : 0;
+            return Math.max(0.38, 1.45 - ramp * 0.65 - lastBonus + Math.random() * 0.55);
         }
 
         function knockOut(player) {
+            const victimWasActive = player.active;
+            const returner = victimWasActive && ball.thrower && !ball.thrower.active && ball.thrower.team !== player.team
+                ? ball.thrower
+                : null;
             player.active = false;
             player.blink = 0.45;
             ball.vx *= -0.35;
@@ -699,7 +740,25 @@
             shake = 10;
             for (let i = 0; i < 28; i++) addSpark(player.x, player.y, Math.random() * Math.PI * 2);
             sendToOuter(player);
+            if (returner) returnToInner(returner);
+            ball.thrower = null;
             updateHud();
+        }
+
+        function returnToInner(player) {
+            player.active = true;
+            player.blink = 0.7;
+            const index = Number(player.id.split('-')[1]) || 0;
+            const row = index % 4;
+            const col = Math.floor(index / 4);
+            if (player.team === 'ally') {
+                player.x = court.x + court.w * (0.16 + col * 0.09);
+            } else {
+                player.x = court.x + court.w * (0.84 - col * 0.09);
+            }
+            player.y = court.y + court.h * (0.18 + row * 0.21);
+            player.targetX = player.x;
+            player.targetY = player.y;
         }
 
         function sendToOuter(player) {
@@ -784,7 +843,8 @@
             const dx = tx - player.x;
             const dy = ty - player.y;
             const len = Math.hypot(dx, dy) || 1;
-            const speed = player.speed * boost * (player.active ? 1 : 0.82);
+            const lastBoost = isLastInner(player) ? 1.35 : 1;
+            const speed = player.speed * boost * lastBoost * (player.active ? 1 : 0.82);
             player.vx = (dx / len) * Math.min(speed, len / Math.max(dt, 0.001));
             player.vy = (dy / len) * Math.min(speed, len / Math.max(dt, 0.001));
             player.x += player.vx * dt;
@@ -794,7 +854,7 @@
 
         function aimAtEnemy(player) {
             const enemies = livingPlayers(opposite(player.team), true);
-            const target = nearest(player, enemies) || { x: court.mid, y: court.y + court.h / 2 };
+            const target = passOrThrowTarget(player, enemies) || { x: court.mid, y: court.y + court.h / 2 };
             return target;
         }
 
@@ -804,6 +864,10 @@
 
         function activeCount(team) {
             return teams.filter(player => player.team === team && player.active).length;
+        }
+
+        function isLastInner(player) {
+            return player.active && activeCount(player.team) === 1;
         }
 
         function nearest(from, list) {
