@@ -312,6 +312,15 @@
       shoot: false
     };
 
+    function isShootKey(e) {
+      return e.key === ' ' ||
+             e.key === 'Space' ||
+             e.key === 'Spacebar' ||
+             e.code === 'Space' ||
+             e.keyCode === 32 ||
+             e.which === 32;
+    }
+
     // ゲームオブジェクト
     let beams = [];
     let enemies = [];
@@ -876,7 +885,10 @@
       if (!gameState.isStarted) return;
       if (e.key === 'ArrowLeft') keys.left = true;
       if (e.key === 'ArrowRight') keys.right = true;
-      if (e.key === ' ' || e.key === 'Space') keys.shoot = true;  // 連射対応
+      if (isShootKey(e)) {
+        e.preventDefault();
+        keys.shoot = true;  // 連射対応
+      }
       if (e.key === 'h' || e.key === 'H') togglePause();
       
       // For testing
@@ -886,23 +898,20 @@
     // バックアップの直接キーコード処理（特にスペースバー用）
     document.addEventListener('keydown', function(e) {
       if (!gameState.isStarted) return;
-      // スペースキー (keyCode: 32)
-      if (e.keyCode === 32 || e.which === 32) {
+      if (isShootKey(e)) {
+        e.preventDefault();
         keys.shoot = true;
         console.log("Space key detected via keyCode! keys.shoot:", keys.shoot);
-        
-        // 直接ビーム発射（緊急対応）
-        if (player.weaponCooldown <= 0) {
-          shootBeam('#00ffff');
-          player.weaponCooldown = 15;
-        }
       }
     });
 
     document.addEventListener('keyup', (e) => {
       if (e.key === 'ArrowLeft') keys.left = false;
       if (e.key === 'ArrowRight') keys.right = false;
-      if (e.key === ' ' || e.key === 'Space') keys.shoot = false;
+      if (isShootKey(e)) {
+        e.preventDefault();
+        keys.shoot = false;
+      }
       
       // For testing
       console.log("Key released:", e.key, "keys.shoot:", keys.shoot);
@@ -938,6 +947,10 @@
     // ゲーム関数
     // =============
     function startGame() {
+      if (gameState.isStarted && !gameState.isGameOver) return;
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
       document.getElementById('startScreen').style.display = 'none';
       gameState.isStarted = true;
       lastUpdateTime = Date.now();

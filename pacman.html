@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>パックマン</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    width: 100%; height: 100%;
+    background: #050510;
+    color: #fff;
+    font-family: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", sans-serif;
+    overflow: hidden;
+    user-select: none;
+  }
+  #wrap {
+    position: fixed; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+    background:
+      radial-gradient(ellipse at 50% 0%, rgba(0, 80, 255, 0.18) 0%, transparent 55%),
+      radial-gradient(ellipse at 50% 100%, rgba(255, 210, 0, 0.08) 0%, transparent 50%),
+      #050510;
+  }
+  #wrap::before {
+    content: "";
+    position: fixed; inset: 0; pointer-events: none; opacity: 0.06;
+    background-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+  #topBar {
+    width: min(100vw, 560px);
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 12px 6px;
+    flex: 0 0 auto;
+    z-index: 2;
+  }
+  #backBtn {
+    font-family: "Zen Maru Gothic", sans-serif;
+    font-size: 13px; font-weight: 700;
+    padding: 8px 14px;
+    border: 2px solid rgba(255,255,255,0.25);
+    border-radius: 999px;
+    background: rgba(255,255,255,0.06);
+    color: #fff; cursor: pointer;
+    transition: background .15s, border-color .15s;
+  }
+  #backBtn:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,210,0,0.5); }
+  #stage {
+    position: relative;
+    width: min(calc(100vw - 8px), calc((100vh - 160px) * 28 / 31), 560px);
+    aspect-ratio: 28 / 31;
+    flex: 0 0 auto;
+    border: 3px solid #1a3a8a;
+    border-radius: 8px;
+    box-shadow:
+      0 0 0 2px #000,
+      0 0 40px rgba(0, 100, 255, 0.25),
+      0 20px 60px rgba(0,0,0,0.6);
+    overflow: hidden;
+    background: #000;
+  }
+  canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; image-rendering: crisp-edges; }
+  #hud {
+    position: absolute; top: 0; left: 0; right: 0;
+    display: flex; justify-content: space-between; align-items: flex-start;
+    padding: 6px 10px;
+    pointer-events: none;
+    font-family: "Press Start 2P", monospace;
+    font-size: clamp(7px, 2vw, 10px);
+    line-height: 1.8;
+    text-shadow: 2px 2px 0 #000;
+    z-index: 3;
+  }
+  #hud .left, #hud .right { display: flex; flex-direction: column; gap: 2px; }
+  #hud .score { color: #ffe566; }
+  #hud .high { color: #88ccff; font-size: 0.85em; }
+  #hud .level { color: #66ffaa; }
+  #hud .lives { color: #ff6688; letter-spacing: 2px; }
+  #hud .status { color: #ffaa44; font-size: 0.8em; min-height: 1.2em; }
+
+  .overlay {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: rgba(0, 5, 20, 0.82);
+    backdrop-filter: blur(4px);
+    z-index: 10;
+    text-align: center;
+    padding: 16px;
+  }
+  .overlay.hidden { display: none; }
+  .overlay h1 {
+    font-family: "Press Start 2P", monospace;
+    font-size: clamp(18px, 5vw, 34px);
+    color: #ffe566;
+    text-shadow:
+      0 0 10px rgba(255, 229, 102, 0.8),
+      3px 3px 0 #c47a00,
+      5px 5px 0 #000;
+    margin-bottom: 10px;
+    letter-spacing: 2px;
+  }
+  .overlay .sub {
+    font-size: clamp(12px, 2.5vw, 16px);
+    opacity: 0.92;
+    line-height: 1.7;
+    max-width: 420px;
+    margin-bottom: 18px;
+  }
+  .overlay button {
+    font-family: "Press Start 2P", monospace;
+    font-size: clamp(10px, 2vw, 13px);
+    padding: 14px 22px;
+    border: 3px solid #fff;
+    border-radius: 8px;
+    background: #2244cc;
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 6px 0 #112266, 0 10px 30px rgba(0,0,0,0.5);
+    transition: transform .08s, box-shadow .08s, background .15s;
+    margin: 6px;
+  }
+  .overlay button:hover { background: #3366ff; }
+  .overlay button:active { transform: translateY(4px); box-shadow: 0 2px 0 #112266; }
+  .overlay .hint {
+    margin-top: 16px;
+    font-size: clamp(10px, 1.8vw, 13px);
+    opacity: 0.85;
+    line-height: 1.8;
+  }
+  .overlay .hint kbd {
+    display: inline-block;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-family: monospace;
+    margin: 0 2px;
+  }
+  .ghost-preview {
+    display: flex; gap: 10px; justify-content: center; margin: 12px 0 4px;
+    font-size: 28px;
+    filter: drop-shadow(0 0 6px rgba(255,255,255,0.3));
+  }
+
+  #dpad {
+    display: none;
+    width: min(100vw, 560px);
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0 8px;
+    flex: 0 0 auto;
+    z-index: 2;
+  }
+  @media (max-width: 768px), (pointer: coarse) {
+    #dpad { display: flex; }
+  }
+  .dpad-grid {
+    display: grid;
+    grid-template-columns: 46px 46px 46px;
+    grid-template-rows: 46px 46px;
+    gap: 6px;
+  }
+  .dpad-btn {
+    width: 46px; height: 46px;
+    border-radius: 14px;
+    border: 2px solid rgba(255,255,255,0.25);
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    font-size: 24px;
+    cursor: pointer;
+    touch-action: manipulation;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.4);
+    transition: background .1s, transform .08s;
+  }
+  .dpad-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,0.4); background: rgba(255,210,0,0.25); }
+  .dpad-btn.empty { visibility: hidden; pointer-events: none; }
+  #pauseBtn {
+    width: 54px; height: 46px;
+    border-radius: 14px;
+    border: 2px solid rgba(255,255,255,0.25);
+    background: rgba(255,100,100,0.15);
+    color: #fff;
+    font-family: "Press Start 2P", monospace;
+    font-size: 10px;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  @media (max-height: 520px) {
+    #backBtn { font-size: 11px; padding: 6px 10px; }
+    #topBar { padding: 6px 10px 4px; }
+    .overlay { padding: 6px; }
+    .overlay h1 { font-size: clamp(12px, 4vw, 18px); margin-bottom: 4px; }
+    .overlay .sub { font-size: 10px; line-height: 1.35; margin-bottom: 6px; }
+    .overlay button { font-size: 8px; padding: 7px 10px; border-width: 2px; }
+    .overlay .hint, .ghost-preview { display: none; }
+  }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="topBar">
+    <button id="backBtn" type="button">← ゲーム選択</button>
+    <span style="font-family:'Press Start 2P',monospace;font-size:10px;color:#88aaff;opacity:.8;">PAC-MAN</span>
+  </div>
+
+  <div id="stage">
+    <canvas id="gameCanvas"></canvas>
+    <div id="hud">
+      <div class="left">
+        <div class="score">SCORE <span id="scoreVal">0</span></div>
+        <div class="high">HI <span id="hiVal">0</span></div>
+      </div>
+      <div class="right">
+        <div class="level">LV <span id="levelVal">1</span></div>
+        <div class="lives" id="livesVal">♥♥♥</div>
+        <div class="status" id="statusVal"></div>
+      </div>
+    </div>
+
+    <div id="startScreen" class="overlay">
+      <h1>パックマン</h1>
+      <div class="ghost-preview">👻 👻 👻 👻</div>
+      <p class="sub">迷路のドットを全部食べろ！<br>パワーエサでゴーストを追い返せ！</p>
+      <button id="startBtn" type="button">スタート</button>
+      <p class="hint">
+        <kbd>↑↓←→</kbd> または <kbd>WASD</kbd> で移動<br>
+        <kbd>Space</kbd> スタート / <kbd>P</kbd> 一時停止
+      </p>
+    </div>
+
+    <div id="pauseScreen" class="overlay hidden">
+      <h1 style="font-size:clamp(16px,4vw,28px);">一時停止</h1>
+      <p class="sub"><kbd>P</kbd> または ボタンで再開</p>
+      <button id="resumeBtn" type="button">再開</button>
+    </div>
+
+    <div id="gameOverScreen" class="overlay hidden">
+      <h1 style="color:#ff5577;font-size:clamp(16px,4vw,28px);">GAME OVER</h1>
+      <p class="sub">スコア: <span id="finalScore">0</span><br>ハイスコア: <span id="finalHi">0</span></p>
+      <button id="retryBtn" type="button">もう一度</button>
+    </div>
+
+    <div id="winScreen" class="overlay hidden">
+      <h1 style="color:#66ffaa;font-size:clamp(14px,3.5vw,24px);">YOU WIN!</h1>
+      <p class="sub">全レベルクリア！<br>スコア: <span id="winScore">0</span></p>
+      <button id="winRetryBtn" type="button">もう一度</button>
+    </div>
+  </div>
+
+  <div id="dpad">
+    <div class="dpad-grid">
+      <div class="dpad-btn empty"></div>
+      <button class="dpad-btn" data-dir="up" type="button">▲</button>
+      <div class="dpad-btn empty"></div>
+      <button class="dpad-btn" data-dir="left" type="button">◀</button>
+      <button class="dpad-btn" data-dir="down" type="button">▼</button>
+      <button class="dpad-btn" data-dir="right" type="button">▶</button>
+    </div>
+    <button id="pauseBtn" type="button">PAUSE</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  const COLS = 28;
+  const ROWS = 28;
+  const TILE = 16;
+  const HUD_ROWS = 3;
+  const CANVAS_W = COLS * TILE;
+  const CANVAS_H = (ROWS + HUD_ROWS) * TILE;
+
+  const WALL = 1;
+  const DOT = 2;
+  const POWER = 3;
+  const EMPTY = 4;
+  const GATE = 5;
+  const TUNNEL = 6;
+
+  const DIR = {
+    none: { x: 0, y: 0, id: "none" },
+    up: { x: 0, y: -1, id: "up" },
+    down: { x: 0, y: 1, id: "down" },
+    left: { x: -1, y: 0, id: "left" },
+    right: { x: 1, y: 0, id: "right" }
+  };
+
+  const OPPOSITE = { up: "down", down: "up", left: "right", right: "left" };
+
+  const MAZE_LAYOUT = [
+    "############################",
+    "#............##............#",
+    "#.####.#####.##.#####.####.#",
+    "#o####.#####.##.#####.####o#",
+    "#.####.#####.##.#####.####.#",
+    "#..........................#",
+    "#.####.##.########.##.####.#",
+    "#.####.##.########.##.####.#",
+    "#......##....##....##......#",
+    "######.##### ## #####.######",
+    "     #.##### ## #####.#     ",
+    "     #.##          ##.#     ",
+    "     #.## ###==### ##.#     ",
+    "######.## #      # ##.######",
+    "      .   #      #   .      ",
+    "######.## #      # ##.######",
+    "     #.## ######## ##.#     ",
+    "     #.##          ##.#     ",
+    "     #.## ######## ##.#     ",
+    "######.## ######## ##.######",
+    "#............##............#",
+    "#.####.#####.##.#####.####.#",
+    "#o..##................##..o#",
+    "###.##.##.########.##.##.###",
+    "#......##....##....##......#",
+    "#.##########.##.##########.#",
+    "#..........................#",
+    "############################"
+  ];
+
+  const GHOST_META = [
+    { name: "blinky", color: "#ff2222", scatter: { x: 25, y: 0 } },
+    { name: "pinky", color: "#ffb8ff", scatter: { x: 2, y: 0 } },
+    { name: "inky", color: "#66ffff", scatter: { x: 27, y: 27 } },
+    { name: "clyde", color: "#ffb066", scatter: { x: 0, y: 27 } }
+  ];
+
+  const STATE = { START: 0, READY: 1, PLAY: 2, PAUSE: 3, DYING: 4, LEVEL_CLEAR: 5, GAMEOVER: 6, WIN: 7 };
+
+  const canvas = document.getElementById("gameCanvas");
+  const ctx = canvas.getContext("2d");
+  canvas.width = CANVAS_W;
+  canvas.height = CANVAS_H;
+
+  const ui = {
+    score: document.getElementById("scoreVal"),
+    hi: document.getElementById("hiVal"),
+    level: document.getElementById("levelVal"),
+    lives: document.getElementById("livesVal"),
+    status: document.getElementById("statusVal"),
+    start: document.getElementById("startScreen"),
+    pause: document.getElementById("pauseScreen"),
+    gameOver: document.getElementById("gameOverScreen"),
+    win: document.getElementById("winScreen"),
+    finalScore: document.getElementById("finalScore"),
+    finalHi: document.getElementById("finalHi"),
+    winScore: document.getElementById("winScore")
+  };
+
+  let grid = [];
+  let dotsLeft = 0;
+  let state = STATE.START;
+  let score = 0;
+  let highScore = Number(localStorage.getItem("pacman_hi") || 0);
+  let level = 1;
+  let lives = 3;
+  let frightenedTimer = 0;
+  let frightenedFlash = false;
+  let ghostCombo = 0;
+  let modeTimer = 0;
+  let chaseMode = false;
+  let modeIndex = 0;
+  let readyTimer = 0;
+  let dyingTimer = 0;
+  let levelClearTimer = 0;
+  let messageText = "";
+  let messageTimer = 0;
+  let lastTs = 0;
+  let animFrame = 0;
+  let frameScale = 1;
+
+  const pac = {
+    tx: 12, ty: 26,
+    x: 12 * TILE + TILE / 2,
+    y: 26 * TILE + TILE / 2 + HUD_ROWS * TILE,
+    dir: DIR.none,
+    nextDir: DIR.none,
+    speed: 0,
+    mouth: 0,
+    mouthOpen: true
+  };
+
+  let ghosts = [];
+
+  const keys = {};
+  let audioCtx = null;
+
+  function initAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === "suspended") audioCtx.resume();
+  }
+
+  function playTone(freq, duration, type = "square", gain = 0.04) {
+    if (!audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    g.gain.value = gain;
+    osc.connect(g);
+    g.connect(audioCtx.destination);
+    const now = audioCtx.currentTime;
+    g.gain.setValueAtTime(gain, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now + duration);
+    osc.start(now);
+    osc.stop(now + duration);
+  }
+
+  function sfxDot() { playTone(520, 0.04, "square", 0.025); }
+  function sfxPower() { playTone(180, 0.18, "sawtooth", 0.05); setTimeout(() => playTone(240, 0.12, "sawtooth", 0.04), 80); }
+  function sfxEatGhost() { playTone(880, 0.08, "triangle", 0.06); setTimeout(() => playTone(1100, 0.08, "triangle", 0.05), 60); }
+  function sfxDie() {
+    [400, 320, 260, 200, 150].forEach((f, i) => setTimeout(() => playTone(f, 0.12, "sawtooth", 0.05), i * 100));
+  }
+  function sfxLevel() {
+    [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => playTone(f, 0.1, "square", 0.04), i * 90));
+  }
+
+  function parseMaze() {
+    grid = [];
+    dotsLeft = 0;
+    for (let y = 0; y < ROWS; y++) {
+      const row = [];
+      const line = MAZE_LAYOUT[y] || "";
+      for (let x = 0; x < COLS; x++) {
+        const ch = line[x] || " ";
+        if (ch === "#") row.push(WALL);
+        else if (ch === ".") { row.push(DOT); dotsLeft++; }
+        else if (ch === "o") { row.push(POWER); dotsLeft++; }
+        else if (ch === "=") row.push(GATE);
+        else if (ch === " ") row.push(TUNNEL);
+        else row.push(EMPTY);
+      }
+      grid.push(row);
+    }
+  }
+
+  function tileAt(tx, ty) {
+    if (ty < 0 || ty >= ROWS || tx < 0 || tx >= COLS) return WALL;
+    return grid[ty][tx];
+  }
+
+  function isWalkable(tx, ty, forGhost = false) {
+    if (ty < 0 || ty >= ROWS) return false;
+    if (tx < 0 || tx >= COLS) return true;
+    const t = grid[ty][tx];
+    if (forGhost) return t !== WALL;
+    return t !== WALL && t !== GATE;
+  }
+
+  function centerX(tx) { return tx * TILE + TILE / 2; }
+  function centerY(ty) { return ty * TILE + TILE / 2 + HUD_ROWS * TILE; }
+  function tileX(x) { return Math.floor(x / TILE); }
+  function tileY(y) { return Math.floor((y - HUD_ROWS * TILE) / TILE); }
+  function isCentered(entity, tolerance = 0.1) {
+    const tx = tileX(entity.x);
+    const ty = tileY(entity.y);
+    return Math.abs(entity.x - centerX(tx)) <= tolerance &&
+      Math.abs(entity.y - centerY(ty)) <= tolerance;
+  }
+
+  function snapToCenter(entity) {
+    entity.tx = tileX(entity.x);
+    entity.ty = tileY(entity.y);
+    entity.x = centerX(entity.tx);
+    entity.y = centerY(entity.ty);
+  }
+
+  function pacSpeed() {
+    return (0.78 + level * 0.025) * (frightenedTimer > 0 ? 1.03 : 1);
+  }
+
+  function ghostSpeed(i) {
+    const base = 0.42 + level * 0.015;
+    if (frightenedTimer > 0) return base * 0.55;
+    if (ghosts[i].eaten) return base * 1.8;
+    return base;
+  }
+
+  function resetPac() {
+    pac.tx = 12; pac.ty = 26;
+    pac.x = centerX(pac.tx);
+    pac.y = centerY(pac.ty);
+    pac.dir = DIR.none;
+    pac.nextDir = DIR.none;
+    pac.speed = 0;
+    pac.mouth = 0;
+  }
+
+  function resetGhosts() {
+    const spawns = [
+      { tx: 13, ty: 11 }, { tx: 13, ty: 15 }, { tx: 12, ty: 15 }, { tx: 14, ty: 15 }
+    ];
+    ghosts = GHOST_META.map((meta, i) => ({
+      ...meta,
+      tx: spawns[i].tx,
+      ty: spawns[i].ty,
+      x: centerX(spawns[i].tx),
+      y: centerY(spawns[i].ty),
+      dir: DIR.up,
+      eaten: false,
+      inHouse: i !== 0,
+      releaseTimer: i === 0 ? 0 : 80 + i * 60
+    }));
+  }
+
+  function resetLevel() {
+    parseMaze();
+    resetPac();
+    resetGhosts();
+    frightenedTimer = 0;
+    ghostCombo = 0;
+    modeTimer = 0;
+    modeIndex = 0;
+    chaseMode = false;
+    readyTimer = 120;
+    state = STATE.READY;
+    messageText = "READY!";
+    messageTimer = 120;
+  }
+
+  function startGame() {
+    initAudio();
+    score = 0;
+    level = 1;
+    lives = 3;
+    hideAllOverlays();
+    resetLevel();
+    updateHUD();
+  }
+
+  function hideAllOverlays() {
+    ui.start.classList.add("hidden");
+    ui.pause.classList.add("hidden");
+    ui.gameOver.classList.add("hidden");
+    ui.win.classList.add("hidden");
+  }
+
+  function updateHUD() {
+    ui.score.textContent = String(score);
+    ui.hi.textContent = String(highScore);
+    ui.level.textContent = String(level);
+    ui.lives.textContent = "♥".repeat(Math.max(0, lives)) || "—";
+    if (frightenedTimer > 0) ui.status.textContent = frightenedFlash ? "RUN!" : "POWER!";
+    else ui.status.textContent = chaseMode ? "CHASE" : "SCATTER";
+  }
+
+  function setHighScore() {
+    if (score > highScore) {
+      highScore = score;
+      localStorage.setItem("pacman_hi", String(highScore));
+    }
+  }
+
+  function showMessage(text, frames = 90) {
+    messageText = text;
+    messageTimer = frames;
+  }
+
+  function tryTurn(entity, nextDir, forGhost = false) {
+    if (!nextDir || nextDir.id === "none") return false;
+    const tx = tileX(entity.x);
+    const ty = tileY(entity.y);
+    if (!isCentered(entity)) return false;
+    const nx = tx + nextDir.x;
+    const ny = ty + nextDir.y;
+    if (isWalkable(nx, ny, forGhost)) {
+      snapToCenter(entity);
+      entity.dir = nextDir;
+      return true;
+    }
+    return false;
+  }
+
+  function canMoveFromCenter(entity, dir, forGhost = false) {
+    if (!dir || dir.id === "none") return false;
+    const tx = tileX(entity.x);
+    const ty = tileY(entity.y);
+    return isWalkable(tx + dir.x, ty + dir.y, forGhost);
+  }
+
+  function availableDirs(tx, ty, forGhost = false) {
+    return [DIR.up, DIR.down, DIR.left, DIR.right].filter(d => {
+      if (forGhost && ghosts.find(g => g.tx === tx && g.ty === ty)) {
+        // allow reverse in house
+      } else if (forGhost) {
+        // ghosts shouldn't reverse unless mode change - simplified: allow all valid
+      }
+      return isWalkable(tx + d.x, ty + d.y, forGhost);
+    });
+  }
+
+  function dist2(a, b) {
+    const dx = a.x - b.x;
+    const dy = a.y - b.y;
+    return dx * dx + dy * dy;
+  }
+
+  function ghostTarget(ghost, idx) {
+    if (frightenedTimer > 0 && !ghost.eaten) {
+      return { x: Math.floor(Math.random() * COLS), y: Math.floor(Math.random() * ROWS) };
+    }
+    if (ghost.eaten) return { x: 13, y: 15 };
+
+    const ptx = tileX(pac.x);
+    const pty = tileY(pac.y);
+
+    if (!chaseMode) return ghost.scatter;
+
+    if (ghost.name === "blinky") return { x: ptx, y: pty };
+
+    if (ghost.name === "pinky") {
+      return { x: ptx + pac.dir.x * 4, y: pty + pac.dir.y * 4 };
+    }
+
+    if (ghost.name === "inky") {
+      const blinky = ghosts[0];
+      const bx = tileX(blinky.x);
+      const by = tileY(blinky.y);
+      const ax = ptx + pac.dir.x * 2;
+      const ay = pty + pac.dir.y * 2;
+      return { x: ax + (ax - bx), y: ay + (ay - by) };
+    }
+
+    // clyde
+    const d = (ghost.tx - ptx) ** 2 + (ghost.ty - pty) ** 2;
+    if (d > 64) return { x: ptx, y: pty };
+    return ghost.scatter;
+  }
+
+  function chooseGhostDir(ghost, idx) {
+    const tx = tileX(ghost.x);
+    const ty = tileY(ghost.y);
+    if (!isCentered(ghost)) return;
+
+    let dirs = availableDirs(tx, ty, true);
+    const opp = DIR[OPPOSITE[ghost.dir.id]];
+    dirs = dirs.filter(d => !(d.x === opp.x && d.y === opp.y) || dirs.length === 1);
+
+    if (dirs.length === 0) return;
+    if (dirs.length === 1) { ghost.dir = dirs[0]; return; }
+
+    const target = ghostTarget(ghost, idx);
+    let best = dirs[0];
+    let bestDist = Infinity;
+    for (const d of dirs) {
+      const nx = tx + d.x;
+      const ny = ty + d.y;
+      const dd = (nx - target.x) ** 2 + (ny - target.y) ** 2;
+      if (dd < bestDist || (dd === bestDist && Math.random() < 0.5)) {
+        bestDist = dd;
+        best = d;
+      }
+    }
+    ghost.dir = best;
+  }
+
+  function moveEntity(entity, speed, forGhost = false) {
+    if (isCentered(entity)) {
+      snapToCenter(entity);
+      if (!forGhost && entity.nextDir) tryTurn(entity, entity.nextDir, false);
+
+      const nx = entity.tx + entity.dir.x;
+      const ny = entity.ty + entity.dir.y;
+      if (!isWalkable(nx, ny, forGhost)) {
+        entity.dir = DIR.none;
+        return;
+      }
+    }
+
+    const fromTx = entity.tx;
+    const fromTy = entity.ty;
+    entity.x += entity.dir.x * speed;
+    entity.y += entity.dir.y * speed;
+
+    if (entity.x < -TILE / 2) entity.x = CANVAS_W + TILE / 2;
+    if (entity.x > CANVAS_W + TILE / 2) entity.x = -TILE / 2;
+
+    entity.tx = tileX(entity.x);
+    entity.ty = tileY(entity.y);
+
+    const targetTx = fromTx + entity.dir.x;
+    const targetTy = fromTy + entity.dir.y;
+    const reachedX =
+      entity.dir.x > 0 ? entity.x >= centerX(targetTx) :
+      entity.dir.x < 0 ? entity.x <= centerX(targetTx) :
+      true;
+    const reachedY =
+      entity.dir.y > 0 ? entity.y >= centerY(targetTy) :
+      entity.dir.y < 0 ? entity.y <= centerY(targetTy) :
+      true;
+
+    if (targetTx >= 0 && targetTx < COLS && reachedX && reachedY) {
+      entity.tx = targetTx;
+      entity.ty = targetTy;
+      snapToCenter(entity);
+    }
+  }
+
+  function eatAt(tx, ty) {
+    const t = tileAt(tx, ty);
+    if (t === DOT) {
+      grid[ty][tx] = EMPTY;
+      dotsLeft--;
+      score += 10;
+      sfxDot();
+    } else if (t === POWER) {
+      grid[ty][tx] = EMPTY;
+      dotsLeft--;
+      score += 50;
+      frightenedTimer = Math.max(frightenedTimer, 360 - level * 20);
+      frightenedFlash = true;
+      ghostCombo = 0;
+      ghosts.forEach(g => { g.eaten = false; });
+      sfxPower();
+      showMessage("POWER UP!", 60);
+    }
+  }
+
+  function checkPacGhost() {
+    for (let i = 0; i < ghosts.length; i++) {
+      const g = ghosts[i];
+      const dx = g.x - pac.x;
+      const dy = g.y - pac.y;
+      if (dx * dx + dy * dy < (TILE * 0.55) ** 2) {
+        if (frightenedTimer > 0 && !g.eaten) {
+          g.eaten = true;
+          ghostCombo++;
+          const pts = [200, 400, 800, 1600][Math.min(ghostCombo - 1, 3)];
+          score += pts;
+          sfxEatGhost();
+          showMessage(`${pts}`, 45);
+        } else if (!g.eaten || frightenedTimer === 0) {
+          loseLife();
+          return;
+        }
+      }
+    }
+  }
+
+  function loseLife() {
+    lives--;
+    sfxDie();
+    setHighScore();
+    updateHUD();
+    if (lives <= 0) {
+      state = STATE.GAMEOVER;
+      ui.finalScore.textContent = String(score);
+      ui.finalHi.textContent = String(highScore);
+      ui.gameOver.classList.remove("hidden");
+      return;
+    }
+    state = STATE.DYING;
+    dyingTimer = 120;
+    showMessage("BOO!", 90);
+  }
+
+  function nextLevel() {
+    if (level >= 5) {
+      state = STATE.WIN;
+      setHighScore();
+      ui.winScore.textContent = String(score);
+      ui.win.classList.remove("hidden");
+      sfxLevel();
+      return;
+    }
+    level++;
+    resetLevel();
+    sfxLevel();
+    showMessage(`LEVEL ${level}`, 90);
+    updateHUD();
+  }
+
+  function updateModeCycle() {
+    const pattern = [
+      { scatter: 420, chase: 1200 },
+      { scatter: 420, chase: 1200 },
+      { scatter: 300, chase: 1200 },
+      { scatter: 300, chase: 99999 }
+    ];
+    const p = pattern[Math.min(modeIndex, pattern.length - 1)];
+    modeTimer++;
+    const limit = chaseMode ? p.chase : p.scatter;
+    if (modeTimer >= limit) {
+      modeTimer = 0;
+      if (chaseMode) {
+        chaseMode = false;
+        modeIndex++;
+      } else {
+        chaseMode = true;
+      }
+    }
+  }
+
+  function updateGhosts() {
+    ghosts.forEach((g, i) => {
+      if (g.inHouse) {
+        g.releaseTimer--;
+        if (g.releaseTimer <= 0) g.inHouse = false;
+        else {
+          g.y = centerY(15) + Math.sin(animFrame / 15 + i) * 3;
+          return;
+        }
+      }
+      chooseGhostDir(g, i);
+      moveEntity(g, ghostSpeed(i) * frameScale, true);
+
+      if (g.eaten && g.tx === 13 && g.ty === 15 && frightenedTimer <= 0) {
+        g.eaten = false;
+      }
+    });
+  }
+
+  function update(dt) {
+    animFrame++;
+    if (messageTimer > 0) messageTimer--;
+    if (state === STATE.READY) {
+      readyTimer--;
+      if (readyTimer <= 0) state = STATE.PLAY;
+      return;
+    }
+    if (state === STATE.DYING) {
+      dyingTimer--;
+      pac.mouthOpen = dyingTimer % 10 < 5;
+      if (dyingTimer <= 0) {
+        resetPac();
+        resetGhosts();
+        readyTimer = 90;
+        state = STATE.READY;
+        messageText = "READY!";
+        messageTimer = 90;
+      }
+      return;
+    }
+    if (state === STATE.LEVEL_CLEAR) {
+      levelClearTimer--;
+      if (levelClearTimer <= 0) nextLevel();
+      return;
+    }
+    if (state !== STATE.PLAY) return;
+
+    updateModeCycle();
+
+    if (frightenedTimer > 0) {
+      frightenedTimer--;
+      if (frightenedTimer < 120) frightenedFlash = frightenedTimer % 20 < 10;
+      if (frightenedTimer <= 0) {
+        ghosts.forEach(g => { g.eaten = false; });
+        frightenedFlash = false;
+      }
+    }
+
+    frameScale = Math.min(1.5, Math.max(0, dt / (1000 / 60)));
+    moveEntity(pac, pacSpeed() * frameScale, false);
+    pac.mouth = (pac.mouth + 0.18) % (Math.PI * 2);
+    pac.mouthOpen = Math.sin(pac.mouth) > 0;
+
+    const ptx = tileX(pac.x);
+    const pty = tileY(pac.y);
+    if (isCentered(pac)) {
+      eatAt(ptx, pty);
+    }
+
+    updateGhosts();
+    checkPacGhost();
+
+    if (dotsLeft <= 0) {
+      state = STATE.LEVEL_CLEAR;
+      levelClearTimer = 120;
+      showMessage("STAGE CLEAR!", 120);
+      setHighScore();
+    }
+
+    updateHUD();
+  }
+
+  function drawMaze() {
+    for (let y = 0; y < ROWS; y++) {
+      for (let x = 0; x < COLS; x++) {
+        const t = grid[y][x];
+        const px = x * TILE;
+        const py = y * TILE + HUD_ROWS * TILE;
+
+        if (t === WALL) {
+          ctx.fillStyle = "#1414a8";
+          ctx.fillRect(px + 1, py + 1, TILE - 2, TILE - 2);
+          ctx.strokeStyle = "#3a3aff";
+          ctx.lineWidth = 1;
+          ctx.strokeRect(px + 1.5, py + 1.5, TILE - 3, TILE - 3);
+          ctx.fillStyle = "rgba(120,160,255,0.15)";
+          ctx.fillRect(px + 2, py + 2, TILE - 4, 3);
+        } else if (t === DOT) {
+          ctx.fillStyle = "#ffb897";
+          ctx.beginPath();
+          ctx.arc(px + TILE / 2, py + TILE / 2, 2, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (t === POWER) {
+          const pulse = 0.8 + Math.sin(animFrame / 8) * 0.2;
+          ctx.fillStyle = "#ffe566";
+          ctx.shadowColor = "#ffe566";
+          ctx.shadowBlur = 8;
+          ctx.beginPath();
+          ctx.arc(px + TILE / 2, py + TILE / 2, 5 * pulse, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        } else if (t === GATE) {
+          ctx.fillStyle = "#ccb8ff";
+          ctx.fillRect(px, py + TILE / 2 - 2, TILE, 4);
+        }
+      }
+    }
+  }
+
+  function drawPac() {
+    if (state === STATE.DYING && dyingTimer < 60 && dyingTimer % 8 < 4) return;
+    const r = TILE * 0.42;
+    let angle = 0.25;
+    if (pac.mouthOpen) angle = 0.05;
+    let rot = 0;
+    if (pac.dir === DIR.right) rot = 0;
+    else if (pac.dir === DIR.down) rot = Math.PI / 2;
+    else if (pac.dir === DIR.left) rot = Math.PI;
+    else if (pac.dir === DIR.up) rot = -Math.PI / 2;
+
+    ctx.save();
+    ctx.translate(pac.x, pac.y);
+    ctx.rotate(rot);
+    ctx.fillStyle = "#ffe566";
+    ctx.shadowColor = "#ffe566";
+    ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.arc(0, 0, r, angle * Math.PI, (2 - angle) * Math.PI);
+    ctx.lineTo(0, 0);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.restore();
+  }
+
+  function drawGhost(g) {
+    const r = TILE * 0.42;
+    let color = g.color;
+    if (frightenedTimer > 0 && !g.eaten) {
+      color = frightenedFlash ? "#2244ff" : "#ffffff";
+    } else if (g.eaten) {
+      color = "#444";
+    }
+
+    ctx.save();
+    ctx.translate(g.x, g.y);
+
+    ctx.fillStyle = color;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = frightenedTimer > 0 && !g.eaten ? 12 : 6;
+    ctx.beginPath();
+    ctx.arc(0, -2, r, Math.PI, 0);
+    ctx.lineTo(r, r - 2);
+    for (let i = 0; i < 4; i++) {
+      const sx = r - (i * (2 * r) / 3);
+      ctx.lineTo(sx, r - 2 + (i % 2 === 0 ? 4 : 0));
+    }
+    ctx.lineTo(-r, r - 2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    if (!(frightenedTimer > 0 && !g.eaten) && !g.eaten) {
+      ctx.fillStyle = "#fff";
+      ctx.beginPath();
+      ctx.arc(-4, -2, 4, 0, Math.PI * 2);
+      ctx.arc(4, -2, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#1122aa";
+      const lookX = g.dir.x * 2;
+      const lookY = g.dir.y * 2;
+      ctx.beginPath();
+      ctx.arc(-4 + lookX, -2 + lookY, 2, 0, Math.PI * 2);
+      ctx.arc(4 + lookX, -2 + lookY, 2, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (frightenedTimer > 0 && !g.eaten) {
+      ctx.strokeStyle = "#fff";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(-5, 0); ctx.lineTo(-1, 0);
+      ctx.moveTo(1, 0); ctx.lineTo(5, 0);
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
+  function drawHUDCanvas() {
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, CANVAS_W, HUD_ROWS * TILE);
+    ctx.fillStyle = "#ffe566";
+    ctx.font = '8px "Press Start 2P", monospace';
+    ctx.fillText("1UP", 12, 14);
+    ctx.fillText(String(score).padStart(6, "0"), 12, 28);
+
+    ctx.fillStyle = "#88ccff";
+    ctx.fillText("HI", CANVAS_W / 2 - 20, 14);
+    ctx.fillText(String(highScore).padStart(6, "0"), CANVAS_W / 2 - 20, 28);
+
+    ctx.fillStyle = "#66ffaa";
+    ctx.textAlign = "right";
+    ctx.fillText(`LV${level}`, CANVAS_W - 12, 14);
+    ctx.fillStyle = "#ff6688";
+    ctx.fillText("♥".repeat(Math.max(0, lives)), CANVAS_W - 12, 28);
+    ctx.textAlign = "left";
+  }
+
+  function drawCenterMessage() {
+    if (messageTimer <= 0 || !messageText) return;
+    ctx.save();
+    ctx.font = '14px "Press Start 2P", monospace';
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#ffe566";
+    ctx.shadowColor = "#000";
+    ctx.shadowBlur = 4;
+    ctx.fillText(messageText, CANVAS_W / 2, HUD_ROWS * TILE + ROWS * TILE / 2);
+    ctx.restore();
+  }
+
+  function draw() {
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+    drawHUDCanvas();
+    drawMaze();
+    if (state !== STATE.DYING || dyingTimer > 60) drawPac();
+    ghosts.forEach(drawGhost);
+    drawCenterMessage();
+  }
+
+  function loop(ts) {
+    requestAnimationFrame(loop);
+    if (!lastTs) lastTs = ts;
+    const dt = ts - lastTs;
+    lastTs = ts;
+    update(dt);
+    draw();
+  }
+
+  function setDirection(dir) {
+    pac.nextDir = dir;
+    if ((state === STATE.PLAY || state === STATE.READY) && isCentered(pac) && canMoveFromCenter(pac, dir)) {
+      snapToCenter(pac);
+      pac.dir = dir;
+    }
+  }
+
+  function togglePause() {
+    if (state === STATE.PLAY) {
+      state = STATE.PAUSE;
+      ui.pause.classList.remove("hidden");
+    } else if (state === STATE.PAUSE) {
+      state = STATE.PLAY;
+      ui.pause.classList.add("hidden");
+    }
+  }
+
+  document.getElementById("backBtn").addEventListener("click", () => {
+    window.location.href = "index.html";
+  });
+  document.getElementById("startBtn").addEventListener("click", startGame);
+  document.getElementById("resumeBtn").addEventListener("click", togglePause);
+  document.getElementById("retryBtn").addEventListener("click", startGame);
+  document.getElementById("winRetryBtn").addEventListener("click", startGame);
+  document.getElementById("pauseBtn").addEventListener("click", togglePause);
+
+  document.querySelectorAll(".dpad-btn[data-dir]").forEach(btn => {
+    const handler = (e) => {
+      e.preventDefault();
+      const id = btn.dataset.dir;
+      setDirection(DIR[id]);
+    };
+    btn.addEventListener("touchstart", handler, { passive: false });
+    btn.addEventListener("mousedown", handler);
+  });
+
+  let touchStart = null;
+  canvas.addEventListener("touchstart", (e) => {
+    touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  }, { passive: true });
+  canvas.addEventListener("touchend", (e) => {
+    if (!touchStart) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - touchStart.x;
+    const dy = t.clientY - touchStart.y;
+    if (Math.abs(dx) < 20 && Math.abs(dy) < 20) return;
+    if (Math.abs(dx) > Math.abs(dy)) setDirection(dx > 0 ? DIR.right : DIR.left);
+    else setDirection(dy > 0 ? DIR.down : DIR.up);
+    touchStart = null;
+  });
+
+  window.addEventListener("keydown", (e) => {
+    keys[e.code] = true;
+    const keyName = e.code || e.key;
+    if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Space"," "].includes(keyName) ||
+        ["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"," "].includes(e.key)) {
+      e.preventDefault();
+    }
+
+    if ((keyName === "Space" || e.key === " ") && state === STATE.START) startGame();
+    if (keyName === "KeyP" || e.key === "p" || e.key === "P") togglePause();
+    if (state !== STATE.PLAY && state !== STATE.READY) return;
+
+    if (keyName === "ArrowUp" || keyName === "KeyW" || e.key === "ArrowUp" || e.key === "w" || e.key === "W") setDirection(DIR.up);
+    if (keyName === "ArrowDown" || keyName === "KeyS" || e.key === "ArrowDown" || e.key === "s" || e.key === "S") setDirection(DIR.down);
+    if (keyName === "ArrowLeft" || keyName === "KeyA" || e.key === "ArrowLeft" || e.key === "a" || e.key === "A") setDirection(DIR.left);
+    if (keyName === "ArrowRight" || keyName === "KeyD" || e.key === "ArrowRight" || e.key === "d" || e.key === "D") setDirection(DIR.right);
+  });
+  window.addEventListener("keyup", (e) => { keys[e.code] = false; });
+
+  ui.hi.textContent = String(highScore);
+  parseMaze();
+  resetPac();
+  resetGhosts();
+  draw();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

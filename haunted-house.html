@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>お化け屋敷シューティング</title>
+    <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Shippori+Mincho:wght@600;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            overflow: hidden;
+            background: #d8c4a0;
+            font-family: 'DotGothic16', sans-serif;
+            touch-action: none;
+            cursor: crosshair;
+        }
+
+        #gameCanvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .overlay {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(8, 4, 12, 0.88);
+            z-index: 20;
+            color: #f0e6d8;
+            text-align: center;
+            padding: 24px;
+        }
+
+        .overlay.hidden { display: none; }
+
+        .overlay h1 {
+            font-family: 'Shippori Mincho', serif;
+            font-size: clamp(1.8rem, 5vw, 3rem);
+            font-weight: 800;
+            color: #e85a4f;
+            text-shadow: 0 0 40px rgba(232, 90, 79, 0.45);
+            margin-bottom: 16px;
+            letter-spacing: 0.12em;
+        }
+
+        .overlay p {
+            font-size: clamp(0.9rem, 2.4vw, 1.1rem);
+            line-height: 1.9;
+            opacity: 0.92;
+            max-width: 480px;
+        }
+
+        .overlay .hint {
+            margin-top: 24px;
+            padding: 16px 24px;
+            border: 1px solid rgba(232, 90, 79, 0.35);
+            border-radius: 8px;
+            background: rgba(30, 12, 18, 0.65);
+            font-size: 0.9rem;
+            line-height: 1.8;
+        }
+
+        .overlay .hint kbd {
+            display: inline-block;
+            padding: 2px 8px;
+            margin: 0 2px;
+            background: rgba(232, 90, 79, 0.18);
+            border: 1px solid rgba(232, 90, 79, 0.45);
+            border-radius: 4px;
+        }
+
+        .btn {
+            margin-top: 28px;
+            padding: 14px 48px;
+            font-family: 'Shippori Mincho', serif;
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #1a0808;
+            background: linear-gradient(180deg, #ff8a7a 0%, #c94438 100%);
+            border: none;
+            border-radius: 999px;
+            cursor: pointer;
+            box-shadow: 0 4px 24px rgba(232, 90, 79, 0.4);
+            transition: transform 0.15s;
+        }
+
+        .btn:hover { transform: scale(1.05); }
+
+        #hud {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 14px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            pointer-events: none;
+            z-index: 10;
+            color: #f0e6d8;
+            text-shadow: 0 1px 6px rgba(0,0,0,0.9);
+        }
+
+        #hud.hidden { display: none; }
+
+        #hud .left { line-height: 1.7; }
+        #hud .timer { font-size: 1.5rem; color: #ffd166; font-family: 'Shippori Mincho', serif; }
+        #hud .hp { color: #ff6b6b; font-size: 1.1rem; }
+        #hud .ammo { color: #a8dadc; font-size: 1rem; }
+        #hud .kills { color: #b8e994; font-size: 1rem; }
+        #hud .spot { color: #e85a4f; font-size: 0.95rem; min-height: 1.4em; margin-top: 4px; }
+
+        #hud .right {
+            text-align: right;
+            font-size: 0.75rem;
+            opacity: 0.8;
+            line-height: 1.6;
+        }
+
+        .mobile-controls {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 16px;
+            display: none;
+            justify-content: space-between;
+            align-items: flex-end;
+            z-index: 15;
+            pointer-events: none;
+        }
+
+        .mobile-controls.visible { display: flex; }
+
+        .dpad {
+            display: grid;
+            grid-template-columns: repeat(3, 52px);
+            grid-template-rows: repeat(3, 52px);
+            gap: 4px;
+            pointer-events: auto;
+        }
+
+        .dpad button {
+            width: 52px;
+            height: 52px;
+            border: 2px solid rgba(240, 230, 216, 0.35);
+            border-radius: 10px;
+            background: rgba(20, 10, 16, 0.75);
+            color: #f0e6d8;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .dpad .empty { visibility: hidden; pointer-events: none; }
+
+        .action-btns {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: auto;
+        }
+
+        .action-btns button {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            border: 2px solid rgba(240, 230, 216, 0.4);
+            font-family: 'Shippori Mincho', serif;
+            font-weight: 800;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        #shootBtn {
+            background: radial-gradient(circle, #ff6b6b, #c94438);
+            color: #fff;
+        }
+
+        #reloadBtn {
+            background: rgba(20, 10, 16, 0.8);
+            color: #a8dadc;
+            width: 56px !important;
+            height: 56px !important;
+            font-size: 0.75rem !important;
+            align-self: flex-end;
+        }
+
+        #backBtn {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 25;
+            padding: 8px 18px;
+            background: rgba(20, 10, 16, 0.85);
+            border: 1px solid rgba(240, 230, 216, 0.3);
+            border-radius: 8px;
+            color: #f0e6d8;
+            font-family: inherit;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <button id="backBtn">ゲーム選択に戻る</button>
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="hud" class="hidden">
+        <div class="left">
+            <div class="timer">残り <span id="timeVal">5:00</span></div>
+            <div class="hp">HP: <span id="hpVal">100</span></div>
+            <div class="ammo">弾: <span id="ammoVal">∞</span>　<span id="reloadHint"></span></div>
+            <div class="kills">倒した: <span id="killVal">0</span> / 20</div>
+            <div class="spot" id="spotVal"></div>
+        </div>
+        <div class="right">
+            <kbd>WASD</kbd> / 矢印 移動<br>
+            <kbd>Space</kbd> 射撃　<kbd>R</kbd> リロード
+        </div>
+    </div>
+
+    <div class="mobile-controls" id="mobileControls">
+        <div class="dpad">
+            <div class="empty"></div>
+            <button data-dir="up">▲</button>
+            <div class="empty"></div>
+            <button data-dir="left">◀</button>
+            <div class="empty"></div>
+            <button data-dir="right">▶</button>
+            <div class="empty"></div>
+            <button data-dir="down">▼</button>
+            <div class="empty"></div>
+        </div>
+        <div class="action-btns">
+            <button id="reloadBtn">装填</button>
+            <button id="shootBtn">射撃</button>
+        </div>
+    </div>
+
+    <div id="startScreen" class="overlay">
+        <h1>👻 お化け屋敷</h1>
+        <p>明かりのついた屋敷にお化けが20体いる！<br>スペースキーで撃って、5分間生き残ろう！</p>
+        <div class="hint">
+            勝ち方① お化け20体を全部倒す<br>
+            勝ち方② 5分間倒されない<br>
+            負け方　 HPが0になる
+        </div>
+        <button class="btn" id="startBtn">はじめる</button>
+    </div>
+
+    <div id="winScreen" class="overlay hidden">
+        <h1 id="winTitle">勝利！</h1>
+        <p id="winMsg"></p>
+        <button class="btn" id="winRestartBtn">もう一度</button>
+    </div>
+
+    <div id="loseScreen" class="overlay hidden">
+        <h1>ゲームオーバー</h1>
+        <p id="loseMsg">お化けにやられた…</p>
+        <button class="btn" id="loseRestartBtn">もう一度</button>
+    </div>
+
+    <script>
+    (function () {
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const hud = document.getElementById('hud');
+        const startScreen = document.getElementById('startScreen');
+        const winScreen = document.getElementById('winScreen');
+        const loseScreen = document.getElementById('loseScreen');
+        const timeVal = document.getElementById('timeVal');
+        const hpVal = document.getElementById('hpVal');
+        const ammoVal = document.getElementById('ammoVal');
+        const reloadHint = document.getElementById('reloadHint');
+        const killVal = document.getElementById('killVal');
+        const spotVal = document.getElementById('spotVal');
+        const winTitle = document.getElementById('winTitle');
+        const winMsg = document.getElementById('winMsg');
+        const loseMsg = document.getElementById('loseMsg');
+        const mobileControls = document.getElementById('mobileControls');
+
+        const GAME_TIME = 300;
+        const MAP_W = 2400;
+        const MAP_H = 1800;
+        const TILE = 60;
+        const PLAYER_SPEED = 220;
+        const MAG_SIZE = 12;
+        const RELOAD_TIME = 1.4;
+        const FIRE_RATE = 0.22;
+        const BASE_LIGHT = 620;
+        const SPOT_LIGHT = 760;
+        const SHOOT_LIGHT = 860;
+        const GHOST_VISIBLE_RANGE = 900;
+
+        const YOKAI_TYPES = [
+            { name: 'ろくろっ首', color: '#f5c6a5', accent: '#8b4513', hp: 3, speed: 90, pattern: 'stretch' },
+            { name: '河童', color: '#5a9e6f', accent: '#2d5a3d', hp: 4, speed: 110, pattern: 'dash' },
+            { name: 'ぬり壁', color: '#c9b896', accent: '#6b5b4a', hp: 6, speed: 45, pattern: 'block' },
+            { name: 'ゾンビ', color: '#7a8a6a', accent: '#3d4a35', hp: 4, speed: 70, pattern: 'shuffle' },
+            { name: 'からかさ小僧', color: '#e85a4f', accent: '#2a1810', hp: 3, speed: 130, pattern: 'hop' },
+            { name: '一反木綿', color: '#f0f0f0', accent: '#888', hp: 3, speed: 150, pattern: 'float' },
+            { name: '天狗', color: '#c94438', accent: '#1a0808', hp: 5, speed: 100, pattern: 'fly' },
+            { name: '赤鬼', color: '#d62828', accent: '#ffd166', hp: 6, speed: 85, pattern: 'charge' },
+            { name: '雪女', color: '#d8f3ff', accent: '#6ba4be', hp: 4, speed: 95, pattern: 'drift' },
+            { name: '猫又', color: '#4a3728', accent: '#ffd166', hp: 3, speed: 140, pattern: 'pounce' },
+            { name: 'ぬらりひょん', color: '#6b5344', accent: '#1a1208', hp: 5, speed: 75, pattern: 'slow' },
+            { name: '抜け首', color: '#e8b4b8', accent: '#5a2030', hp: 3, speed: 120, pattern: 'float' },
+            { name: '山姥', color: '#8b7355', accent: '#3d3020', hp: 5, speed: 65, pattern: 'shuffle' },
+            { name: '貧乏神', color: '#6b6b5a', accent: '#2a2a20', hp: 3, speed: 80, pattern: 'wander' },
+            { name: 'のっぺら坊', color: '#f5f0e8', accent: '#ccc', hp: 4, speed: 90, pattern: 'fade' },
+            { name: '口裂け女', color: '#ffb4b4', accent: '#8b0000', hp: 4, speed: 105, pattern: 'teleport' },
+            { name: '提灯お化け', color: '#ff9f1c', accent: '#c94438', hp: 3, speed: 100, pattern: 'sway' },
+            { name: '人魂', color: '#7ec8e3', accent: '#2a6090', hp: 2, speed: 160, pattern: 'orbit' },
+            { name: '砂かけ婆', color: '#b8a088', accent: '#5a4a3a', hp: 5, speed: 70, pattern: 'wander' },
+            { name: 'かまいたち', color: '#a8c8d8', accent: '#4a6878', hp: 3, speed: 180, pattern: 'zigzag' }
+        ];
+
+        let W, H, state = 'menu';
+        let player, bullets, shotEffects, ghosts, particles, walls, keys, mouse, cam;
+        let timeLeft, kills, shake, muzzleFlash, reloadTimer, fireCooldown;
+        let lastTime = 0;
+        let touchMove = { up: false, down: false, left: false, right: false };
+        let isMobile = false;
+
+        function resize() {
+            W = canvas.width = window.innerWidth;
+            H = canvas.height = window.innerHeight;
+            isMobile = W <= 768 || 'ontouchstart' in window;
+            mobileControls.classList.toggle('visible', isMobile && state === 'playing');
+        }
+
+        function buildWalls() {
+            walls = [];
+            const addRect = (x, y, w, h) => walls.push({ x, y, w, h });
+
+            addRect(0, 0, MAP_W, TILE);
+            addRect(0, MAP_H - TILE, MAP_W, TILE);
+            addRect(0, 0, TILE, MAP_H);
+            addRect(MAP_W - TILE, 0, TILE, MAP_H);
+
+            const rooms = [
+                [TILE*2, TILE*2, TILE*8, TILE*6],
+                [TILE*12, TILE*2, TILE*10, TILE*5],
+                [TILE*24, TILE*2, TILE*8, TILE*6],
+                [TILE*2, TILE*10, TILE*6, TILE*8],
+                [TILE*10, TILE*9, TILE*12, TILE*10],
+                [TILE*24, TILE*10, TILE*8, TILE*8],
+                [TILE*2, TILE*20, TILE*10, TILE*6],
+                [TILE*14, TILE*22, TILE*12, TILE*5],
+                [TILE*28, TILE*20, TILE*6, TILE*6]
+            ];
+
+            rooms.forEach(([rx, ry, rw, rh]) => {
+                addRect(rx, ry, rw, TILE);
+                addRect(rx, ry + rh - TILE, rw, TILE);
+                addRect(rx, ry, TILE, rh);
+                addRect(rx + rw - TILE, ry, TILE, rh);
+            });
+
+            addRect(TILE*10, TILE*2, TILE, TILE*4);
+            addRect(TILE*22, TILE*2, TILE, TILE*4);
+            addRect(TILE*8, TILE*10, TILE, TILE*4);
+            addRect(TILE*22, TILE*10, TILE, TILE*4);
+            addRect(TILE*12, TILE*18, TILE*8, TILE);
+            addRect(TILE*24, TILE*18, TILE, TILE*4);
+            addRect(TILE*6, TILE*20, TILE, TILE*4);
+        }
+
+        function spawnPositions() {
+            const pts = [
+                [900, 720], [1080, 720], [1160, 900], [900, 980], [1120, 1020],
+                [180, 180], [420, 150], [780, 200], [1380, 180], [1680, 220],
+                [150, 720], [360, 840], [1680, 720], [2100, 660], [240, 1320],
+                [600, 1380], [960, 1260], [1380, 1320], [1800, 1260], [1920, 960]
+            ];
+            return pts;
+        }
+
+        function resetGame() {
+            player = {
+                x: MAP_W / 2,
+                y: MAP_H / 2,
+                r: 16,
+                hp: 100,
+                angle: 0,
+                ammo: MAG_SIZE,
+                reloading: false
+            };
+            bullets = [];
+            particles = [];
+            shotEffects = [];
+            ghosts = [];
+            timeLeft = GAME_TIME;
+            kills = 0;
+            shake = 0;
+            muzzleFlash = 0;
+            reloadTimer = 0;
+            fireCooldown = 0;
+
+            const positions = spawnPositions();
+            YOKAI_TYPES.forEach((type, i) => {
+                const [x, y] = positions[i];
+                ghosts.push({
+                    type,
+                    name: type.name,
+                    x, y,
+                    hp: type.hp,
+                    maxHp: type.hp,
+                    r: 22 + (type.hp > 5 ? 6 : 0),
+                    alive: true,
+                    spotted: false,
+                    spotTimer: 0,
+                    attackCd: 0,
+                    anim: Math.random() * Math.PI * 2,
+                    vx: 0, vy: 0,
+                    hitFlash: 0
+                });
+            });
+
+            buildWalls();
+            updateHud();
+        }
+
+        function updateHud() {
+            const m = Math.floor(timeLeft / 60);
+            const s = Math.floor(timeLeft % 60);
+            timeVal.textContent = `${m}:${s.toString().padStart(2, '0')}`;
+            hpVal.textContent = player.hp;
+            ammoVal.textContent = '∞';
+            killVal.textContent = kills;
+            reloadHint.textContent = '';
+        }
+
+        function collidesCircleRect(cx, cy, cr, rect) {
+            const nx = Math.max(rect.x, Math.min(cx, rect.x + rect.w));
+            const ny = Math.max(rect.y, Math.min(cy, rect.y + rect.h));
+            const dx = cx - nx;
+            const dy = cy - ny;
+            return dx * dx + dy * dy < cr * cr;
+        }
+
+        function canMove(x, y, r) {
+            for (const w of walls) {
+                if (collidesCircleRect(x, y, r, w)) return false;
+            }
+            return x - r > 0 && x + r < MAP_W && y - r > 0 && y + r < MAP_H;
+        }
+
+        function moveEntity(ent, dx, dy, r) {
+            if (canMove(ent.x + dx, ent.y, r)) ent.x += dx;
+            if (canMove(ent.x, ent.y + dy, r)) ent.y += dy;
+        }
+
+        function dist(a, b) {
+            const dx = a.x - b.x;
+            const dy = a.y - b.y;
+            return Math.hypot(dx, dy);
+        }
+
+        function nearestGhost() {
+            let nearest = null;
+            let nearestDist = Infinity;
+            ghosts.forEach(g => {
+                if (!g.alive) return;
+                const d = dist(player, g);
+                if (d < nearestDist) {
+                    nearest = g;
+                    nearestDist = d;
+                }
+            });
+            return { ghost: nearest, distance: nearestDist };
+        }
+
+        function shoot(targetX, targetY) {
+            if (fireCooldown > 0) return;
+            fireCooldown = FIRE_RATE;
+            muzzleFlash = 0.08;
+            shake = 4;
+
+            const angle = Math.atan2(targetY - player.y, targetX - player.x);
+            player.angle = angle;
+
+            bullets.push({
+                x: player.x + Math.cos(angle) * 20,
+                y: player.y + Math.sin(angle) * 20,
+                vx: Math.cos(angle) * 680,
+                vy: Math.sin(angle) * 680,
+                life: 1.2
+            });
+
+            shotEffects.push({
+                x1: player.x + Math.cos(angle) * 24,
+                y1: player.y + Math.sin(angle) * 24,
+                x2: player.x + Math.cos(angle) * 520,
+                y2: player.y + Math.sin(angle) * 520,
+                life: 0.12,
+                maxLife: 0.12
+            });
+
+            for (let i = 0; i < 6; i++) {
+                particles.push({
+                    x: player.x + Math.cos(angle) * 18,
+                    y: player.y + Math.sin(angle) * 18,
+                    vx: Math.cos(angle + (Math.random() - 0.5)) * 120 + Math.cos(angle) * 80,
+                    vy: Math.sin(angle + (Math.random() - 0.5)) * 120 + Math.sin(angle) * 80,
+                    life: 0.15 + Math.random() * 0.1,
+                    color: '#ffd166',
+                    size: 2 + Math.random() * 3
+                });
+            }
+            updateHud();
+        }
+
+        function startReload() {
+            if (player.reloading || player.ammo === MAG_SIZE) return;
+            player.reloading = true;
+            reloadTimer = RELOAD_TIME;
+            updateHud();
+        }
+
+        function updateGhost(g, dt, isActive) {
+            if (!g.alive) return;
+            g.anim += dt;
+            g.hitFlash = Math.max(0, g.hitFlash - dt);
+
+            const d = dist(player, g);
+            if (d < GHOST_VISIBLE_RANGE) {
+                g.spotted = true;
+                g.spotTimer = 2;
+            }
+            g.spotTimer = Math.max(0, g.spotTimer - dt);
+            if (g.spotTimer <= 0 && d > GHOST_VISIBLE_RANGE + 120) g.spotted = false;
+
+            if (!isActive) {
+                g.anchorX = g.anchorX === undefined ? g.x : g.anchorX;
+                g.anchorY = g.anchorY === undefined ? g.y : g.anchorY;
+                const wx = Math.cos(g.anim * 0.8) * 24;
+                const wy = Math.sin(g.anim * 0.6) * 24;
+                const tx = g.anchorX + wx;
+                const ty = g.anchorY + wy;
+                moveEntity(g, (tx - g.x) * dt * 2, (ty - g.y) * dt * 2, g.r);
+                g.attackCd = Math.max(0, g.attackCd - dt);
+                return;
+            }
+
+            g.anchorX = undefined;
+            g.anchorY = undefined;
+
+            if (d < GHOST_VISIBLE_RANGE && g.spotted) {
+                spotVal.textContent = '👁 ' + g.name + ' が向かってくる！';
+            }
+
+            const angle = Math.atan2(player.y - g.y, player.x - g.x);
+            let spd = g.type.speed;
+            let dx = Math.cos(angle) * spd * dt;
+            let dy = Math.sin(angle) * spd * dt;
+
+            switch (g.type.pattern) {
+                case 'stretch':
+                    dy *= 0.6 + Math.sin(g.anim * 3) * 0.4;
+                    break;
+                case 'dash':
+                    if (Math.sin(g.anim * 2) > 0.7) { dx *= 2.2; dy *= 2.2; }
+                    break;
+                case 'block':
+                    spd *= 0.5;
+                    dx = Math.cos(angle) * spd * dt;
+                    dy = Math.sin(angle) * spd * dt;
+                    break;
+                case 'hop':
+                    if (Math.sin(g.anim * 5) > 0.85) { dx *= 1.8; dy *= 1.8; }
+                    break;
+                case 'float':
+                    dx += Math.sin(g.anim * 2) * 30 * dt;
+                    dy += Math.cos(g.anim * 2) * 20 * dt;
+                    break;
+                case 'fly':
+                    dy += Math.sin(g.anim * 4) * 40 * dt;
+                    break;
+                case 'charge':
+                    if (d < 200) { dx *= 1.6; dy *= 1.6; }
+                    break;
+                case 'drift':
+                    dx += Math.sin(g.anim) * 25 * dt;
+                    break;
+                case 'pounce':
+                    if (d < 160 && Math.sin(g.anim * 6) > 0.9) { dx *= 2.5; dy *= 2.5; }
+                    break;
+                case 'teleport':
+                    if (Math.sin(g.anim * 1.5) > 0.98) {
+                        g.x = player.x + (Math.random() - 0.5) * 120;
+                        g.y = player.y + (Math.random() - 0.5) * 120;
+                    }
+                    break;
+                case 'orbit':
+                    dx = Math.cos(angle + Math.PI / 2) * spd * dt * 0.8 + Math.cos(angle) * spd * dt * 0.4;
+                    dy = Math.sin(angle + Math.PI / 2) * spd * dt * 0.8 + Math.sin(angle) * spd * dt * 0.4;
+                    break;
+                case 'zigzag':
+                    dx += Math.sin(g.anim * 8) * 80 * dt;
+                    break;
+                case 'sway':
+                    dx += Math.sin(g.anim * 3) * 35 * dt;
+                    break;
+                case 'wander':
+                    dx += Math.sin(g.anim) * 20 * dt;
+                    dy += Math.cos(g.anim * 1.3) * 20 * dt;
+                    break;
+                case 'fade':
+                    if (Math.sin(g.anim * 2) > 0.5) spd *= 0.3;
+                    dx = Math.cos(angle) * spd * dt;
+                    dy = Math.sin(angle) * spd * dt;
+                    break;
+            }
+
+            if (d > 30) moveEntity(g, dx, dy, g.r);
+
+            g.attackCd = Math.max(0, g.attackCd - dt);
+            if (d < g.r + player.r + 8 && g.attackCd <= 0) {
+                player.hp -= 8 + Math.floor(g.type.hp);
+                g.attackCd = 1.2;
+                shake = 8;
+                for (let i = 0; i < 8; i++) {
+                    particles.push({
+                        x: player.x, y: player.y,
+                        vx: (Math.random() - 0.5) * 200,
+                        vy: (Math.random() - 0.5) * 200,
+                        life: 0.4,
+                        color: '#ff6b6b',
+                        size: 3 + Math.random() * 4
+                    });
+                }
+                updateHud();
+                if (player.hp <= 0) endGame(false);
+            }
+        }
+
+        function update(dt) {
+            if (state !== 'playing') return;
+
+            timeLeft -= dt;
+            if (timeLeft <= 0) {
+                timeLeft = 0;
+                endGame(true, 'survive');
+                return;
+            }
+
+            fireCooldown = Math.max(0, fireCooldown - dt);
+            muzzleFlash = Math.max(0, muzzleFlash - dt);
+            shake = Math.max(0, shake - dt * 20);
+
+            if (player.reloading) {
+                reloadTimer -= dt;
+                if (reloadTimer <= 0) {
+                    player.ammo = MAG_SIZE;
+                    player.reloading = false;
+                    updateHud();
+                }
+            }
+
+            let mx = 0, my = 0;
+            if (keys['KeyW'] || keys['ArrowUp'] || touchMove.up) my -= 1;
+            if (keys['KeyS'] || keys['ArrowDown'] || touchMove.down) my += 1;
+            if (keys['KeyA'] || keys['ArrowLeft'] || touchMove.left) mx -= 1;
+            if (keys['KeyD'] || keys['ArrowRight'] || touchMove.right) mx += 1;
+
+            if (mx || my) {
+                const len = Math.hypot(mx, my) || 1;
+                moveEntity(player, (mx / len) * PLAYER_SPEED * dt, (my / len) * PLAYER_SPEED * dt, player.r);
+            }
+
+            const worldMouseX = mouse.x + cam.x - W / 2;
+            const worldMouseY = mouse.y + cam.y - H / 2;
+            player.angle = Math.atan2(worldMouseY - player.y, worldMouseX - player.x);
+
+            const active = nearestGhost().ghost;
+            ghosts.forEach(g => updateGhost(g, dt, g === active));
+
+            if (active) {
+                const ad = dist(player, active);
+                if (ad < GHOST_VISIBLE_RANGE) {
+                    spotVal.textContent = '👁 ' + active.name + ' が向かってくる！';
+                } else {
+                    spotVal.textContent = `次のお化け: ${active.name} (${Math.round(ad)}m)`;
+                }
+            } else {
+                spotVal.textContent = '';
+            }
+
+            bullets = bullets.filter(b => {
+                b.x += b.vx * dt;
+                b.y += b.vy * dt;
+                b.life -= dt;
+                if (b.life <= 0) return false;
+
+                for (const g of ghosts) {
+                    if (!g.alive) continue;
+                    if (dist(b, g) < g.r + 4) {
+                        g.hp--;
+                        g.hitFlash = 0.15;
+                        g.spotted = true;
+                        g.spotTimer = 3;
+                        spotVal.textContent = '👁 ' + g.name + ' を発見！';
+
+                        for (let i = 0; i < 5; i++) {
+                            particles.push({
+                                x: g.x, y: g.y,
+                                vx: (Math.random() - 0.5) * 150,
+                                vy: (Math.random() - 0.5) * 150,
+                                life: 0.3,
+                                color: g.type.color,
+                                size: 2 + Math.random() * 3
+                            });
+                        }
+
+                        if (g.hp <= 0) {
+                            g.alive = false;
+                            kills++;
+                            for (let i = 0; i < 12; i++) {
+                                particles.push({
+                                    x: g.x, y: g.y,
+                                    vx: (Math.random() - 0.5) * 220,
+                                    vy: (Math.random() - 0.5) * 220,
+                                    life: 0.6,
+                                    color: g.type.accent,
+                                    size: 3 + Math.random() * 5
+                                });
+                            }
+                            updateHud();
+                            if (kills >= 20) {
+                                endGame(true, 'all');
+                                return false;
+                            }
+                        }
+                        updateHud();
+                        return false;
+                    }
+                }
+                return true;
+            });
+
+            shotEffects = shotEffects.filter(s => {
+                s.life -= dt;
+                return s.life > 0;
+            });
+
+            particles = particles.filter(p => {
+                p.x += p.vx * dt;
+                p.y += p.vy * dt;
+                p.life -= dt;
+                return p.life > 0;
+            });
+
+            cam.x = player.x;
+            cam.y = player.y;
+            updateHud();
+        }
+
+        function drawMap() {
+            ctx.fillStyle = '#d8c4a0';
+            ctx.fillRect(0, 0, MAP_W, MAP_H);
+
+            for (let y = 0; y < MAP_H; y += TILE) {
+                for (let x = 0; x < MAP_W; x += TILE) {
+                    const shade = ((x / TILE + y / TILE) % 2) ? '#e3d2b0' : '#d2bd96';
+                    ctx.fillStyle = shade;
+                    ctx.fillRect(x, y, TILE, TILE);
+                }
+            }
+
+            ctx.fillStyle = '#8a6e4e';
+            walls.forEach(w => {
+                ctx.fillRect(w.x, w.y, w.w, w.h);
+                ctx.strokeStyle = '#a98a64';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(w.x + 1, w.y + 1, w.w - 2, w.h - 2);
+
+                if (w.h <= TILE || w.w <= TILE) {
+                    ctx.fillStyle = '#9c7d58';
+                    for (let i = 0; i < w.w; i += 12) {
+                        ctx.fillRect(w.x + i, w.y + 4, 8, w.h - 8);
+                    }
+                }
+            });
+
+            const lanterns = [
+                [300, 300], [900, 240], [1500, 300], [2100, 360],
+                [360, 900], [1200, 840], [1800, 900], [600, 1320], [1500, 1320]
+            ];
+            lanterns.forEach(([lx, ly]) => {
+                ctx.fillStyle = '#c94438';
+                ctx.beginPath();
+                ctx.arc(lx, ly, 8, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = 'rgba(255, 190, 90, 0.35)';
+                ctx.beginPath();
+                ctx.arc(lx, ly, 160, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        function drawYokai(g) {
+            if (!g.alive) return;
+            const { color, accent, name } = g.type;
+            const bob = Math.sin(g.anim * 4) * 3;
+
+            ctx.save();
+            ctx.translate(g.x, g.y + bob);
+
+            if (g.hitFlash > 0) {
+                ctx.globalAlpha = 0.5 + Math.sin(g.hitFlash * 40) * 0.5;
+            }
+
+            switch (name) {
+                case 'ろくろっ首':
+                    ctx.fillStyle = color;
+                    ctx.beginPath(); ctx.ellipse(0, 8, 14, 18, 0, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = accent;
+                    ctx.fillRect(-3, -30 - Math.sin(g.anim * 3) * 20, 6, 38);
+                    ctx.fillStyle = color;
+                    ctx.beginPath(); ctx.arc(0, -32 - Math.sin(g.anim * 3) * 20, 12, 0, Math.PI * 2); ctx.fill();
+                    break;
+                case '河童':
+                    ctx.fillStyle = color;
+                    ctx.beginPath(); ctx.ellipse(0, 4, 16, 14, 0, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = accent;
+                    ctx.beginPath(); ctx.arc(0, -8, 14, Math.PI, 0); ctx.fill();
+                    ctx.fillStyle = '#f5c6a5';
+                    ctx.beginPath(); ctx.arc(0, -6, 8, 0, Math.PI * 2); ctx.fill();
+                    break;
+                case 'ぬり壁':
+                case '塗り壁':
+                    ctx.fillStyle = color;
+                    ctx.fillRect(-22, -18, 44, 36);
+                    ctx.strokeStyle = accent;
+                    ctx.lineWidth = 3;
+                    ctx.strokeRect(-22, -18, 44, 36);
+                    break;
+                case 'ゾンビ':
+                    ctx.fillStyle = color;
+                    ctx.fillRect(-12, -8, 24, 28);
+                    ctx.fillStyle = accent;
+                    ctx.beginPath(); ctx.arc(0, -14, 10, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = '#5a4030';
+                    ctx.fillRect(-8, 0, 16, 4);
+                    break;
+                case 'からかさ小僧':
+                    ctx.fillStyle = accent;
+                    ctx.beginPath(); ctx.moveTo(0, -20); ctx.lineTo(-18, 10); ctx.lineTo(18, 10); ctx.closePath(); ctx.fill();
+                    ctx.fillStyle = color;
+                    ctx.beginPath(); ctx.arc(0, 14, 8, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = '#fff';
+                    ctx.beginPath(); ctx.arc(0, 14, 3, 0, Math.PI * 2); ctx.fill();
+                    break;
+                case '一反木綿':
+                    ctx.fillStyle = color;
+                    ctx.globalAlpha *= 0.85;
+                    ctx.beginPath();
+                    ctx.moveTo(-20, 0);
+                    ctx.quadraticCurveTo(0, -25 + Math.sin(g.anim * 5) * 10, 20, 0);
+                    ctx.quadraticCurveTo(0, 25, -20, 0);
+                    ctx.fill();
+                    ctx.globalAlpha = g.hitFlash > 0 ? 0.5 + Math.sin(g.hitFlash * 40) * 0.5 : 1;
+                    break;
+                case '天狗':
+                    ctx.fillStyle = color;
+                    ctx.beginPath(); ctx.moveTo(0, -28); ctx.lineTo(-16, 12); ctx.lineTo(16, 12); ctx.closePath(); ctx.fill();
+                    ctx.fillStyle = accent;
+                    ctx.beginPath(); ctx.arc(0, 8, 10, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = '#f5c6a5';
+                    ctx.beginPath(); ctx.arc(0, 6, 7, 0, Math.PI * 2); ctx.fill();
+                    break;
+                case '赤鬼':
+                    ctx.fillStyle = color;
+                    ctx.beginPath(); ctx.arc(0, 0, 18, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = accent;
+                    ctx.beginPath(); ctx.moveTo(-14, -8); ctx.lineTo(-6, -2); ctx.lineTo(-14, 4); ctx.fill();
+                    ctx.beginPath(); ctx.moveTo(14, -8); ctx.lineTo(6, -2); ctx.lineTo(14, 4); ctx.fill();
+                    break;
+                case '雪女':
+                    ctx.fillStyle = color;
+                    ctx.globalAlpha *= 0.9;
+                    ctx.beginPath(); ctx.moveTo(0, -22); ctx.lineTo(-14, 20); ctx.lineTo(14, 20); ctx.closePath(); ctx.fill();
+                    ctx.fillStyle = accent;
+                    ctx.beginPath(); ctx.arc(0, -12, 8, 0, Math.PI * 2); ctx.fill();
+                    break;
+                case '猫又':
+                    ctx.fillStyle = color;
+                    ctx.beginPath(); ctx.ellipse(0, 4, 14, 12, 0, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); ctx.moveTo(-10, -8); ctx.lineTo(-6, -18); ctx.lineTo(-2, -8); ctx.fill();
+                    ctx.beginPath(); ctx.moveTo(10, -8); ctx.lineTo(6, -18); ctx.lineTo(2, -8); ctx.fill();
+                    ctx.fillStyle = accent;
+                    ctx.beginPath(); ctx.arc(-5, 0, 3, 0, Math.PI * 2); ctx.arc(5, 0, 3, 0, Math.PI * 2); ctx.fill();
+                    break;
+                case 'ぬらりひょん':
+                    ctx.fillStyle = color;
+                    ctx.beginPath(); ctx.ellipse(0, 6, 16, 20, 0, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = accent;
+                    ctx.beginPath(); ctx.arc(0, -10, 12, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = '#f5c6a5';
+                    ctx.beginPath(); ctx.arc(0, -8, 8, 0, Math.PI * 2); ctx.fill();
+                    break;
+                case '抜け首':
+                    ctx.fillStyle = accent;
+                    ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = color;
+                    ctx.beginPath(); ctx.arc(0, -2, 10, 0, Math.PI * 2); ctx.fill();
+                    ctx.strokeStyle = '#8b0000';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath(); ctx.moveTo(0, 10); ctx.lineTo(0, 20); ctx.stroke();
+                    break;
+                case '山姥':
+                    ctx.fillStyle = color;
+                    ctx.beginPath(); ctx.moveTo(0, -20); ctx.lineTo(-16, 18); ctx.lineTo(16, 18); ctx.closePath(); ctx.fill();
+                    ctx.fillStyle = accent;
+                    ctx.beginPath(); ctx.arc(0, -14, 10, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = '#fff';
+                    ctx.fillRect(-12, -6, 24, 2);
+                    break;
+                case '貧乏神':
+                    ctx.fillStyle = color;
+                    ctx.beginPath(); ctx.ellipse(0, 4, 12, 16, 0, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = accent;
+                    ctx.beginPath(); ctx.arc(0, -10, 9, 0, Math.PI * 2); ctx.fill();
+                    break;
+                case 'のっぺら坊':
+                    ctx.fillStyle = color;
+                    ctx.beginPath(); ctx.ellipse(0, 0, 14, 18, 0, 0, Math.PI * 2); ctx.fill();
+                    break;
+                case '口裂け女':
+                    ctx.fillStyle = color;
+                    ctx.beginPath(); ctx.arc(0, -4, 12, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = accent;
+                    ctx.fillRect(-10, 2, 20, 3);
+                    ctx.fillStyle = '#fff';
+                    ctx.fillRect(-6, -2, 4, 4);
+                    ctx.fillRect(2, -2, 4, 4);
+                    break;
+                case '提灯お化け':
+                    ctx.fillStyle = color;
+                    ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = accent;
+                    ctx.fillRect(-2, -22, 4, 10);
+                    ctx.fillStyle = '#fff';
+                    ctx.beginPath(); ctx.arc(0, 0, 5, 0, Math.PI * 2); ctx.fill();
+                    break;
+                case '人魂':
+                    ctx.fillStyle = color;
+                    ctx.globalAlpha *= 0.7 + Math.sin(g.anim * 6) * 0.2;
+                    ctx.beginPath(); ctx.arc(0, 0, 12, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = '#fff';
+                    ctx.globalAlpha *= 0.6;
+                    ctx.beginPath(); ctx.arc(0, 0, 5, 0, Math.PI * 2); ctx.fill();
+                    break;
+                case 'かまいたち':
+                    ctx.fillStyle = color;
+                    ctx.beginPath();
+                    ctx.moveTo(-16, 0);
+                    ctx.lineTo(0, -8);
+                    ctx.lineTo(16, 0);
+                    ctx.lineTo(0, 8);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.strokeStyle = accent;
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    break;
+                default:
+                    ctx.fillStyle = color;
+                    ctx.beginPath(); ctx.arc(0, 0, g.r * 0.6, 0, Math.PI * 2); ctx.fill();
+            }
+
+            if (g.spotted && g.hp < g.maxHp) {
+                ctx.fillStyle = '#ff6b6b';
+                ctx.fillRect(-16, -g.r - 10, 32 * (g.hp / g.maxHp), 4);
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(-16, -g.r - 10, 32, 4);
+            }
+
+            if (g.spotted) {
+                ctx.font = '13px DotGothic16, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillStyle = '#f0e6d8';
+                ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)';
+                ctx.lineWidth = 4;
+                ctx.strokeText(g.name, 0, -g.r - 18);
+                ctx.fillText(g.name, 0, -g.r - 18);
+            }
+
+            ctx.restore();
+        }
+
+        function drawPlayer() {
+            ctx.save();
+            ctx.translate(player.x, player.y);
+            ctx.rotate(player.angle);
+
+            ctx.fillStyle = '#4a5568';
+            ctx.beginPath();
+            ctx.arc(0, 0, player.r, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#2d3748';
+            ctx.fillRect(4, -6, 14, 12);
+
+            ctx.fillStyle = '#1a202c';
+            ctx.fillRect(10, -3, 18, 6);
+
+            if (muzzleFlash > 0) {
+                ctx.fillStyle = `rgba(255, 220, 100, ${muzzleFlash / 0.08})`;
+                ctx.beginPath();
+                ctx.arc(30, 0, 12 + muzzleFlash * 80, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            ctx.restore();
+        }
+
+        function render() {
+            const sx = (Math.random() - 0.5) * shake;
+            const sy = (Math.random() - 0.5) * shake;
+
+            ctx.save();
+            ctx.translate(W / 2 - cam.x + sx, H / 2 - cam.y + sy);
+
+            drawMap();
+
+            ghosts.forEach(g => {
+                if (g.alive) drawYokai(g);
+            });
+
+            drawPlayer();
+
+            bullets.forEach(b => {
+                ctx.fillStyle = '#ffd166';
+                ctx.beginPath();
+                ctx.arc(b.x, b.y, 6, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            shotEffects.forEach(s => {
+                const alpha = Math.max(0, s.life / s.maxLife);
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                ctx.strokeStyle = '#fff2a8';
+                ctx.lineWidth = 7;
+                ctx.shadowColor = '#ffd166';
+                ctx.shadowBlur = 18;
+                ctx.beginPath();
+                ctx.moveTo(s.x1, s.y1);
+                ctx.lineTo(s.x2, s.y2);
+                ctx.stroke();
+                ctx.strokeStyle = '#ff6b35';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(s.x1, s.y1);
+                ctx.lineTo(s.x2, s.y2);
+                ctx.stroke();
+                ctx.restore();
+            });
+
+            particles.forEach(p => {
+                ctx.globalAlpha = p.life * 2;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            });
+
+            ctx.restore();
+
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.6)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(mouse.x, mouse.y, 14, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(mouse.x - 18, mouse.y);
+            ctx.lineTo(mouse.x + 18, mouse.y);
+            ctx.moveTo(mouse.x, mouse.y - 18);
+            ctx.lineTo(mouse.x, mouse.y + 18);
+            ctx.stroke();
+        }
+
+        function endGame(won, reason) {
+            state = won ? 'win' : 'lose';
+            hud.classList.add('hidden');
+            mobileControls.classList.remove('visible');
+
+            if (won) {
+                winScreen.classList.remove('hidden');
+                if (reason === 'all') {
+                    winTitle.textContent = '完全勝利！';
+                    winMsg.textContent = `お化け20体を全部倒した！\n残り時間 ${timeVal.textContent}`;
+                } else {
+                    winTitle.textContent = '生還成功！';
+                    winMsg.textContent = `5分間生き残った！\n倒したお化け: ${kills} / 20`;
+                }
+            } else {
+                loseScreen.classList.remove('hidden');
+                loseMsg.textContent = `お化けにやられた…\n倒した: ${kills} / 20　残り ${timeVal.textContent}`;
+            }
+        }
+
+        function startGame() {
+            resetGame();
+            state = 'playing';
+            startScreen.classList.add('hidden');
+            winScreen.classList.add('hidden');
+            loseScreen.classList.add('hidden');
+            hud.classList.remove('hidden');
+            if (isMobile) mobileControls.classList.add('visible');
+            mouse.x = W / 2;
+            mouse.y = H / 2;
+        }
+
+        function loop(ts) {
+            const dt = Math.min((ts - lastTime) / 1000, 0.05);
+            lastTime = ts;
+            update(dt);
+            if (state === 'playing') render();
+            requestAnimationFrame(loop);
+        }
+
+        keys = {};
+        mouse = { x: 0, y: 0 };
+        cam = { x: 0, y: 0 };
+
+        window.addEventListener('keydown', e => {
+            keys[e.code] = true;
+            if (e.code === 'KeyR' && state === 'playing') startReload();
+            if (e.code === 'Space' && state === 'playing') {
+                e.preventDefault();
+                const wx = mouse.x + cam.x - W / 2;
+                const wy = mouse.y + cam.y - H / 2;
+                shoot(wx, wy);
+            }
+        });
+        window.addEventListener('keyup', e => { keys[e.code] = false; });
+
+        canvas.addEventListener('mousemove', e => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+
+        canvas.addEventListener('mousedown', e => {
+            if (state !== 'playing') return;
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+
+        canvas.addEventListener('touchmove', e => {
+            e.preventDefault();
+            if (e.touches.length) {
+                mouse.x = e.touches[0].clientX;
+                mouse.y = e.touches[0].clientY;
+            }
+        }, { passive: false });
+
+        document.querySelectorAll('.dpad button[data-dir]').forEach(btn => {
+            const dir = btn.dataset.dir;
+            const set = v => { touchMove[dir] = v; };
+            btn.addEventListener('touchstart', e => { e.preventDefault(); set(true); });
+            btn.addEventListener('touchend', e => { e.preventDefault(); set(false); });
+            btn.addEventListener('mousedown', () => set(true));
+            btn.addEventListener('mouseup', () => set(false));
+            btn.addEventListener('mouseleave', () => set(false));
+        });
+
+        document.getElementById('shootBtn').addEventListener('touchstart', e => {
+            e.preventDefault();
+            if (state === 'playing') {
+                const wx = mouse.x + cam.x - W / 2;
+                const wy = mouse.y + cam.y - H / 2;
+                shoot(wx, wy);
+            }
+        });
+        document.getElementById('shootBtn').addEventListener('mousedown', () => {
+            if (state === 'playing') {
+                const wx = mouse.x + cam.x - W / 2;
+                const wy = mouse.y + cam.y - H / 2;
+                shoot(wx, wy);
+            }
+        });
+
+        document.getElementById('reloadBtn').addEventListener('click', () => {
+            if (state === 'playing') startReload();
+        });
+
+        document.getElementById('startBtn').addEventListener('click', startGame);
+        document.getElementById('winRestartBtn').addEventListener('click', startGame);
+        document.getElementById('loseRestartBtn').addEventListener('click', startGame);
+        document.getElementById('backBtn').addEventListener('click', () => { window.location.href = 'index.html'; });
+
+        window.addEventListener('resize', resize);
+        resize();
+        resetGame();
+        requestAnimationFrame(loop);
+    })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+nuriephotos/nurie-final-01.png	ピカチュウ	https://www.pokemon.jp/PostImages/f07f46d9ca3af45fc75c5ac27c7bffde5baa9a8b.pdf	1273x1800
+nuriephotos/nurie-final-02.png	ピカチュウ・イーブイ	https://www.pokemon.jp/PostImages/6c3dda382f7189b39b53b1d70882bd42ae2b74c5.pdf	1273x1800
+nuriephotos/nurie-final-03.png	ピカチュウ	https://www.pokemon.jp/PostImages/6a2f3b306706487b3bbb2aa04312329f8451d191.pdf	1273x1800
+nuriephotos/nurie-final-04.png	ピカチュウ・コダック・ワンリキー	https://www.pokemon.jp/PostImages/9eec54ff247b4549d8b15f442a5773ccdbe4cb68.pdf	1273x1800
+nuriephotos/nurie-final-05.png	ピカチュウ・ビクティニ・ゴンベ	https://www.pokemon.jp/PostImages/16798f25347492d4730121b31debfdf143d3e635.pdf	1273x1800
+nuriephotos/nurie-final-06.png	ピカチュウ・ペリッパー	https://www.pokemon.jp/PostImages/4d6eefbd4ef4e482c73847074b9cd36f3240af2f.pdf	1273x1800
+nuriephotos/nurie-final-07.png	カイリュー・プクリン	https://www.pokemon.jp/PostImages/7707f086cf584311992bc8e46ca1651b5eec1f67.pdf	1273x1800
+nuriephotos/nurie-final-08.png	カイリュー・コアルヒー・クワッス	https://www.pokemon.jp/PostImages/5243881f7866b9532c8172b301db907c13f01d1c.pdf	1273x1800
+nuriephotos/nurie-final-09.png	カイリュー・モルペコ・サッチムシ	https://www.pokemon.jp/PostImages/918d8323bb55a0692bd6ae0e0d5577cd3ecb446b.pdf	1273x1800
+nuriephotos/nurie-final-10.png	カイリュー・ケーシィ・ニャオニクス	https://www.pokemon.jp/PostImages/a69bb9bd7d83de9da89102844a3e8da0b344f9c3.pdf	1273x1800
+nuriephotos/nurie-final-11.png	カイリュー・ジャラランガ	https://www.pokemon.jp/PostImages/cf67f7151251a04c21e38c3735798162b1cb57f9.pdf	1273x1800
+nuriephotos/nurie-final-12.png	カイリュー 所沢市	https://www.pokemon.jp/PostImages/1d8dc2a9de9a0a6c4f077cfd57f40cd8e0057100.pdf	1273x1800
+nuriephotos/nurie-final-13.png	レックウザ	https://www.pokemon.jp/PostImages/9da3a919bfe4d4485f755859757b8e8047326c38.pdf	1273x1800
+nuriephotos/nurie-final-14.png	黒いレックウザ用	https://www.pokemon.jp/PostImages/244b175351868c7561fcc2f2c931e08f4600dee8.pdf	1273x1800
+nuriephotos/nurie-final-15.png	イーブイ	https://www.pokemon.jp/PostImages/684c678920a9cef3fa9fb6c9f40d863fcf2000e6.pdf	1273x1800
+nuriephotos/nurie-final-16.png	イーブイ 指宿市	https://www.pokemon.jp/PostImages/0d3556e49b0be970d75df2a509e9c657e0a33d6b.pdf	1273x1800
+nuriephotos/nurie-final-17.png	リザードン	https://www.pokemon.jp/PostImages/a08e082a3f986045689697b1ec55a0582b84361b.pdf	1273x1800
+nuriephotos/nurie-final-18.png	リザードン 小笠原村	https://www.pokemon.jp/PostImages/d0a5940f01bfaab17897551e70412acccdb8e0d5.pdf	1273x1800
+nuriephotos/nurie-final-19.png	フシギダネ	https://www.pokemon.jp/PostImages/efd7daf42fe8bd47282f29ac8d5004b21287b0b9.pdf	1273x1800
+nuriephotos/nurie-final-20.png	ヒトカゲ	https://www.pokemon.jp/PostImages/bb5fb80f12664e3e892683f4367b23166c250238.pdf	1273x1800
+nuriephotos/nurie-final-21.png	ゼニガメ	https://www.pokemon.jp/PostImages/27fc0a26b2d0cd5d7c77a5dfe22924a49f0d007f.pdf	1273x1800
+nuriephotos/nurie-final-22.png	ミュウ	https://www.pokemon.jp/PostImages/98bd806147cf6c8deb9267efa39e6e6914c34aff.pdf	1273x1800
+nuriephotos/nurie-final-23.png	ルカリオ	https://www.pokemon.jp/PostImages/4cea95e3f1002666ff7aaa6bb56f5ea96ac121d2.pdf	1273x1800
+nuriephotos/nurie-final-24.png	ポッチャマ	https://www.pokemon.jp/PostImages/9f9df0a2909f8308e13a259324abd19ff5ff5d11.pdf	1273x1800
+nuriephotos/nurie-final-25.png	カビゴン・プラスル・マイナン	https://www.pokemon.jp/PostImages/da428fef56ba625a6b1079c6f3157f12befe5251.pdf	1273x1800
+nuriephotos/nurie-final-26.png	ラプラス・チョンチー・ホエルコ	https://www.pokemon.jp/PostImages/f43bfe11c89be4d6db940e8a68cafbfec274918b.pdf	1273x1800
+nuriephotos/nurie-final-27.png	アローラロコン・トドグラー	https://www.pokemon.jp/PostImages/e65bf7f3c4e9ab2c86614660451f7e365339ff6c.pdf	1273x1800
+nuriephotos/nurie-final-28.png	ラッキー・ヒメグマ	https://www.pokemon.jp/PostImages/bece637b8003891defa5837be9a93451c4a24397.pdf	1273x1800
+nuriephotos/nurie-final-29.png	ヤドン	https://www.pokemon.jp/PostImages/7a93db508c5db736caf50769d0bda9eb95c72a50.pdf	1273x1800
+nuriephotos/nurie-final-30.png	ヌオー・メッソン	https://www.pokemon.jp/PostImages/6e5f2733edde1b2af507e9471ed56ea880dffec3.pdf	1273x1800
+nuriephotos/nurie-final-31.png	ミジュマル	https://www.pokemon.jp/PostImages/16d75686daa319174abeea4bdeec8e3b9ae86df2.pdf	1273x1800
+nuriephotos/nurie-final-32.png	イシツブテ・イワンコ	https://www.pokemon.jp/PostImages/1ec266575e2b705e000c15054a315033aa3f2506.pdf	1273x1800
+nuriephotos/nurie-final-33.png	ナッシー・レジアイス	https://www.pokemon.jp/PostImages/6ed561f20499d0a771dece6da39b0e6547a3d512.pdf	1273x1800
+nuriephotos/nurie-final-34.png	ルカリオ 倉敷市	https://www.pokemon.jp/PostImages/c566b7b7980c342d79532f371286850972f83b5d.pdf	1273x1800
+nuriephotos/nurie-final-35.png	アローラロコン・ポッチャマ	https://www.pokemon.jp/PostImages/f30fca3e6de4ca07892b1cd9b9f9d2e8cdd69270.pdf	1273x1800
