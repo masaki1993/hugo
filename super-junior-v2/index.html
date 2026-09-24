@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Super Junior v2</title>
+  <style>
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0d1420;font-family:system-ui,sans-serif}
+    canvas{display:block}
+    #hud{position:fixed;top:16px;left:16px;padding:12px 14px;background:rgba(10,15,25,.78);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:12px;line-height:1.45;backdrop-filter:blur(6px);pointer-events:none}
+    #hud b{font-size:18px}.key{display:inline-block;min-width:18px;padding:1px 5px;margin:1px;border:1px solid #9fb4cc;border-radius:5px;text-align:center;background:#202b3a}
+    #status{margin-top:6px;color:#bfe2ff}
+  </style>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div id="hud">
+    <b>SUPER JUNIOR v2</b><br>
+    移動 <span class="key">W</span><span class="key">A</span><span class="key">Z</span><span class="key">D</span> / 矢印<br>
+    バリア <span class="key">K</span>　攻撃 <span class="key">L</span>　前方ダッシュ <span class="key">T</span>
+    <div id="status">READY</div>
+  </div>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Les 5 héros en quête de Patricia</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,700&display=swap" rel="stylesheet">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.170.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.170.0/examples/jsm/"
+    }
+  }
+  </script>
+  <style>
+    :root {
+      --ink: #231910;
+      --parchment: #efe2c4;
+      --gold: #c9a227;
+      --night: #0b1020;
+      --slime: #2ecc71;
+      --torch: #ff9f43;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--night);
+      color: var(--parchment);
+      font-family: 'Source Serif 4', serif;
+    }
+
+    #view {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    .hidden { display: none !important; }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      overflow: auto;
+      padding: 24px;
+      background:
+        radial-gradient(ellipse at 50% 20%, rgba(201, 162, 39, 0.12), transparent 45%),
+        rgba(8, 10, 18, 0.78);
+    }
+
+    .pager, .select-wrap {
+      width: min(920px, 100%);
+      background: var(--parchment);
+      color: var(--ink);
+      border: 3px solid var(--gold);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45), inset 0 0 80px rgba(120, 80, 20, 0.08);
+      padding: 36px 40px 32px;
+    }
+
+    .kicker {
+      font-family: Cinzel, serif;
+      letter-spacing: 0.12em;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      color: #7a5a18;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-family: Cinzel, serif;
+      font-size: clamp(1.7rem, 4vw, 2.6rem);
+      line-height: 1.2;
+      margin-bottom: 16px;
+    }
+
+    .pager p, .sub {
+      font-size: 1.2rem;
+      line-height: 1.7;
+      margin-bottom: 10px;
+    }
+
+    .sub { opacity: 0.88; margin-bottom: 28px; }
+
+    .row, .cards {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 22px;
+    }
+
+    button {
+      font-family: Cinzel, serif;
+      font-size: 1.05rem;
+      padding: 12px 22px;
+      border: 2px solid var(--ink);
+      background: var(--ink);
+      color: var(--parchment);
+      cursor: pointer;
+    }
+
+    button:hover { background: #3d2a14; }
+    button:disabled { opacity: 0.35; cursor: default; }
+    button.ghost {
+      background: transparent;
+      color: var(--ink);
+      margin-top: 22px;
+    }
+
+    .hero-card {
+      flex: 1 1 150px;
+      min-width: 140px;
+      background: #f7edd4;
+      border: 1px solid #c9b48a;
+      padding: 16px 14px 14px;
+    }
+
+    .swatch {
+      width: 42px;
+      height: 42px;
+      margin-bottom: 10px;
+    }
+
+    .hero-card h2 {
+      font-family: Cinzel, serif;
+      font-size: 1.05rem;
+      margin-bottom: 8px;
+    }
+
+    .hero-card p { font-size: 0.98rem; line-height: 1.45; }
+    .hero-card .line { font-style: italic; margin: 8px 0 12px; }
+    .hero-card button { width: 100%; }
+
+    #hud { position: fixed; inset: 0; z-index: 8; pointer-events: none; }
+
+    #hearts {
+      position: absolute;
+      top: 18px;
+      left: 22px;
+      font-size: 1.45rem;
+      text-shadow: 0 2px 8px #000;
+    }
+
+    #goal {
+      position: absolute;
+      top: 62px;
+      left: 22px;
+      max-width: min(520px, 70vw);
+      font-family: Cinzel, serif;
+      font-size: 1.15rem;
+      text-shadow: 0 2px 8px #000;
+    }
+
+    #key {
+      position: absolute;
+      top: 18px;
+      right: 22px;
+      font-family: Cinzel, serif;
+      font-size: 1.35rem;
+      color: var(--gold);
+      text-shadow: 0 2px 8px #000;
+    }
+
+    .life {
+      font-family: Cinzel, serif;
+      font-size: 0.95rem;
+      margin-right: 8px;
+      letter-spacing: 0.06em;
+    }
+
+    .heart { margin-right: 4px; opacity: 0.35; }
+    .heart.on { color: #e74c3c; opacity: 1; }
+
+    #boss {
+      position: absolute;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(420px, 70vw);
+      text-align: center;
+      font-family: Cinzel, serif;
+    }
+
+    #boss i {
+      display: block;
+      height: 10px;
+      margin-top: 6px;
+      background: var(--slime);
+      box-shadow: 0 0 16px rgba(46, 204, 113, 0.55);
+    }
+
+    #boss em {
+      display: block;
+      margin-top: 6px;
+      font-style: normal;
+      color: var(--gold);
+    }
+
+    #prompt-line {
+      position: absolute;
+      top: 22%;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: Cinzel, serif;
+      font-size: clamp(1.3rem, 3vw, 2rem);
+      padding: 10px 22px;
+      background: rgba(11, 16, 32, 0.72);
+      border: 2px solid var(--torch);
+      text-shadow: 0 0 12px rgba(255, 159, 67, 0.4);
+    }
+
+    .help {
+      position: absolute;
+      bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 1.15rem;
+    }
+
+    .help.left { left: 22px; }
+    .help.right { right: 22px; text-align: right; }
+
+    @media (max-width: 720px) {
+      .help.left, .help.right {
+        left: 16px;
+        right: auto;
+        text-align: left;
+      }
+      .help.right { bottom: 108px; }
+      .help.left { bottom: 16px; }
+    }
+
+    kbd {
+      display: inline-block;
+      min-width: 1.6em;
+      padding: 4px 8px;
+      margin: 0 2px;
+      border: 2px solid var(--gold);
+      background: rgba(11, 16, 32, 0.7);
+      font-family: Cinzel, serif;
+      font-size: 1.05rem;
+    }
+
+    #banner {
+      position: fixed;
+      top: 12%;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 12;
+      font-family: Cinzel, serif;
+      font-size: clamp(1.4rem, 3.2vw, 2.2rem);
+      text-align: center;
+      padding: 14px 28px;
+      background: rgba(11, 16, 32, 0.8);
+      border: 2px solid var(--gold);
+      pointer-events: none;
+    }
+
+    #prompt {
+      position: fixed;
+      bottom: 110px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 14;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      pointer-events: none;
+    }
+
+    #prompt button { pointer-events: auto; }
+
+    .banner-copy {
+      font-family: Cinzel, serif;
+      margin: 16px 0;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="view"></canvas>
+  <div id="hud" class="hidden">
+    <div id="hearts"></div>
+    <div id="goal"></div>
+    <div id="key" class="hidden"></div>
+    <div id="boss" class="hidden"></div>
+    <div id="prompt-line" class="hidden"></div>
+    <div class="help left">
+      <span>Déplacement</span>
+      <div><kbd>W</kbd> <kbd>A</kbd> <kbd>Z</kbd> <kbd>D</kbd></div>
+    </div>
+    <div class="help right">
+      <div><kbd>K</kbd> Barrière</div>
+      <div><kbd>L</kbd> Attaque</div>
+      <div><kbd>L</kbd> Porte</div>
+      <div><kbd>T</kbd> Dash</div>
+    </div>
+  </div>
+  <div id="banner" class="hidden"></div>
+  <div id="prompt" class="hidden">
+    <button type="button" id="continue-btn">Continuer</button>
+  </div>
+  <div id="story" class="overlay"></div>
+  <div id="select" class="overlay hidden"></div>
+  <div id="rescue" class="overlay hidden"></div>
+  <script type="module" src="./game.js"></script>
+</body>
+</html>
