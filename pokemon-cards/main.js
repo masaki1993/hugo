@@ -13,12 +13,19 @@ const CARDS = [
   { file: '09.jpg', name: 'るかストライクEX', sub: '炎のドラゴン' },
   { file: '10.jpg', name: 'ユウゴEX', sub: '炎のシュート' },
   { file: '11.jpg', name: 'マサキファミリーEX', sub: '絆のクリスタル' },
+  { file: '12.jpg', name: 'るかストライクEX', sub: '1万ボルト' },
+  { file: '13.jpg', name: 'ユウゴEX', sub: '聖獣の絆' },
+  { file: '14.jpg', name: 'ユウゴEX', sub: 'シャドウ・クリスタルバースト' },
+  { file: '15.jpg', name: 'ユウゴEX', sub: '光炎メテオドライブ' },
+  { file: '16.jpg', name: 'ユウゴEX', sub: '1万ボルト・クリスタルブレイク' },
+  { file: '17.jpg', name: 'るかストライクEX', sub: 'バーニングオーラボール' },
+  { file: '18.jpg', name: 'るかストライクEX', sub: 'メガサイコストーム' },
 ];
 
 const CARD_W = 2.5;
 const CARD_H = 3.5;
 const CARD_D = 0.07;
-const RADIUS = 8.6;
+const RADIUS = (4.15 * CARDS.length) / (2 * Math.PI);
 const FOV = 36;
 
 const canvas = document.getElementById('view');
