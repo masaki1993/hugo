@@ -17,7 +17,7 @@ const CARDS = [
   { file: '13.jpg', name: 'ユウゴEX', sub: '聖獣の絆' },
   { file: '14.jpg', name: 'ユウゴEX', sub: 'シャドウ・クリスタルバースト' },
   { file: '15.jpg', name: 'ユウゴEX', sub: '光炎メテオドライブ' },
-  { file: '16.jpg', name: 'ユウゴEX', sub: '1万ボルト・クリスタルブレイク' },
+  { file: '16.jpg', name: 'ユウゴEX', sub: '1万ボルト・クリスタルインパクト' },
   { file: '17.jpg', name: 'るかストライクEX', sub: 'バーニングオーラボール' },
   { file: '18.jpg', name: 'るかストライクEX', sub: 'メガサイコストーム' },
 ];
