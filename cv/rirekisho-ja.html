@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>履歴書｜エレン・ギリット</title>
+  <style>
+    :root {
+      --ink: #000;
+      --muted: #000;
+      --line: #000;
+      --soft: #fff;
+      --accent: #000;
+      --paper: #fff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      background: #e5e5e5;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: "Yu Mincho", "Hiragino Mincho ProN", "MS Mincho", serif;
+      font-size: 10pt;
+      line-height: 1.45;
+    }
+
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      margin: 12mm auto;
+      padding: 14mm 15mm 12mm;
+      background: var(--paper);
+      box-shadow: 0 4px 16px rgb(0 0 0 / 18%);
+      position: relative;
+    }
+
+    .page::before {
+      content: none;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin-top: 0;
+    }
+
+    .document-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 5mm;
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    h1 {
+      margin-bottom: 0;
+      font-family: "Yu Mincho", "Hiragino Mincho ProN", serif;
+      font-size: 24pt;
+      font-weight: 700;
+      letter-spacing: .35em;
+    }
+
+    .as-of {
+      margin-bottom: 1mm;
+      font-size: 9pt;
+    }
+
+    .identity {
+      display: grid;
+      grid-template-columns: 1fr 34mm;
+      gap: 5mm;
+      margin-bottom: 5mm;
+    }
+
+    .identity-main {
+      border: 1px solid var(--line);
+    }
+
+    .field {
+      display: grid;
+      grid-template-columns: 31mm 1fr;
+      min-height: 12mm;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .field:last-child {
+      border-bottom: 0;
+    }
+
+    .field-label {
+      padding: 3mm;
+      border-right: 1px solid var(--line);
+      background: #fff;
+      font-size: 8.5pt;
+      font-weight: 700;
+      letter-spacing: .08em;
+    }
+
+    .field-value {
+      padding: 2.5mm 4mm;
+    }
+
+    .name-kana {
+      font-size: 9.5pt;
+      letter-spacing: .22em;
+    }
+
+    .name {
+      font-family: "Yu Mincho", "Hiragino Mincho ProN", serif;
+      font-size: 22pt;
+      font-weight: 400;
+      letter-spacing: .13em;
+      line-height: 1.35;
+    }
+
+    .photo {
+      height: 45mm;
+      border: 1px solid var(--line);
+      color: #000;
+      display: grid;
+      place-items: center;
+      font-size: 8.5pt;
+      letter-spacing: .12em;
+    }
+
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-top: 1px solid var(--line);
+      border-left: 1px solid var(--line);
+      margin-bottom: 5mm;
+    }
+
+    .contact {
+      padding: 3mm 4mm;
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .contact.address {
+      grid-column: 1 / -1;
+    }
+
+    .contact dt {
+      margin-bottom: 1mm;
+      font-size: 8pt;
+      font-weight: 700;
+    }
+
+    .contact dd {
+      margin: 0;
+    }
+
+    h2 {
+      margin-bottom: 3mm;
+      border: 1px solid var(--ink);
+      padding: 1.5mm 3mm;
+      font-family: "Yu Mincho", "Hiragino Mincho ProN", serif;
+      font-size: 11pt;
+      text-align: center;
+      letter-spacing: .3em;
+    }
+
+    .history {
+      width: 100%;
+      margin-bottom: 5mm;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    .history th,
+    .history td {
+      border: 1px solid var(--line);
+      padding: 1.7mm 2.5mm;
+      vertical-align: top;
+    }
+
+    .history th {
+      background: var(--soft);
+      font-size: 8.5pt;
+      letter-spacing: .08em;
+    }
+
+    .history .year {
+      width: 16mm;
+      text-align: center;
+    }
+
+    .history .month {
+      width: 11mm;
+      text-align: center;
+    }
+
+    .history .division td {
+      background: #fff;
+      font-weight: 700;
+      text-align: center;
+      letter-spacing: .4em;
+    }
+
+    .history .end td:last-child {
+      text-align: right;
+      letter-spacing: .4em;
+    }
+
+    .note {
+      color: #000;
+      font-size: 8pt;
+    }
+
+    .profile {
+      margin-bottom: 7mm;
+      padding: 4mm 5mm;
+      border: 1px solid var(--line);
+      line-height: 1.8;
+    }
+
+    .career {
+      margin-bottom: 7mm;
+    }
+
+    .career-item {
+      display: grid;
+      grid-template-columns: 32mm 1fr;
+      gap: 5mm;
+      padding: 3.2mm 0;
+      border-bottom: 1px solid #000;
+      break-inside: avoid;
+    }
+
+    .career-period {
+      color: #000;
+      font-size: 9pt;
+      font-weight: 700;
+    }
+
+    .career-item h3 {
+      margin-bottom: .8mm;
+      font-size: 10.5pt;
+    }
+
+    .career-item p {
+      margin-bottom: 0;
+      font-size: 9.2pt;
+    }
+
+    .details-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6mm;
+    }
+
+    .detail-card {
+      border: 1px solid var(--ink);
+      padding: 3mm;
+      break-inside: avoid;
+    }
+
+    .detail-card h3 {
+      margin-bottom: 2mm;
+      color: #000;
+      font-family: "Yu Mincho", "Hiragino Mincho ProN", serif;
+      font-size: 11pt;
+      border-bottom: 1px solid #000;
+      padding-bottom: 1.5mm;
+      letter-spacing: .08em;
+    }
+
+    .detail-card ul {
+      margin: 0;
+      padding-left: 1.2em;
+    }
+
+    .detail-card li {
+      margin-bottom: 1mm;
+    }
+
+    .lang-list {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 1.5mm 4mm;
+    }
+
+    .lang-list span:nth-child(even) {
+      color: var(--muted);
+      font-size: 9pt;
+    }
+
+    .page-number {
+      position: absolute;
+      right: 15mm;
+      bottom: 7mm;
+      color: var(--muted);
+      font-size: 8pt;
+    }
+
+    @media print {
+      @page {
+        size: A4;
+        margin: 0;
+      }
+
+      html {
+        background: transparent;
+      }
+
+      body {
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+      }
+
+      .page {
+        margin: 0;
+        box-shadow: none;
+        page-break-after: always;
+      }
+
+      .page:last-child {
+        page-break-after: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="page" aria-label="履歴書1ページ目">
+      <header class="document-header">
+        <h1>履歴書</h1>
+        <p class="as-of">2026年10月7日現在</p>
+      </header>
+
+      <div class="identity">
+        <div class="identity-main">
+          <div class="field">
+            <div class="field-label">ふりがな</div>
+            <div class="field-value name-kana">エレン　ギリット</div>
+          </div>
+          <div class="field">
+            <div class="field-label">氏名</div>
+            <div class="field-value name">Hélène Guillitte</div>
+          </div>
+          <div class="field">
+            <div class="field-label">生年月日</div>
+            <div class="field-value">1994年4月29日（満32歳）</div>
+          </div>
+        </div>
+        <div class="photo" aria-label="証明写真貼付欄">証明写真</div>
+      </div>
+
+      <dl class="contact-grid">
+        <div class="contact address">
+          <dt>現住所</dt>
+          <dd>神奈川県川崎市麻生区東百合丘2-39-4</dd>
+        </div>
+        <div class="contact">
+          <dt>電話</dt>
+          <dd>+81 (0) 70 3963 5802</dd>
+        </div>
+        <div class="contact">
+          <dt>Eメール</dt>
+          <dd>guillitte.h@gmail.com</dd>
+        </div>
+        <div class="contact">
+          <dt>最寄り駅</dt>
+          <dd>新百合ヶ丘駅（小田急線）</dd>
+        </div>
+        <div class="contact">
+          <dt>利用駅</dt>
+          <dd>あざみ野駅（田園都市線）</dd>
+        </div>
+      </dl>
+
+      <h2>学歴</h2>
+      <table class="history">
+        <thead>
+          <tr>
+            <th class="year">年</th>
+            <th class="month">月</th>
+            <th>学歴</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="year">2012</td>
+            <td class="month"></td>
+            <td>ブリュッセル自由大学（ULB） 人文・社会科学学士課程 入学</td>
+          </tr>
+          <tr>
+            <td class="year">2015</td>
+            <td class="month"></td>
+            <td>同課程 卒業</td>
+          </tr>
+          <tr>
+            <td class="year">2015</td>
+            <td class="month"></td>
+            <td>ブリュッセル自由大学（ULB） 社会学修士課程 入学</td>
+          </tr>
+          <tr>
+            <td class="year">2015</td>
+            <td class="month">9</td>
+            <td>早稲田大学 政治学研究科 交換留学（2016年2月まで）</td>
+          </tr>
+          <tr>
+            <td class="year">2017</td>
+            <td class="month">4</td>
+            <td>上智大学 研究インターン「政治分野におけるジェンダー・クオータ」（同年5月まで）</td>
+          </tr>
+          <tr>
+            <td class="year">2018</td>
+            <td class="month">6</td>
+            <td>ブリュッセル自由大学（ULB） 社会学修士課程 修了（最優秀評価）</td>
+          </tr>
+          <tr>
+            <td class="year">2024</td>
+            <td class="month">6</td>
+            <td>カンリン日本語学校 入学</td>
+          </tr>
+          <tr>
+            <td class="year">2025</td>
+            <td class="month">6</td>
+            <td>同校 修了（日本語能力 JLPT N2相当・未取得）</td>
+          </tr>
+          <tr class="end">
+            <td></td>
+            <td></td>
+            <td>以上</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>職歴</h2>
+      <table class="history">
+        <thead>
+          <tr>
+            <th class="year">年</th>
+            <th class="month">月</th>
+            <th>職歴</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="year">2016</td>
+            <td class="month">6</td>
+            <td>E.S.Court（東京） コースコーディネーター（同年9月まで）</td>
+          </tr>
+          <tr>
+            <td class="year">2017</td>
+            <td class="month">1</td>
+            <td>Japan Consulting Office（ブリュッセル） アシスタントマネージャー・インターン（同年3月まで）</td>
+          </tr>
+          <tr>
+            <td class="year">2018</td>
+            <td class="month">7</td>
+            <td>Trainnovation（カイロ） ファシリテーター・教育担当（2019年7月まで）</td>
+          </tr>
+          <tr>
+            <td class="year">2019</td>
+            <td class="month">9</td>
+            <td>Citizen Concept（ワーヴル） プロジェクトマネージャー（2020年3月まで）</td>
+          </tr>
+          <tr>
+            <td class="year">2020</td>
+            <td class="month">3</td>
+            <td>WomenWavre（ワーヴル） ジェンダー教育ワークショップ企画・進行</td>
+          </tr>
+          <tr>
+            <td class="year">2020</td>
+            <td class="month">10</td>
+            <td>Vie Féminine（ニヴェル） 社会教育ファシリテーター（2022年3月まで）</td>
+          </tr>
+          <tr>
+            <td class="year">2023</td>
+            <td class="month">1</td>
+            <td>Beal International 日本支社 MBA・研修コーディネーター（2024年1月まで）</td>
+          </tr>
+          <tr>
+            <td class="year">2025</td>
+            <td class="month">1</td>
+            <td>営業開拓・ベルギー／日本間リエゾン（現在に至る）</td>
+          </tr>
+          <tr class="end">
+            <td></td>
+            <td></td>
+            <td>以上</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="note">※ 学校・勤務先の正式な法人名、入学・卒業月は、提出前に証明書類と照合してください。</p>
+      <span class="page-number">1 / 2</span>
+    </section>
+
+    <section class="page" aria-label="履歴書2ページ目">
+      <header class="document-header">
+        <h1>経歴詳細</h1>
+        <p class="as-of">Hélène Guillitte</p>
+      </header>
+
+      <h2>プロフィール</h2>
+      <p class="profile">
+        参加型教育、ジェンダー研究、異文化コミュニケーションを専門とするファシリテーター兼プロジェクトマネージャー。
+        ワークショップの企画・進行、プロジェクト調整、ベルギー・日本間の連携に携わってきました。
+      </p>
+
+      <h2>職務内容</h2>
+      <div class="career">
+        <article class="career-item">
+          <div class="career-period">2025年1月<br>― 現在</div>
+          <div>
+            <h3>営業開拓・ベルギー／日本間リエゾン</h3>
+            <p>日本市場での営業開拓、顧客対応、ベルギー・日本間の関係者調整を担当。</p>
+          </div>
+        </article>
+        <article class="career-item">
+          <div class="career-period">2023年1月<br>― 2024年1月</div>
+          <div>
+            <h3>Beal International 日本支社｜MBA・研修コーディネーター</h3>
+            <p>Business／MBA研修の運営、事務、人事関連業務を担当。</p>
+          </div>
+        </article>
+        <article class="career-item">
+          <div class="career-period">2020年10月<br>― 2022年3月</div>
+          <div>
+            <h3>Vie Féminine｜社会教育ファシリテーター</h3>
+            <p>フェミニズム、女性の健康、社会課題をテーマに参加型グループを企画・進行。フェミニスト・スラムや参加型写真展などの共同プロジェクトを企画し、地域団体との連携、イベント、啓発活動を調整。</p>
+          </div>
+        </article>
+        <article class="career-item">
+          <div class="career-period">2020年3月</div>
+          <div>
+            <h3>WomenWavre｜ジェンダー教育ワークショップ</h3>
+            <p>ジェンダー・ステレオタイプとジェンダーにとらわれない教育をテーマに、ワークショップを企画・進行。</p>
+          </div>
+        </article>
+        <article class="career-item">
+          <div class="career-period">2019年9月<br>― 2020年3月</div>
+          <div>
+            <h3>Citizen Concept｜プロジェクトマネージャー</h3>
+            <p>プロジェクト運営、広報・マーケティング、イベント企画を担当。</p>
+          </div>
+        </article>
+        <article class="career-item">
+          <div class="career-period">2018年7月<br>― 2019年7月</div>
+          <div>
+            <h3>Trainnovation｜ファシリテーター・教育担当</h3>
+            <p>欧州・日本間の異文化研修を支援。教材準備、コンテンツ作成、顧客調整を担当。</p>
+          </div>
+        </article>
+        <article class="career-item">
+          <div class="career-period">2016年6月<br>― 2016年9月</div>
+          <div>
+            <h3>E.S.Court｜コースコーディネーター</h3>
+            <p>英語コースの運営・講師調整、英語キャンプの企画運営を担当。</p>
+          </div>
+        </article>
+      </div>
+
+      <div class="details-grid">
+        <section class="detail-card">
+          <h3>主なスキル</h3>
+          <ul>
+            <li>参加型ファシリテーション</li>
+            <li>ワークショップ設計</li>
+            <li>プロジェクト管理</li>
+            <li>ジェンダー平等</li>
+            <li>異文化コミュニケーション</li>
+            <li>パートナー連携</li>
+          </ul>
+        </section>
+
+        <section class="detail-card">
+          <h3>言語</h3>
+          <div class="lang-list">
+            <span>フランス語</span><span>母語</span>
+            <span>英語</span><span>上級</span>
+            <span>日本語</span><span>中級（N2相当）</span>
+            <span>オランダ語</span><span>記載なし</span>
+          </div>
+        </section>
+
+        <section class="detail-card">
+          <h3>ツール</h3>
+          <ul>
+            <li>生成AI、Notion、Canva</li>
+            <li>Google Workspace、Microsoft 365</li>
+            <li>WordPress、InDesign</li>
+            <li>R、SPSS</li>
+          </ul>
+        </section>
+
+        <section class="detail-card">
+          <h3>個人活動・その他</h3>
+          <ul>
+            <li>社会規範を扱うポッドキャスト制作</li>
+            <li>在日フランス語話者の保護者向けジェンダー平等講座</li>
+            <li>演劇経験10年：即興、人前での発表、舞台表現、観客との対話</li>
+          </ul>
+        </section>
+      </div>
+      <span class="page-number">2 / 2</span>
+    </section>
+  </main>
+</body>
+</html>

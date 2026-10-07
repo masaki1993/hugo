@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Twinkle-CatchTheCards</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@500;700&display=swap" rel="stylesheet" />
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+    }
+  }
+  </script>
+  <style>
+    :root {
+      --ink: #10243a;
+      --gold: #e7c56a;
+      --paper: #f4efe2;
+      --sheet: rgba(16, 36, 58, 0.88);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #87b4df;
+      color: var(--paper);
+      font-family: "Kiwi Maru", serif;
+      touch-action: none;
+      user-select: none;
+    }
+
+    body.is-ruka {
+      --ink: #3a1220;
+      --gold: #ff8b6a;
+      --paper: #fff6ea;
+      --sheet: rgba(58, 18, 32, 0.9);
+    }
+
+    #view { display: block; width: 100%; height: 100%; }
+
+    #hud, #album, #prompt, #pad, #veil, #talk, #reward, #done, #book, #toilet, #book-zoom {
+      position: fixed;
+      z-index: 2;
+    }
+
+    #hud {
+      top: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px 16px 0;
+      pointer-events: none;
+    }
+
+    #turn {
+      font-size: clamp(1.6rem, 4vw, 2.6rem);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+    }
+
+    #count {
+      pointer-events: auto;
+      font-family: inherit;
+      font-size: clamp(1.05rem, 2.4vw, 1.45rem);
+      letter-spacing: 0.04em;
+      color: var(--paper);
+      background: var(--sheet);
+      border: 2px solid var(--gold);
+      border-radius: 999px;
+      padding: 6px 14px;
+      text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+      cursor: pointer;
+    }
+
+    #home {
+      pointer-events: auto;
+      color: var(--gold);
+      text-decoration: none;
+      border-bottom: 2px solid var(--gold);
+      font-size: 1.35rem;
+      padding-bottom: 2px;
+      white-space: nowrap;
+    }
+
+    #guide {
+      position: fixed;
+      z-index: 3;
+      top: 58px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(920px, 94vw);
+      text-align: center;
+      pointer-events: none;
+    }
+
+    #goal {
+      background: var(--sheet);
+      color: var(--paper);
+      border: 3px solid var(--gold);
+      border-radius: 22px;
+      padding: 12px 16px 8px;
+      font-size: clamp(1.45rem, 4.6vw, 2.35rem);
+      font-weight: 700;
+      line-height: 1.35;
+      letter-spacing: 0.04em;
+    }
+
+    body.is-ruka #goal { font-size: clamp(1.6rem, 5vw, 2.5rem); letter-spacing: 0.08em; }
+
+    #steps {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    #steps span {
+      min-width: 2.2em;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 2px solid var(--gold);
+      background: rgba(8, 16, 32, 0.55);
+      color: var(--paper);
+      font-size: 0.95rem;
+      letter-spacing: 0.04em;
+    }
+
+    #steps span.is-done {
+      background: var(--gold);
+      color: var(--ink);
+    }
+
+    #steps span.is-now {
+      background: var(--paper);
+      color: var(--ink);
+    }
+
+    #album { display: none; }
+
+    #prompt {
+      left: 50%;
+      bottom: calc(214px + env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      background: var(--sheet);
+      color: var(--paper);
+      border: 3px solid var(--gold);
+      border-radius: 999px;
+      padding: 10px 22px;
+      font-size: clamp(1.3rem, 3vw, 2rem);
+      letter-spacing: 0.08em;
+      pointer-events: none;
+    }
+
+    #pad {
+      left: 50%;
+      bottom: calc(14px + env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      display: grid;
+      grid-template-columns: 74px 92px 74px;
+      grid-template-rows: 64px 74px 64px;
+      gap: 6px;
+      justify-items: center;
+      align-items: center;
+    }
+
+    #pad button, .sheet button, #reward button, #done button {
+      font-family: inherit;
+      font-weight: 700;
+      color: var(--ink);
+      background: var(--paper);
+      border: 3px solid var(--gold);
+      border-radius: 18px;
+      cursor: pointer;
+    }
+
+    #pad button {
+      width: 70px;
+      height: 60px;
+      font-size: 1.4rem;
+      background: var(--sheet);
+      color: var(--paper);
+    }
+
+    #up { grid-column: 2; grid-row: 1; }
+    #left { grid-column: 1; grid-row: 2; }
+    #act { grid-column: 2; grid-row: 2; width: 88px; height: 70px; font-size: 1.5rem; background: var(--gold); color: var(--ink); }
+    #right { grid-column: 3; grid-row: 2; }
+    #down { grid-column: 2; grid-row: 3; }
+
+    body.is-talk #pad, body.is-reward #pad, body.is-done #pad, body.is-load #pad, body.is-book #pad, body.is-toilet #pad { visibility: hidden; }
+
+    #talk, #reward, #done {
+      inset: 0;
+      display: grid;
+      align-items: end;
+      justify-content: center;
+      padding: 18px 16px calc(24px + env(safe-area-inset-bottom));
+      background: rgba(6, 10, 18, 0.28);
+    }
+
+    #talk[hidden], #reward[hidden], #done[hidden], #prompt[hidden] { display: none; }
+
+    .sheet {
+      width: min(960px, 100%);
+      max-height: 88vh;
+      overflow: auto;
+      background: var(--sheet);
+      border: 3px solid var(--gold);
+      border-radius: 28px;
+      padding: 22px 18px 18px;
+      text-align: center;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+    }
+
+    #talk-how {
+      font-size: clamp(1.5rem, 4vw, 2.2rem);
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    #talk-who, #reward-line, #done-title {
+      font-size: clamp(1.2rem, 2.5vw, 1.7rem);
+      letter-spacing: 0.12em;
+      white-space: pre-line;
+      color: var(--gold);
+      margin-bottom: 12px;
+    }
+
+    #words {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      max-height: 48vh;
+      overflow: auto;
+    }
+
+    .word {
+      font-family: inherit;
+      font-weight: 700;
+      font-size: clamp(1.15rem, 3.2vw, 2rem);
+      line-height: 1.25;
+      color: var(--paper);
+      background: transparent;
+      border: 3px solid var(--gold);
+      border-radius: 16px;
+      padding: 0.28em 0.42em;
+      max-width: 100%;
+    }
+
+    body.is-ruka .word { font-size: clamp(1.25rem, 3.6vw, 2.15rem); letter-spacing: 0.04em; }
+
+    .word.is-done { background: var(--gold); color: var(--ink); }
+    .word.is-next { transform: translateY(-3px); }
+    .word.is-bad { animation: shake 0.28s linear; }
+
+    @keyframes shake {
+      25% { transform: translateX(-8px); }
+      75% { transform: translateX(8px); }
+    }
+
+    #book-actions {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    #go, #reward-go, #again, #reset, #book-close, #toilet-out, #zero {
+      margin-top: 16px;
+      min-width: 180px;
+      min-height: 72px;
+      font-size: clamp(1.8rem, 4vw, 2.6rem);
+      padding: 0.2em 0.8em;
+    }
+
+    #reward { align-items: center; background: rgba(6, 10, 18, 0.62); }
+    #reward-key {
+      width: 96px;
+      height: 40px;
+      margin: 4px auto 10px;
+      position: relative;
+    }
+    #reward-key::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 4px;
+      width: 28px;
+      height: 28px;
+      border: 5px solid var(--gold);
+      border-radius: 50%;
+    }
+    #reward-key::after {
+      content: "";
+      position: absolute;
+      left: 28px;
+      top: 15px;
+      width: 58px;
+      height: 7px;
+      background: var(--gold);
+      box-shadow: -16px 12px 0 var(--gold), 8px 12px 0 var(--gold);
+    }
+    #reward-found {
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    #reward-img {
+      width: min(360px, 78vw);
+      border-radius: 16px;
+      border: 4px solid var(--gold);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+    }
+    #reward.is-kira #reward-img { box-shadow: 0 0 0 6px var(--gold), 0 16px 40px rgba(0, 0, 0, 0.4); }
+
+    #done { align-items: center; background: rgba(6, 10, 18, 0.72); }
+    #done .sheet { display: flex; flex-direction: column; align-items: center; }
+    #again { margin-right: 0; }
+
+    #veil {
+      inset: 0;
+      z-index: 5;
+      display: grid;
+      place-items: center;
+      align-content: center;
+      gap: 18px;
+      background: #10243a;
+      transition: opacity 0.45s ease;
+    }
+
+    #veil.is-gone {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    #veil-text { font-size: 2.4rem; letter-spacing: 0.18em; color: var(--gold); }
+
+    progress {
+      width: min(420px, 70vw);
+      height: 14px;
+      accent-color: var(--gold);
+    }
+
+    #veil-error {
+      max-width: min(520px, 86vw);
+      text-align: center;
+      line-height: 1.5;
+      font-size: 1.05rem;
+    }
+
+    #book, #toilet {
+      inset: 0;
+      z-index: 4;
+      display: grid;
+      place-items: center;
+      padding: 16px;
+      background: rgba(6, 10, 18, 0.72);
+    }
+
+    #book[hidden], #toilet[hidden], #book-zoom[hidden] { display: none; }
+
+    #book-title, #toilet-line {
+      font-size: clamp(1.4rem, 3.4vw, 2rem);
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    #book-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 8px;
+      max-height: 62vh;
+      overflow: auto;
+      margin-bottom: 8px;
+    }
+
+    @media (max-width: 720px) {
+      #book-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+
+    .book-card {
+      aspect-ratio: 3 / 4;
+      border: 2px solid var(--gold);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--gold);
+      font-family: inherit;
+      font-size: 1rem;
+      overflow: hidden;
+      padding: 0;
+    }
+
+    .book-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .book-card:disabled { opacity: 0.4; }
+    .book-card.is-kira { box-shadow: inset 0 0 0 3px var(--gold); }
+
+    #book-zoom {
+      inset: 0;
+      z-index: 6;
+      display: grid;
+      place-items: center;
+      border: 0;
+      padding: 0;
+      background: rgba(0, 0, 0, 0.84);
+      cursor: pointer;
+    }
+
+    #book-zoom img {
+      width: min(420px, 86vw);
+      border-radius: 12px;
+      border: 4px solid var(--gold);
+    }
+  </style>
+</head>
+<body class="is-yugo is-load">
+  <canvas id="view"></canvas>
+  <header id="hud">
+    <p id="turn">ゆうご</p>
+    <button type="button" id="count"></button>
+    <a id="home" href="../index.html">出る</a>
+  </header>
+  <div id="guide">
+    <p id="goal"></p>
+    <p id="steps"></p>
+  </div>
+  <div id="album"></div>
+  <p id="prompt" hidden></p>
+  <div id="pad">
+    <button type="button" id="up" data-code="KeyW" aria-label="上">▲</button>
+    <button type="button" id="left" data-code="KeyA" aria-label="左">◀</button>
+    <button type="button" id="act">見よ</button>
+    <button type="button" id="right" data-code="KeyD" aria-label="右">▶</button>
+    <button type="button" id="down" data-code="KeyZ" aria-label="下">▼</button>
+  </div>
+  <div id="talk" hidden>
+    <div class="sheet">
+      <p id="talk-how"></p>
+      <p id="talk-who"></p>
+      <div id="words"></div>
+      <button type="button" id="go" hidden>行こう</button>
+    </div>
+  </div>
+  <div id="reward" hidden>
+    <div class="sheet">
+      <div id="reward-key"></div>
+      <p id="reward-found"></p>
+      <img id="reward-img" alt="" />
+      <p id="reward-line"></p>
+      <button type="button" id="reward-go">行こう</button>
+    </div>
+  </div>
+  <div id="book" hidden>
+    <div class="sheet">
+      <p id="book-title"></p>
+      <div id="book-grid"></div>
+      <div id="book-actions">
+        <button type="button" id="zero">0に戻す</button>
+        <button type="button" id="book-close">出る</button>
+      </div>
+    </div>
+  </div>
+  <button type="button" id="book-zoom" hidden>
+    <img id="book-zoom-img" alt="" />
+  </button>
+  <div id="toilet" hidden>
+    <div class="sheet">
+      <p id="toilet-line"></p>
+      <button type="button" id="toilet-out">出る</button>
+    </div>
+  </div>
+  <div id="done" hidden>
+    <div class="sheet">
+      <p id="done-title"></p>
+      <button type="button" id="again">もう行く</button>
+      <button type="button" id="reset">一から出る</button>
+    </div>
+  </div>
+  <div id="veil">
+    <p id="veil-text">入る</p>
+    <progress id="bar" max="100" value="0"></progress>
+    <p id="veil-error"></p>
+  </div>
+  <script type="module" src="./game.js"></script>
+</body>
+</html>
