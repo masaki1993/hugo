@@ -92,8 +92,8 @@
 
   // ---------- むずかしさ ----------
   const MODES = {
-    ruka:   { name: 'ルカ モード', dmgMul: 0.35, bossHP: 40, bossLvl: 0.6, beeShoot: false, minionSpd: 0.55, gameOver: false, homing: 720, spill: 3 },
-    normal: { name: 'ふつう モード', dmgMul: 1, bossHP: 80, bossLvl: 2, beeShoot: true, minionSpd: 1, gameOver: true, homing: 560, spill: 10 },
+    ruka:   { name: 'ルカ モード', touchWin: true, roomMinions: 16, dmgMul: 0.2, bossHP: 24, bossLvl: 0.6, beeShoot: false, minionSpd: 0.55, gameOver: false, homing: 720, spill: 3 },
+    normal: { name: 'ふつう モード', touchWin: false, roomMinions: 0, dmgMul: 1, bossHP: 80, bossLvl: 2, beeShoot: true, minionSpd: 1, gameOver: true, homing: 560, spill: 10 },
   };
   let MODE = 'ruka', D = MODES.ruka;
 
@@ -453,9 +453,10 @@
       m.anim++;
       if (Math.abs(m.x - p.x) > 1500) continue;
       const sp = (m.type === 'bee' ? 1.4 : 1.8) * D.minionSpd;
+      const range = m.home > ROOM_X ? 80 : 140;
       m.x += m.dir * sp;
-      if (m.x < m.home - 140) m.dir = 1;
-      if (m.x > m.home + 140) m.dir = -1;
+      if (m.x < m.home - range) m.dir = 1;
+      if (m.x > m.home + range) m.dir = -1;
       if (m.type === 'bee') {
         m.y += Math.sin(m.anim * 0.06) * 0.6;
         if (D.beeShoot && scene === 'play' && Math.abs(m.x - p.x) < 450 && --m.cd <= 0) {
@@ -614,6 +615,8 @@
         if (p.state === 'jump' || p.state === 'homing') {
           p.state = 'jump'; p.vy = -13; p.vx *= 0.5; p.onG = false; p.jumps = 1; newAttack();
         }
+      } else if (overlap(pb, mb) && D.touchWin) {
+        killMinion(m);
       } else if (overlap(pb, mb) && p.state !== 'boost') {
         hurtP(m.type === 'bee' ? 8 : 10, sign(p.x - m.x));
       }
@@ -738,7 +741,18 @@
   }
 
   // ---------- ボスのへや ----------
+  function spawnRoomMinions() {
+    minions = minions.filter(m => m.home < ROOM_X);
+    for (let i = 0; i < D.roomMinions; i++) {
+      const x = ROOM_X + 240 + (i % 8) * ((CAGE_X - 260 - ROOM_X - 240) / 7) + rand(-20, 20);
+      const bee = i >= 10;
+      minions.push(bee
+        ? { type: 'bee', x, home: x, y: GROUND - 110 - rand(0, 40), dir: i % 2 ? 1 : -1, anim: rand(0, 100), cd: 999, alive: true }
+        : { type: 'moto', x, home: x, y: GROUND, dir: i % 2 ? 1 : -1, anim: rand(0, 100), alive: true });
+    }
+  }
   function enterRoom() {
+    spawnRoomMinions();
     bossReached = true;
     setScene('roomCut'); cutF = 0; bgm = null;
     p.vx = 0; p.vy = 0; p.y = GROUND; p.onG = true; p.state = 'idle'; p.trail = [];
@@ -1439,6 +1453,11 @@
       ctx.textAlign = 'right'; ctx.font = 'bold 18px sans-serif'; ctx.fillStyle = '#ff8080';
       ctx.fillText('メタルソニック', W - 30, y + 6);
       bar(W - 490, y - 8, 330, 20, e.hp / e.maxHp * 100, '#ff4848', true);
+      const left = minions.filter(m => m.alive && m.home > ROOM_X).length;
+      if (D.roomMinions) {
+        ctx.font = 'bold 15px sans-serif'; ctx.fillStyle = left ? '#ffd23f' : '#9fff7a';
+        ctx.fillText(left ? 'ロボ のこり ' + left + ' / ' + D.roomMinions : 'ロボ ぜんぶ やっつけた！', W - 30, y + 30);
+      }
     } else {
       // ママまでの きょり
       const x0 = W - 500, w = 360;

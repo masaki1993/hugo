@@ -92,8 +92,8 @@
 
   // ---------- むずかしさ ----------
   const MODES = {
-    ruka:   { name: 'ルカ モード', hearts: 11, guardAfter: 3, guardT: 100, bossLvl: 0.6, beeShoot: false, minionSpd: 0.55, gameOver: false, homing: 720, spill: 3 },
-    normal: { name: 'ふつう モード', hearts: 13, guardAfter: 2, guardT: 150, bossLvl: 2, beeShoot: true, minionSpd: 1, gameOver: true, homing: 560, spill: 10 },
+    ruka:   { name: 'ルカ モード', touchWin: true, roomMinions: 16, hearts: 7, guardAfter: 4, guardT: 60, bossLvl: 0.6, beeShoot: false, minionSpd: 0.55, gameOver: false, homing: 720, spill: 3 },
+    normal: { name: 'ふつう モード', touchWin: false, roomMinions: 0, hearts: 13, guardAfter: 2, guardT: 150, bossLvl: 2, beeShoot: true, minionSpd: 1, gameOver: true, homing: 560, spill: 10 },
   };
   let MODE = 'ruka', D = MODES.ruka;
 
@@ -453,9 +453,10 @@
       m.anim++;
       if (Math.abs(m.x - p.x) > 1500) continue;
       const sp = (m.type === 'bee' ? 1.4 : 1.8) * D.minionSpd;
+      const range = m.home > ROOM_X ? 80 : 140;
       m.x += m.dir * sp;
-      if (m.x < m.home - 140) m.dir = 1;
-      if (m.x > m.home + 140) m.dir = -1;
+      if (m.x < m.home - range) m.dir = 1;
+      if (m.x > m.home + range) m.dir = -1;
       if (m.type === 'bee') {
         m.y += Math.sin(m.anim * 0.06) * 0.6;
         if (D.beeShoot && scene === 'play' && Math.abs(m.x - p.x) < 450 && --m.cd <= 0) {
@@ -636,6 +637,8 @@
         if (p.state === 'jump' || p.state === 'homing') {
           p.state = 'jump'; p.vy = -13; p.vx *= 0.5; p.onG = false; p.jumps = 1; newAttack();
         }
+      } else if (overlap(pb, mb) && D.touchWin) {
+        killMinion(m);
       } else if (overlap(pb, mb) && p.state !== 'boost') {
         hurtP(m.type === 'bee' ? 8 : 10, sign(p.x - m.x));
       }
@@ -764,7 +767,18 @@
   }
 
   // ---------- ボスのへや ----------
+  function spawnRoomMinions() {
+    minions = minions.filter(m => m.home < ROOM_X);
+    for (let i = 0; i < D.roomMinions; i++) {
+      const x = ROOM_X + 240 + (i % 8) * ((CAGE_X - 260 - ROOM_X - 240) / 7) + rand(-20, 20);
+      const bee = i >= 10;
+      minions.push(bee
+        ? { type: 'bee', x, home: x, y: GROUND - 110 - rand(0, 40), dir: i % 2 ? 1 : -1, anim: rand(0, 100), cd: 999, alive: true }
+        : { type: 'moto', x, home: x, y: GROUND, dir: i % 2 ? 1 : -1, anim: rand(0, 100), alive: true });
+    }
+  }
   function enterRoom() {
+    spawnRoomMinions();
     bossReached = true;
     setScene('roomCut'); cutF = 0; bgm = null;
     p.vx = 0; p.vy = 0; p.y = GROUND; p.onG = true; p.state = 'idle'; p.trail = [];
@@ -1486,6 +1500,11 @@
       heartsRow(W - 175, y - 2, e.hp, e.maxHp, '#ff4848', true);
       ctx.textAlign = 'right'; ctx.font = 'bold 15px sans-serif'; ctx.fillStyle = '#fff';
       ctx.fillText(e.hp + ' / ' + e.maxHp, W - 175 - e.maxHp * 25 + 10, y + 6);
+      const left = minions.filter(m => m.alive && m.home > ROOM_X).length;
+      if (D.roomMinions && !(e.guardT > 0)) {
+        ctx.font = 'bold 15px sans-serif'; ctx.fillStyle = left ? '#ffd23f' : '#9fff7a';
+        ctx.fillText(left ? 'ロボ のこり ' + left + ' / ' + D.roomMinions : 'ロボ ぜんぶ やっつけた！', W - 30, y + 30);
+      }
       if (e.guardT > 0) { ctx.fillStyle = '#7fe0ff'; ctx.font = 'bold 14px sans-serif'; ctx.fillText('ガード中 → キックかスピンで こわせ！', W - 30, y + 28); }
     } else {
       // ママまでの きょり
@@ -1584,7 +1603,7 @@
     ['← → : はしる　↑ / スペース : ジャンプ（空中でもう一回 → ホーミング）', 'Z : アタック　X : スーパーブースト（リング20こ）',
       'ジャンプばかりだと メタルが ガード！ キックや スピンも つかおう'].forEach((l, i) => ctx.fillText(l, W / 2, 375 + i * 26));
     ctx.font = 'bold 15px sans-serif'; ctx.fillStyle = '#ff9ad5';
-    ctx.fillText('ハートは そすう！　ルカ 11こ ／ ふつう 13こ（ソニックも メタルも おなじ数）', W / 2, 450);
+    ctx.fillText('ハートは そすう！　ルカ 7こ ／ ふつう 13こ（ソニックも メタルも おなじ数）', W / 2, 450);
   }
 
   function drawLeader() {
