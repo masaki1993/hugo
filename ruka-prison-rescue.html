@@ -35,7 +35,7 @@
   #modes .normal { background: linear-gradient(#5aa0ff, #1f5fe0); }
   #modes button.sel, #select button.sel { outline: 4px solid #ffd23f; outline-offset: 3px; }
   #select {
-    position: absolute; right: 3%; top: 17%; width: 57%; z-index: 6;
+    position: absolute; right: 3%; top: 13%; width: 57%; z-index: 6;
     display: none; flex-direction: column; gap: 1.6%;
   }
   #cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px 1.2vw; }
@@ -46,6 +46,10 @@
   .card { text-align: left; padding: 6px 10px; font-weight: 800; font-size: min(2.2vw, 3.9vh); }
   .card small { display: block; font-size: 56%; font-weight: 600; margin-top: 2px; line-height: 1.25; }
   .card.sel { transform: scale(1.04); }
+  #folrow { display: flex; align-items: center; gap: 8px; }
+  #folrow span { font-weight: 800; font-size: min(1.5vw, 2.6vh); white-space: nowrap; color: #ffd23f; }
+  #fols { display: flex; flex-wrap: wrap; gap: 5px; }
+  #fols button { padding: 3px 9px; font-weight: 800; font-size: min(1.5vw, 2.6vh); border-width: 2px; box-shadow: 0 3px 0 rgba(0,0,0,.4); }
   #route { display: flex; gap: 1.2vw; margin-top: 4px; }
   #route button { flex: 1; padding: 6px 0; font-weight: 800; font-size: min(1.7vw, 3vh); background: #3a3a5a; }
   #route button small { display: block; font-size: 75%; font-weight: 600; opacity: .9; }
@@ -81,9 +85,10 @@
     </div>
     <div id="select">
       <div id="cards"></div>
+      <div id="folrow"><span>うしろから ついてくる人：</span><div id="fols"></div></div>
       <div id="route">
-        <button data-long="1" class="sel">ながい コース<small>へや 4つ → ママの ろうや</small></button>
-        <button data-long="0">みじかい コース<small>すぐ ママの ろうや へ</small></button>
+        <button data-long="1" class="sel">ながい コース<small>へや 4つ → さいごの ろうや</small></button>
+        <button data-long="0">みじかい コース<small>すぐ さいごの ろうや へ</small></button>
       </div>
       <button id="go">スタート！</button>
     </div>
@@ -146,6 +151,10 @@
               counts: { gate: [7, 0, 0], hall: [4, 5, 0], factory: [5, 3, 2], guard: [3, 3, 4] } },
   };
   let MODE = 'ruka', D = MODES.ruka, HERO = 'ruka', HC = HEROES.ruka, longRoute = true;
+  // FOL = うしろから ついてくる人、CAP = つかまる人、STORY A = ママが つれていかれる / B = ママは だいじょうぶ → りょこう先で だれかが つかまる
+  let FOL = 'papa', CAP = 'mama', STORY = 'A';
+  const FOL_KEYS = ['papa', 'mama', ...Object.keys(HEROES)];
+  const nm = k => CH[k].name;
 
   // ---------- へや ----------
   const ROOM_INFO = {
@@ -163,7 +172,9 @@
   function buildRooms() {
     const types = longRoute ? ['home', 'gate', 'hall', 'factory', 'guard', 'prison'] : ['home', 'prison'];
     let x = 0;
-    rooms = types.map((t, i) => { const r = { type: t, idx: i, x0: x, ...ROOM_INFO[t] }; x += r.w; return r; });
+    const B = STORY === 'B';
+    const names = B ? { home: 'アジトへ いそげ！', gate: 'へや1　わるい子の アジト', guard: 'へや4　みはりの へや', prison: nm(CAP) + 'の ろうや' } : {};
+    rooms = types.map((t, i) => { const r = { type: t, idx: i, x0: x, ...ROOM_INFO[t] }; if (names[t]) r.name = names[t]; x += r.w; return r; });
   }
 
   // ---------- 入力 ----------
@@ -223,10 +234,21 @@
     e.stopPropagation(); initAudio(); longRoute = b.dataset.long === '1'; updateSelUI(); SFX.tick();
   }));
   document.getElementById('go').addEventListener('pointerdown', e => { e.stopPropagation(); initAudio(); startGame(); });
+  const folsEl = document.getElementById('fols');
+  const folBtns = FOL_KEYS.map(k => {
+    const b = document.createElement('button');
+    b.textContent = CH[k].name;
+    b.style.background = `linear-gradient(${CH[k].light}, ${CH[k].dark})`;
+    b.addEventListener('pointerdown', e => { e.stopPropagation(); initAudio(); FOL = k; updateSelUI(); SFX.tick(); });
+    folsEl.appendChild(b);
+    return b;
+  });
   function updateSelUI() {
     cardBtns.forEach((b, i) => b.classList.toggle('sel', i === heroSel));
     routeBtns.forEach(b => b.classList.toggle('sel', (b.dataset.long === '1') === longRoute));
     HERO = HERO_KEYS[heroSel]; HC = HEROES[HERO];
+    if (FOL === HERO) FOL = 'papa';
+    folBtns.forEach((b, i) => { b.style.display = FOL_KEYS[i] === HERO ? 'none' : ''; b.classList.toggle('sel', FOL_KEYS[i] === FOL); });
   }
 
   // ---------- サウンド ----------
@@ -336,7 +358,7 @@
   let cageOpen = 0, bossReached = false, score = 0;
   const cam = { x: 700, y: 400, z: 1 };
   let camT = { x: 700, y: 400, z: 1 };
-  let p, e, mama, papa, lasers = [], stars = [], parts = [], minions = [], allies = [], allyCD = 0, friendsLine = [];
+  let p, e, mama, papa, fam = [], lasers = [], stars = [], parts = [], minions = [], allies = [], allyCD = 0, friendsLine = [];
 
   function makeP(x) {
     const hp = D.hearts + (HC.tough ? 4 : 0); // 7→11, 13→17（そすうのまま）
@@ -375,16 +397,28 @@
   }
   function newGame() {
     D = MODES[MODE]; HC = HEROES[HERO];
+    // ママが つれていかれない ときも ある！
+    STORY = FOL === 'mama' ? 'B' : (Math.random() < 0.5 ? 'A' : 'B');
+    if (STORY === 'A') CAP = 'mama';
+    else { const pool = ['papa', ...HERO_KEYS].filter(k => k !== HERO && k !== FOL); CAP = pool[Math.floor(Math.random() * pool.length)]; }
     buildRooms();
     cr = 0;
     p = makeP(500); e = makeBoss();
-    mama = makeFolk(760, -1);
-    papa = makeFolk(360, 1);
+    mama = makeFolk(STORY === 'A' ? 760 : 900, -1); // つかまる人
+    papa = makeFolk(360, 1);                          // ついてくる人
+    setupFam();
     lasers = []; parts = []; minions = []; allies = []; allyCD = 0; friendsLine = [];
     makeStars(rooms[0]);
     roomCleared = true; cageOpen = 0; bossReached = false; score = 0;
     bounds = { min: 60, max: rooms[0].w + 10 };
     cam.x = 700; cam.z = 1;
+  }
+  function setupFam() {
+    const ks = (STORY === 'A' ? ['papa'] : ['mama', 'papa']).filter(k => k !== FOL && k !== CAP);
+    fam = ks.map((k, i) => ({ ...makeFolk(STORY === 'A' ? 250 : (i ? 650 : 770), STORY === 'A' ? 1 : (i ? 1 : -1)), kind: k }));
+  }
+  function folkPhys(o) {
+    if (o.y < GROUND || o.vy) { o.y += o.vy; o.vy += 1.05; if (o.y >= GROUND) { o.y = GROUND; o.vy = 0; } }
   }
   function setScene(s) {
     scene = s; sceneT = 0; clearPress();
@@ -608,12 +642,12 @@
     bounds = b;
     if (Math.abs(papa.vx) > 1) papa.face = sign(papa.vx); else papa.face = sign(p.x - papa.x);
     papa.state = Math.abs(papa.vx) > 1 ? 'run' : 'idle';
-    if (papa.cheer > 0 && --papa.cheer === 0) popText(papa.x, papa.y - 140, ['がんばれ！', 'いけー！', 'パパが ついてるぞ！'][Math.floor(rand(0, 3))], '#7fb8ff');
+    if (papa.cheer > 0 && --papa.cheer === 0) popText(papa.x, papa.y - 140, ['がんばれ！', 'いけー！', nm(FOL) + 'が ついてるぞ！'][Math.floor(rand(0, 3))], CH[FOL].ui);
   }
 
   // ---------- なかまが たすけに くる ----------
   function callAllies() {
-    const free = HERO_KEYS.filter(k => k !== HERO && !allies.some(a => a.kind === k));
+    const free = HERO_KEYS.filter(k => k !== HERO && k !== FOL && k !== CAP && !allies.some(a => a.kind === k));
     free.sort(() => Math.random() - 0.5);
     const n = Math.min(D.allyN, free.length);
     if (!n) return;
@@ -1004,29 +1038,74 @@
 
   function say(name, text, dur, col = '#fff') { sub = { name, text, until: cutF + dur, col }; }
 
-  // ---------- オープニング：ママが つれていかれる ----------
-  function cutStep() {
-    cutF++;
-    mama.anim++; p.anim++; papa.anim++;
-    if (cutF === 1) { say('', 'ある日。' + HC.name + 'は ママと パパと いっしょに いた。', 120); camT = { x: 600, y: GROUND - 200, z: 1.1 }; }
-    if (cutF === 120) say('ママ', 'わるい子たちが けいむしょに いかないように、ママが まもってあげるの。', 140, '#ff9ad5');
-    if (cutF === 260) { SFX.charge(); say('？？？', 'ワルイコヲ カバウ ヤツモ タイホ ダ！', 100, '#ff7070'); }
-    if (cutF >= 260 && cutF < 340) {
-      e.active = false; e.x = 920; e.face = -1;
-      e.y = lerp(-300, GROUND - 140, (cutF - 260) / 80);
-      camT = { x: 820, y: GROUND - 250, z: 1.0 };
+  // ---------- オープニング ----------
+  // ロボが おりてきて（t0〜t0+80）、つかまえて とんでいく（t0+80〜t0+210）
+  function bossDescend(t0, x) {
+    if (cutF >= t0 && cutF < t0 + 80) {
+      e.active = false; e.x = x; e.face = -1;
+      e.y = lerp(-300, GROUND - 140, (cutF - t0) / 80);
+      camT = { x: x - 100, y: GROUND - 250, z: 1.0 };
     }
-    if (cutF === 340) { e.carry = true; SFX.scream(); shake = 10; mama.wave = true; say('ママ', 'きゃあ〜！　たすけて〜！', 110, '#ff9ad5'); }
-    if (cutF > 340 && cutF < 470) {
+  }
+  function bossCarry(t0) {
+    if (cutF === t0) { e.carry = true; SFX.scream(); shake = 10; mama.wave = true; say(nm(CAP), 'きゃあ〜！　たすけて〜！', 110, CH[CAP].ui); }
+    if (cutF > t0 && cutF < t0 + 130) {
       e.x += 9; e.y -= 4.5;
       mama.x = e.x; mama.y = e.y + 30;
       camT = { x: Math.min(e.x, 1500), y: GROUND - 260, z: 0.95 };
       if (simT % 3 === 0) sparks(e.x - 30, e.y - 30, 2, '#ffb040', 4);
     }
-    if (cutF === 470) { putMamaInCage(); papa.face = 1; say('パパ', 'ママが けいむしょに つれていかれた！　パパも いっしょに いくぞ！', 140, '#7fb8ff'); }
-    if (cutF >= 470) camT = { x: (p.x + papa.x) / 2 + 40, y: GROUND - 130, z: 1.45 };
-    if (cutF === 610) say(HC.name, 'ママ、ぜったい たすけるからね！', 130, HC.ui);
-    if (cutF === 750) startStage();
+    if (cutF === t0 + 130) {
+      putMamaInCage(); papa.face = 1;
+      say(nm(FOL), nm(CAP) + 'が つれていかれた！　' + nm(FOL) + 'も いっしょに いくよ！', 140, CH[FOL].ui);
+    }
+    if (cutF >= t0 + 130) camT = { x: (p.x + papa.x) / 2 + 40, y: GROUND - 130, z: 1.45 };
+    if (cutF === t0 + 270) say(HC.name, nm(CAP) + '、ぜったい たすけるからね！', 130, HC.ui);
+    if (cutF === t0 + 410) startStage();
+  }
+  function cutStep() {
+    cutF++;
+    mama.anim++; p.anim++; papa.anim++;
+    for (const f of fam) { f.anim++; folkPhys(f); }
+    folkPhys(papa);
+    if (cutF === 1) { say('', 'ある日。' + HC.name + 'は みんなと いっしょに いた。', 120); camT = { x: 600, y: GROUND - 200, z: 1.1 }; }
+    if (cutF === 120) say('ママ', 'わるい子たちが けいむしょに いかないように、ママが まもってあげるの。', 140, CH.mama.ui);
+    if (cutF === 260) { SFX.charge(); say('？？？', 'ワルイコヲ カバウ ヤツモ タイホ ダ！', 100, '#ff7070'); }
+    if (STORY === 'A') {
+      bossDescend(260, 920);
+      bossCarry(340);
+      return;
+    }
+    // --- ママは つれていかれなかった！ ---
+    bossDescend(260, 860);
+    const mo = FOL === 'mama' ? papa : fam.find(f => f.kind === 'mama');
+    if (cutF === 340) {
+      SFX.hit(true); shake = 12; sparks(mo.x, mo.y - 60, 20, '#fff6a0', 10);
+      mo.vy = -18; mo.y -= 1; mo.wave = true;
+      say('ロボ', 'ム、ムムッ…　ニゲラレタ！', 100, '#ff7070');
+    }
+    if (cutF > 360 && cutF < 460) { e.x += 7; e.y -= 7; if (simT % 3 === 0) sparks(e.x - 30, e.y - 30, 2, '#ffb040', 4); }
+    if (cutF === 470) {
+      mo.wave = false; SFX.win(); bgm = 'happy';
+      hearts(mo.x, mo.y - 120, 16);
+      banner = { text: 'よかったね！', t: 0, max: 130, col: '#ff9ad5' };
+      say('ママ', 'ママは つれていかれなかった！　よかった〜！', 130, CH.mama.ui);
+      camT = { x: 640, y: GROUND - 200, z: 1.1 };
+    }
+    if (cutF === 610) say('パパ', 'よし！　みんなで りょこうに いこう！', 120, CH.papa.ui);
+    if (cutF === 730) fade = 1;
+    if (cutF === 745) {
+      // りょこうさきの うみ
+      rooms[0].beach = true;
+      e = makeBoss();
+      p.x = 500; papa.x = 360; papa.y = GROUND; papa.vy = 0; mama.x = 900; mama.y = GROUND;
+      setupFam();
+      camT = { x: 640, y: GROUND - 200, z: 1.1 }; cam.x = 640;
+    }
+    if (cutF === 760) say('', 'りょこうさきの うみ。でも そこにも わるい子たちが いた…', 120);
+    if (cutF === 880) { SFX.charge(); bgm = null; say('ロボ', 'コンドコソ ツカマエル！', 90, '#ff7070'); }
+    bossDescend(880, 960);
+    bossCarry(960);
   }
   function putMamaInCage() {
     e.carry = false;
@@ -1035,7 +1114,7 @@
   function startStage() {
     e = makeBoss();
     enterRoomPlay(0, 500);
-    banner = { text: 'ママを たすけだせ！', t: 0, max: 110, col: '#ffd23f' };
+    banner = { text: nm(CAP) + 'を たすけだせ！', t: 0, max: 110, col: '#ffd23f' };
   }
 
   // ---------- へやの いどう ----------
@@ -1095,18 +1174,18 @@
     if (cutF === 40) { p.vx = 0; p.state = 'idle'; papa.vx = 0; papa.state = 'idle'; }
     if (cutF === 30) { SFX.door(); shake = 14; }
     camT = { x: P.x0 + 640, y: GROUND - 210, z: 1 };
-    if (cutF === 50) say('ママ', HC.name + '〜！　パパ〜！　ここよ〜！', 110, '#ff9ad5');
-    if (cutF === 160) say('パパ', 'ママ！　いま たすけるからな！', 100, '#7fb8ff');
+    if (cutF === 50) say(nm(CAP), HC.name + '〜！　' + nm(FOL) + '〜！　ここだよ〜！', 110, CH[CAP].ui);
+    if (cutF === 160) say(nm(FOL), nm(CAP) + '！　いま たすけるからね！', 100, CH[FOL].ui);
     if (cutF === 260) {
       e = makeBoss(); e.active = true; e.x = P.x0 + 860; e.y = -300; e.onG = false; e.vy = 0;
       SFX.charge();
     }
     if (cutF > 260 && !e.onG) {
       e.vy += 1.2; e.y += e.vy;
-      if (e.y >= GROUND) { e.y = GROUND; e.vy = 0; e.onG = true; SFX.land(); shake = 22; dust(e.x, GROUND, 24); say('ガッチャン大王', 'ワシハ けいむしょの 王！　ママハ ダサナイ！', 130, '#ff7070'); }
+      if (e.y >= GROUND) { e.y = GROUND; e.vy = 0; e.onG = true; SFX.land(); shake = 22; dust(e.x, GROUND, 24); say('ガッチャン大王', STORY === 'A' ? 'ワシハ けいむしょの 王！　ママハ ダサナイ！' : 'ワシハ わるい子の 王！　' + nm(CAP) + 'ハ ダサナイ！', 130, '#ff7070'); }
     }
     if (cutF >= 280 && cutF < 410 && e.onG) camT = { x: e.x - 40, y: GROUND - 150, z: 1.45 };
-    if (cutF === 410) say(HC.name, 'ママを かえせ！　いくぞ！', 100, HC.ui);
+    if (cutF === 410) say(HC.name, nm(CAP) + 'を かえせ！　いくぞ！', 100, HC.ui);
     if (cutF >= 410 && cutF < 500) camT = { x: p.x + 40, y: GROUND - 120, z: 1.6 };
     if (cutF === 510) beginBoss();
   }
@@ -1144,19 +1223,20 @@
       if (papa.x < p.x - 100) { papa.x += 3; papa.vx = 3; papa.state = 'run'; papa.face = 1; } else { papa.vx = 0; papa.state = 'idle'; papa.face = 1; }
     }
     camT = cutF < 380 ? { x: (papa.x + mama.x) / 2, y: GROUND - 150, z: 1.35 } : { x: R().x0 + 640, y: GROUND - 200, z: 1 };
-    if (cutF === 220) { mama.state = 'idle'; mama.vx = 0; p.state = 'idle'; p.vx = 0; papa.vx = 0; hearts((p.x + mama.x) / 2, GROUND - 120, 16); SFX.win(); bgm = 'happy'; say('ママ', HC.name + '！　パパ！　たすけてくれて ありがとう！', 160, '#ff9ad5'); }
+    if (cutF === 220) { mama.state = 'idle'; mama.vx = 0; p.state = 'idle'; p.vx = 0; papa.vx = 0; hearts((p.x + mama.x) / 2, GROUND - 120, 16); SFX.win(); bgm = 'happy'; say(nm(CAP), HC.name + '！　' + nm(FOL) + '！　たすけてくれて ありがとう！', 160, CH[CAP].ui); }
     if (cutF > 220 && cutF % 25 === 0) hearts((p.x + mama.x) / 2, GROUND - 130, 2);
     if (cutF === 380) {
-      say('パパ', 'よかったなあ、ママ！　なかまの みんなも ありがとう！', 160, '#7fb8ff');
-      const others = HERO_KEYS.filter(k => k !== HERO);
+      say(nm(FOL), 'よかったね、' + nm(CAP) + '！　みんなも きてくれたよ！', 160, CH[FOL].ui);
+      // さいごは みんな あつまる
+      const others = [...fam.map(f => f.kind), ...HERO_KEYS.filter(k => k !== HERO && k !== FOL && k !== CAP)];
       const left = R().x0 + 110;
       friendsLine = others.map((k, i) => ({ kind: k, x: left - 300 - i * 80, tx: left + i * 72, y: GROUND, vx: 0, face: 1, state: 'run', anim: rand(0, 40), inv: 0, onG: true, wave: false }));
     }
     for (const f of friendsLine) {
       if (f.x < f.tx) { f.x += 6; f.vx = 6; f.state = 'run'; } else { f.vx = 0; f.state = 'idle'; f.wave = true; }
     }
-    if (cutF === 540) say(HC.name, 'ママ、パパ、みんな、いっしょに かえろう！', 160, HC.ui);
-    if (cutF === 700) { banner = { text: 'ママを たすけた！', t: 0, max: 150, col: '#ffd23f' }; }
+    if (cutF === 540) say(HC.name, STORY === 'A' ? 'みんな、いっしょに かえろう！' : 'みんなで りょこうの つづきを しよう！', 160, HC.ui);
+    if (cutF === 700) { banner = { text: nm(CAP) + 'を たすけた！', t: 0, max: 150, col: '#ffd23f' }; }
     if (cutF === 860) { setScene('credits'); sub = null; }
   }
 
@@ -1230,8 +1310,8 @@
         break;
       case 'cut':
         lbTarget = 110;
-        if (cutF < 340 && cutF > 20) bgm = 'happy'; else if (cutF >= 340) bgm = null;
-        if (take('start') && cutF > 30) { putMamaInCage(); startStage(); }
+        { const calm = STORY === 'A' ? 340 : 880; if (cutF < calm && cutF > 20) bgm = 'happy'; else if (cutF >= calm) bgm = null; }
+        if (take('start') && cutF > 30) { if (STORY === 'B') rooms[0].beach = true; putMamaInCage(); startStage(); }
         break;
       case 'stageIntro':
         lbTarget = 64;
@@ -1687,6 +1767,14 @@
     }
     const horizon = H / 2 + (GROUND - cam.y) * cam.z;
     drawLayer(0.15, horizon - 120, '#6a80b8', 260, 150, 1);
+    if (R().beach) {
+      const sea = ctx.createLinearGradient(0, horizon - 70, 0, horizon);
+      sea.addColorStop(0, '#2a7ad0'); sea.addColorStop(1, '#5ac0f0');
+      ctx.fillStyle = sea; ctx.fillRect(0, horizon - 70, W, H);
+      ctx.fillStyle = 'rgba(255,255,255,.6)';
+      for (let i = 0; i < 14; i++) { const x = ((i * 137 - cam.x * 0.4 + simT * 0.5) % (W + 100) + W + 100) % (W + 100) - 50; ctx.fillRect(x, horizon - 60 + (i % 4) * 14, 40, 3); }
+      return;
+    }
     drawLayer(0.3, horizon - 50, '#3a8a4a', 200, 100, 2);
     for (let i = 0; i < 7; i++) {
       const x = ((i * 410 + 120 - cam.x * 0.6) % 2870 + 2870) % 2870 - 200;
@@ -1714,6 +1802,12 @@
   function drawGroundRange(Rm, vx0, vx1) {
     const a = Math.max(vx0, Rm.x0), b = Math.min(vx1, Rm.x0 + Rm.w);
     if (b <= a) return;
+    if (!Rm.indoor && Rm.beach) {
+      ctx.fillStyle = '#f0d890'; ctx.fillRect(a, GROUND, b - a, 600);
+      ctx.fillStyle = '#e0c070';
+      for (let x = Math.floor(a / 90) * 90; x < b; x += 90) { ell(x + 30, GROUND + 50, 10, 3); ell(x + 70, GROUND + 120, 14, 4); }
+      return;
+    }
     if (!Rm.indoor) {
       ctx.fillStyle = '#8a5a2a'; ctx.fillRect(a, GROUND, b - a, 600);
       ctx.fillStyle = '#6e4620';
@@ -1754,7 +1848,7 @@
     const T = Rm.type;
     if (T === 'gate') {
       for (let x = x0 + 300; x < x1 - 200; x += 360) barWindow(x, GROUND - 400);
-      drawSign(x0 + 160, GROUND - 330, 'けいむしょ', '#ffd23f');
+      drawSign(x0 + 160, GROUND - 330, STORY === 'A' ? 'けいむしょ' : 'アジト', '#ffd23f');
     } else if (T === 'hall') {
       for (let x = x0 + 260; x < x1 - 150; x += 300) { cellDoor(x, GROUND); }
       for (let x = x0 + 110; x < x1; x += 300) lamp(x, GROUND - 520);
@@ -1861,11 +1955,17 @@
   function drawHomeScenery(Rm) {
     // ルカの おうち
     const hx = Rm.x0 + 240;
+    if (Rm.beach) {
+      ctx.strokeStyle = '#8a6a3a'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(hx, GROUND); ctx.lineTo(hx + 10, GROUND - 190); ctx.stroke();
+      for (let i = 0; i < 6; i++) { ctx.fillStyle = i % 2 ? '#ffffff' : '#ff5a5a'; ctx.beginPath(); ctx.moveTo(hx + 10, GROUND - 200); ctx.arc(hx + 10, GROUND - 190, 110, Math.PI + i * Math.PI / 6, Math.PI + (i + 1) * Math.PI / 6); ctx.closePath(); ctx.fill(); }
+      ctx.fillStyle = '#e8c070'; ctx.fillRect(hx + 120, GROUND - 40, 70, 40); ctx.fillRect(hx + 135, GROUND - 70, 40, 30); ctx.fillRect(hx + 147, GROUND - 88, 16, 18);
+    } else {
     ctx.fillStyle = '#f4e4c4'; ctx.fillRect(hx - 130, GROUND - 200, 260, 200);
     ctx.fillStyle = '#c84a3a'; ctx.beginPath(); ctx.moveTo(hx - 160, GROUND - 200); ctx.lineTo(hx, GROUND - 320); ctx.lineTo(hx + 160, GROUND - 200); ctx.closePath(); ctx.fill();
     ctx.fillStyle = '#8a5a2a'; ctx.fillRect(hx - 30, GROUND - 110, 60, 110);
     ctx.fillStyle = '#7ac0ff'; ctx.fillRect(hx - 105, GROUND - 160, 50, 44); ctx.fillRect(hx + 55, GROUND - 160, 50, 44);
     ctx.fillStyle = '#ff5fa8'; heartPath(hx, GROUND - 270, 24);
+    }
     // けいむしょの たてもの
     const px0 = Rm.x0 + Rm.w - 560, px1 = Rm.x0 + Rm.w, top = GROUND - 460;
     ctx.fillStyle = '#5a5068'; ctx.fillRect(px0, top, px1 - px0, 460);
@@ -1881,7 +1981,7 @@
     ctx.fillStyle = '#16204a'; ctx.beginPath(); ctx.moveTo(px0 - 50, top - 140); ctx.lineTo(px0 + 35, top - 250); ctx.lineTo(px0 + 120, top - 140); ctx.closePath(); ctx.fill();
     ctx.fillStyle = '#ffd23f'; starPath(px0 + 35, top - 175, 16, 7); ctx.fill();
     for (const wx of [px0 + 220, px0 + 400]) barWindow(wx, top + 170);
-    drawSign(px0 + 300, GROUND - 230, 'けいむしょ', '#ff8080');
+    drawSign(px0 + 300, GROUND - 230, STORY === 'A' ? 'けいむしょ' : 'アジト', '#ff8080');
     // もん（ここから 入る）
     ctx.fillStyle = '#05040a';
     ctx.beginPath(); ctx.moveTo(px1 - 110, GROUND); ctx.lineTo(px1 - 110, GROUND - 150); ctx.arc(px1 - 55, GROUND - 150, 55, Math.PI, 0); ctx.lineTo(px1, GROUND); ctx.closePath(); ctx.fill();
@@ -1990,11 +2090,12 @@
     for (const m of minions) if (m.alive && Math.abs(m.x - cam.x) < 900 / cam.z) drawMinion(m);
     const inPrison = Rm.type === 'prison';
     if (inPrison || scene === 'cut') {
-      if (!e.carry && (scene === 'cut' || inPrison)) drawHero(mama, 'mama');
+      if (!e.carry && (scene === 'cut' || inPrison)) drawHero(mama, CAP);
+    if (scene === 'cut') for (const f of fam) drawHero(f, f.kind);
       if (inPrison) drawCage();
     }
     for (const f of friendsLine) drawHero(f, f.kind);
-    if (['play', 'boss', 'ko', 'stageIntro', 'cut', 'roomCut', 'rescue'].includes(scene)) drawHero(papa, 'papa');
+    if (['play', 'boss', 'ko', 'stageIntro', 'cut', 'roomCut', 'rescue'].includes(scene)) drawHero(papa, FOL);
     for (let i = 0; i < e.trail.length; i++) drawBoss({ ...e.trail[i], inv: 0, onG: true }, 0.15 + i * 0.05, true);
     for (let i = 0; i < p.trail.length; i++) {
       ctx.save(); ctx.globalCompositeOperation = 'lighter';
@@ -2011,7 +2112,7 @@
       ctx.fillStyle = g; ctx.beginPath(); ctx.arc(e.x, e.y - 75, 105, 0, Math.PI * 2); ctx.fill();
       ctx.restore();
     }
-    if (e.carry) drawHero(mama, 'mama');
+    if (e.carry) drawHero(mama, CAP);
     for (const a of allies) {
       drawHero(a, a.kind);
       ctx.font = 'bold 20px sans-serif'; ctx.textAlign = 'center'; ctx.lineWidth = 4; ctx.strokeStyle = '#000';
@@ -2097,7 +2198,7 @@
         else { ctx.fillRect(x - 9, y - 10, 18, 22); ctx.fillStyle = '#000'; ctx.fillRect(x - 5, y - 6, 10, 18); }
       });
       ctx.textAlign = 'right'; ctx.font = 'bold 15px sans-serif'; ctx.fillStyle = '#ff9ad5';
-      ctx.fillText('ママまで', x0 - 18, y + 7);
+      ctx.fillText(nm(CAP) + 'まで', x0 - 18, y + 7);
       const left = minions.filter(m => m.alive).length;
       if (left) { ctx.fillStyle = '#ffd23f'; ctx.fillText('てき のこり ' + left + '　→ ぜんぶ たおすと ドアが あくよ', W - 30, y + 30); }
     }
@@ -2199,12 +2300,12 @@
     const h = HEROES[HERO];
     const runO = idleO(1, { state: Math.floor(sceneT / 120) % 2 ? 'idle' : 'run', vx: Math.floor(sceneT / 120) % 2 ? 0 : 8 });
     ctx.save(); ctx.translate(260, 590); ctx.scale(2.6, 2.6); drawHero(runO, HERO, 1, true); ctx.restore();
-    ctx.save(); ctx.translate(90, 600); ctx.scale(1.5, 1.5); drawHero(idleO(1), 'papa', 1, true); ctx.restore();
+    ctx.save(); ctx.translate(90, 600); ctx.scale(1.5, 1.5); drawHero(idleO(1), FOL, 1, true); ctx.restore();
     ctx.font = 'bold 46px sans-serif'; ctx.fillStyle = h.ui; ctx.textAlign = 'center';
     ctx.strokeStyle = '#000'; ctx.lineWidth = 6; ctx.strokeText(h.name, 260, 210); ctx.fillText(h.name, 260, 210);
     ctx.font = 'bold 20px sans-serif'; ctx.fillStyle = '#fff'; ctx.fillText(h.desc, 260, 244);
     ctx.font = '15px sans-serif'; ctx.fillStyle = 'rgba(255,255,255,.7)';
-    ctx.fillText('パパは いつも うしろから ついてくるよ', 260, 680);
+    ctx.fillText(nm(FOL) + 'が うしろから ついてくるよ', 260, 680);
     ctx.fillText('← → で えらぶ　↓ で コース　Enter で スタート', W / 2 + 180, 690);
   }
 
@@ -2248,7 +2349,7 @@
     const cast = HERO_KEYS.map(k => ['', HEROES[k].name + ' ………… ' + HEROES[k].desc]);
     const credits = [
       ['h', 'ルカ＆フレンズ　けいむしょの ママを たすけだせ！'], ['', ''], ['s', '出演'],
-      ['', 'しゅじんこう ………… ' + HC.name], ['', 'ママ ………… けいむしょから たすけだされた'], ['', 'パパ ………… ずっと うしろから ついてきた'],
+      ['', 'しゅじんこう ………… ' + HC.name], ['', nm(CAP) + ' ………… ろうやから たすけだされた'], ['', nm(FOL) + ' ………… ずっと うしろから ついてきた'],
       ['s', 'なかまたち'], ...cast,
       ['', 'ガッチャン大王 ………… けいむしょの わるい 王さまロボ'], ['', 'ロボたち ………… たくさん'], ['', ''],
       ['s', 'あそんだ モード'], ['', D.name + '　／　' + (longRoute ? 'ながい コース' : 'みじかい コース')], ['s', 'スコア'], ['', String(score)], ['', ''],
@@ -2267,7 +2368,7 @@
     const wx = ((sceneT * 2.2) % (W + 400)) - 250;
     ctx.save(); ctx.translate(wx, H - lb - 20); ctx.scale(0.75, 0.75);
     const walk = (dx, k, off) => drawHero({ x: dx, y: 0, face: 1, state: 'walk', anim: sceneT + off, vx: 2, inv: 0, onG: true }, k, 1, true);
-    walk(0, 'papa', 0); walk(110, 'mama', 10); walk(220, HERO, 20);
+    walk(0, FOL, 0); walk(110, CAP, 10); walk(220, HERO, 20);
     ctx.fillStyle = '#ff5fa8'; heartPath(110, -170 + Math.sin(sceneT * 0.1) * 6, 22);
     ctx.restore();
     filmFX(1.3);
