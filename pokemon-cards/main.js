@@ -291,6 +291,110 @@ function exitFocus() {
   hint.textContent = 'ドラッグで回す　·　クリックで拡大';
 }
 
+// ---- 印刷（A4 に 3×3 で 9枚ずつ） ----
+const PER_PAGE = 9;
+const BACK_SRC = './cards/back.jpg';
+const picker = document.getElementById('picker');
+const pickerGrid = document.getElementById('picker-grid');
+const pickerInfo = document.getElementById('picker-info');
+const pickerBacks = document.getElementById('picker-backs');
+const pickerPrint = document.getElementById('picker-print');
+const printSheet = document.getElementById('print-sheet');
+const printCounts = new Array(CARDS.length).fill(0);
+const tiles = [];
+
+function buildPicker() {
+  CARDS.forEach((meta, i) => {
+    const tile = document.createElement('button');
+    tile.type = 'button';
+    tile.className = 'tile';
+    tile.setAttribute('aria-label', `${meta.name} ${meta.sub}`);
+    tile.innerHTML = `<img src="./cards/${meta.file}" alt="" loading="lazy" /><span class="count"></span><span class="minus" role="button" aria-label="1枚へらす">−</span>`;
+    tile.addEventListener('click', (event) => {
+      const minus = event.target.closest('.minus');
+      printCounts[i] = Math.max(0, printCounts[i] + (minus ? -1 : 1));
+      renderPicker();
+    });
+    pickerGrid.appendChild(tile);
+    tiles.push(tile);
+  });
+}
+
+function renderPicker() {
+  const total = printCounts.reduce((a, b) => a + b, 0);
+  tiles.forEach((tile, i) => {
+    tile.classList.toggle('is-on', printCounts[i] > 0);
+    tile.querySelector('.count').textContent = `×${printCounts[i]}`;
+  });
+  const sheets = Math.ceil(total / PER_PAGE);
+  pickerInfo.textContent = total ? `${total}枚 · A4 ${sheets}枚分` : 'カードを選んでください';
+  pickerPrint.disabled = total === 0;
+}
+
+function openPicker() {
+  if (!printCounts.some(Boolean) && state.mode === 'focus' && state.focus >= 0) {
+    printCounts[state.focus] = 1;
+  }
+  renderPicker();
+  document.body.classList.add('is-picking');
+}
+
+function closePicker() {
+  document.body.classList.remove('is-picking');
+}
+
+function makeImg(src) {
+  const img = document.createElement('img');
+  img.src = src;
+  img.alt = '';
+  return img;
+}
+
+async function printSelected() {
+  const list = [];
+  printCounts.forEach((n, i) => {
+    for (let k = 0; k < n; k++) list.push(CARDS[i]);
+  });
+  if (!list.length) return;
+  printSheet.innerHTML = '';
+  const imgs = [];
+  for (let start = 0; start < list.length; start += PER_PAGE) {
+    const chunk = list.slice(start, start + PER_PAGE);
+    const front = document.createElement('div');
+    front.className = 'print-grid is-front';
+    const back = document.createElement('div');
+    back.className = 'print-grid is-back';
+    for (let slot = 0; slot < PER_PAGE; slot++) {
+      const meta = chunk[slot];
+      const f = meta ? makeImg(`./cards/${meta.file}`) : document.createElement('div');
+      front.appendChild(f);
+      if (meta) imgs.push(f);
+      // うら面は左右反転した位置に置く（長辺とじの両面印刷でぴったり重なる）
+      const row = Math.floor(slot / 3);
+      const mirrored = chunk[row * 3 + (2 - (slot % 3))];
+      const b = mirrored ? makeImg(BACK_SRC) : document.createElement('div');
+      back.appendChild(b);
+      if (mirrored) imgs.push(b);
+    }
+    const fp = document.createElement('div');
+    fp.className = 'print-page';
+    fp.appendChild(front);
+    printSheet.appendChild(fp);
+    if (pickerBacks.checked) {
+      const bp = document.createElement('div');
+      bp.className = 'print-page';
+      bp.appendChild(back);
+      printSheet.appendChild(bp);
+    }
+  }
+  try {
+    await Promise.all(imgs.map((img) => img.decode()));
+  } catch (err) {
+    console.error(err);
+  }
+  window.print();
+}
+
 function step(dir) {
   if (state.mode !== 'focus') return;
   const next = (state.focus + dir + cards.length) % cards.length;
@@ -379,6 +483,10 @@ function bindInput() {
   }, { passive: false });
 
   window.addEventListener('keydown', (event) => {
+    if (document.body.classList.contains('is-picking')) {
+      if (event.key === 'Escape') closePicker();
+      return;
+    }
     if (event.key === 'Escape') exitFocus();
     if (event.key === 'ArrowRight') step(1);
     if (event.key === 'ArrowLeft') step(-1);
@@ -387,6 +495,14 @@ function bindInput() {
   document.getElementById('prev').addEventListener('click', () => step(-1));
   document.getElementById('next').addEventListener('click', () => step(1));
   document.getElementById('back').addEventListener('click', () => exitFocus());
+  buildPicker();
+  document.getElementById('print-btn').addEventListener('click', openPicker);
+  document.getElementById('picker-close').addEventListener('click', closePicker);
+  document.getElementById('picker-print').addEventListener('click', printSelected);
+  document.getElementById('picker-clear').addEventListener('click', () => {
+    printCounts.fill(0);
+    renderPicker();
+  });
   window.addEventListener('resize', resize);
 }
 
@@ -490,6 +606,7 @@ async function main() {
   textures.forEach((tex, i) => cards.push(makeCard(CARDS[i], i, tex, foil)));
   bindInput();
   veil.classList.add('is-gone');
+  document.body.classList.remove('is-loading');
   renderer.setAnimationLoop((t) => frame(t * 0.001, lights));
 }
 
