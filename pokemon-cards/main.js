@@ -291,6 +291,21 @@ function exitFocus() {
   hint.textContent = 'ドラッグで回す　·　クリックで拡大';
 }
 
+const printImg = document.getElementById('print-img');
+
+async function printCard() {
+  if (state.mode !== 'focus' || state.focus < 0) return;
+  const card = cards[state.focus];
+  printImg.src = `./cards/${card.meta.file}`;
+  printImg.alt = `${card.meta.name} ${card.meta.sub}`;
+  try {
+    await Promise.all([printImg.decode(), document.getElementById('print-back').decode()]);
+  } catch (err) {
+    console.error(err);
+  }
+  window.print();
+}
+
 function step(dir) {
   if (state.mode !== 'focus') return;
   const next = (state.focus + dir + cards.length) % cards.length;
@@ -387,6 +402,7 @@ function bindInput() {
   document.getElementById('prev').addEventListener('click', () => step(-1));
   document.getElementById('next').addEventListener('click', () => step(1));
   document.getElementById('back').addEventListener('click', () => exitFocus());
+  document.getElementById('print-btn').addEventListener('click', printCard);
   window.addEventListener('resize', resize);
 }
 
