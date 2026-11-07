@@ -20,6 +20,8 @@ const CARDS = [
   { file: '16.jpg', name: 'ユウゴEX', sub: '1万ボルト・クリスタルインパクト' },
   { file: '17.jpg', name: 'るかストライクEX', sub: 'バーニングオーラボール' },
   { file: '18.jpg', name: 'るかストライクEX', sub: 'メガサイコストーム' },
+  { file: 'BlackRayquazaHugo.jpg', name: '黒レックウザ＆ユウゴ GX', sub: 'スカイバーストGX' },
+  { file: 'luca-lizardon.jpg', name: 'ルカ＆リザードン', sub: 'ルカとリザードンの絆' },
 ];
 
 const CARD_W = 2.5;
