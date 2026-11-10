@@ -69,6 +69,7 @@
   #dock button.down { transform: translateY(4px); box-shadow: 0 1px 0 rgba(0,0,0,.45); filter: brightness(1.2); }
   #dock button.dim { opacity: .45; }
   .glow { animation: glow .7s infinite alternate; }
+  @media (prefers-reduced-motion: reduce) { .glow { animation: none !important; outline: 4px solid #ffe650; outline-offset: 2px; } #flash, #fact { transition: none; } }
   @keyframes glow { from { box-shadow: 0 5px 0 rgba(0,0,0,.45), 0 0 0 0 rgba(255,230,80,.0); } to { box-shadow: 0 5px 0 rgba(0,0,0,.45), 0 0 0 8px rgba(255,230,80,.9); filter: brightness(1.25); } }
   .steer { position: fixed; bottom: 96px; z-index: 6; width: 76px; height: 76px; border-radius: 50%; border: 3px solid rgba(255,255,255,.8);
     background: rgba(40,80,160,.75); color: #fff; font-size: 30px; font-weight: 900; cursor: pointer; touch-action: none; }
@@ -199,6 +200,7 @@ const kmh = v => Math.round(Math.abs(v) * 3.6);
 const cv = $('cv'); let g = cv.getContext('2d');
 let W = 0, H = 0, DPR = 1;
 let VC = 0.5;
+const RMOTION = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
 function resize() {
   DPR = Math.min(2, window.devicePixelRatio || 1);
   W = window.innerWidth; H = window.innerHeight; VC = H < 520 ? 0.6 : 0.5;
@@ -622,7 +624,7 @@ function drawSat(sat, x, y, k) {
 // ---------------- exhaust plumes (drawn pointing +y in local coordinates)
 function plume(x, y0, w, len, kind, alt, k) {
   if (k <= 0) return;
-  const sp = 1 + clamp(alt / 18000, 0, 1) * 3.2;
+  const sp = 1 + Math.min(6, Math.sqrt(1.225 / Math.max(rho(alt), 0.004)) - 1) * 0.7;
   len *= (0.85 + Math.random() * 0.15) * (0.6 + 0.4 * k) * (1 + clamp(alt / 30000, 0, 1) * 0.6);
   const w1 = w * sp * 1.4;
   const cols = {
@@ -673,7 +675,7 @@ function drawParts(v) {
 
 // ---------------- confetti (screen space)
 let conf = [];
-function confetti(n = 120) { for (let i = 0; i < n; i++) conf.push({ x: Math.random() * W, y: -20 - Math.random() * H * 0.4, vx: rnd(-40, 40), vy: rnd(80, 200), r: rnd(0, 6.28), c: ['#ff5a5a', '#ffd23f', '#3fe08a', '#4aa3ff', '#ff9ad5'][i % 5], life: 4 }); }
+function confetti(n = 120) { if (RMOTION) n = Math.round(n * 0.2); for (let i = 0; i < n; i++) conf.push({ x: Math.random() * W, y: -20 - Math.random() * H * 0.4, vx: rnd(-40, 40), vy: rnd(80, 200), r: rnd(0, 6.28), c: ['#ff5a5a', '#ffd23f', '#3fe08a', '#4aa3ff', '#ff9ad5'][i % 5], life: 4 }); }
 function stepConfetti(dt) { for (const p of conf) { p.x += p.vx * dt; p.y += p.vy * dt; p.r += dt * 6; p.life -= dt; } conf = conf.filter(p => p.life > 0 && p.y < H + 20); }
 function drawConfetti() { for (const p of conf) { g.save(); g.translate(p.x, p.y); g.rotate(p.r); g.fillStyle = p.c; g.fillRect(-4, -2, 8, 4); g.restore(); } }
 
@@ -821,7 +823,7 @@ function newStar() {
 }
 function newH3() {
   return {
-    rocket: 'h3', T: -600, ts: 1, pi: 0, results: [], retries: 0, xray: false, frost: 0, lifted: false, site: 'h3', mlx: -295,
+    rocket: 'h3', T: -600, srbBurn: 116 + rnd(-4, 4), ts: 1, pi: 0, results: [], retries: 0, xray: false, frost: 0, lifted: false, site: 'h3', mlx: -295,
     core: { x: -295, h: ML_TOP, ang: 0, vx: 0, vh: 0, v: 0, lox: 0, lh2: 0, eng: [0, 0], srbOn: false, srbThr: 0, attachedSrb: true, upper: true },
     up: { x: 0, h: 0, ang: 0, v: 0, lox: 0, lh2: 0, eng: 0, fairing: true, free: false, satGone: false },
     srbs: [], fair: [], sat: null,
@@ -831,7 +833,7 @@ function newH3() {
 
 // nominal ascent profiles (time t in seconds after liftoff)
 const NOM = {
-  star: { h: t => 70000 * Math.pow(clamp(t / 165, 0, 2), 1.85), v: t => 1500 * Math.pow(clamp(t / 165, 0, 2), 1.6), p: t => 0.96 * Math.pow(sm(8, 165, t), 0.8) },
+  star: { h: t => 70000 * Math.pow(clamp(t / 165, 0, 2), 1.85), v: t => 1600 * Math.pow(clamp(t / 165, 0, 2), 1.6), p: t => 0.96 * Math.pow(sm(8, 165, t), 0.8) },
   h3: { h: t => 230000 * Math.pow(clamp(t / 300, 0, 2), 1.6), v: t => 4800 * Math.pow(clamp(t / 300, 0, 2), 1.35), p: t => 1.2 * Math.pow(sm(6, 300, t), 0.75) },
 };
 function qMaxOf(n) { let m = 0, tm = 0; for (let t = 0; t < 200; t += 0.5) { const q = 0.5 * rho(n.h(t)) * n.v(t) ** 2; if (q > m) { m = q; tm = t; } } return [m, tm]; }
@@ -856,7 +858,7 @@ const FACTS = {
   fair: 'まめちしき：フェアリングが ないと、えいせいは くうきの ねつと ちからで こわれちゃう',
   meco: 'まめちしき：だい1だんは つかいすて。うみに おちるよ',
   stage2: 'まめちしき：LE-5B-3 は うちゅうで なんども つけたり けしたり できる エンジン',
-  h3seco: 'まめちしき：じそく 27,000km だと、ちきゅう 1しゅう やく 1じかん 30ぷん！',
+  h3seco: 'まめちしき：じそく 27,400km だと、ちきゅう 1しゅう やく 1じかん 35ふん！',
   pay: 'まめちしき：えいせいは うちゅうから ちきゅうの しゃしんを とったり、てんきを しらべたり する',
 };
 let factT = 0;
@@ -866,14 +868,16 @@ function result(key, name, score, note, quiet) {
   S.results = S.results.filter(r => r.key !== key);
   S.results.push({ key, name, score, note });
   showFact(key);
-  if (!quiet) flashRes(name, score);
+  let pb = false;
+  try { const k = 'rocketStep_' + S.rocket + '_' + mode + '_' + key, prev = localStorage.getItem(k); if (prev === null || score > +prev) { localStorage.setItem(k, score); pb = prev !== null; } } catch (e) {}
+  if (!quiet) flashRes(name, score, pb);
 }
-function flashRes(name, score) {
+function flashRes(name, score, pb) {
   score = Math.round(clamp(score, 0, 100));
   const col = score >= 85 ? '#7fffb0' : score >= 60 ? '#ffe45c' : '#ff9a7a';
   const word = score >= 95 ? 'パーフェクト！' : score >= 85 ? 'すごい！' : score >= 60 ? 'いいね！' : 'ドンマイ！';
   S.streak = score >= 95 ? (S.streak || 0) + 1 : 0; S.bestStreak = Math.max(S.bestStreak || 0, S.streak);
-  flash(`${word} ${name} ${score}てん` + (S.streak >= 2 ? ` 🔥×${S.streak}` : ''), col, 2.2);
+  flash(`${word} ${name} ${score}てん` + (S.streak >= 2 ? ` 🔥×${S.streak}` : '') + (pb ? ' 🆕じこベスト！' : ''), col, 2.2);
   if (S.streak >= 3 && S.streak % 3 === 0) { confetti(50); say('れんぞく パーフェクト！'); }
   (score >= 60 ? sfx.ok : sfx.bad)();
 }
@@ -1055,7 +1059,7 @@ const PH_STAR = [
     update(dt) {
       if (S.filling && !S.filled) {
         S.fill += dt * (ruka() ? 9 : 13) * (S.fill > 90 ? 0.35 : 1);
-        if (S.fill >= 101) { S.fill = 100; S.filled = true; S.filling = false; result('fuel', 'ねんりょう', 55, 'いれすぎて ベント'); S.nextIn = 1.8; }
+        if (S.fill >= 101) { S.fill = 100; S.filled = true; S.filling = false; result('fuel', 'ねんりょう', 55, 'いれすぎ！ あまった ガスを そとへ だした（ベント）'); S.nextIn = 1.8; }
         if (Math.random() < 0.5) { const p = along(S.ship, SS); puff(p.x + rnd(-1, 1), p.h - 8, rnd(2, 6), rnd(1, 3), 2, 2.5, '#f4f7fb'); }
       }
       S.T = -45 * 60 + clamp(S.fill / 100, 0, 1) * 44 * 60;
@@ -1119,7 +1123,7 @@ const PH_STAR = [
       follow(b, 62, 88);
       if (b.h < 9000 && Math.random() < 0.5) { const q = nozW(b, 6); puff(q.x, q.h, rnd(-3, 3), rnd(-3, 3), 3, 3, '#ffffff'); }
       S.vapor = v > 270 && v < 430 ? 1 : 0;
-      if (t >= 152) {
+      if (t >= 157) {
         result('steer', 'コースを まもる', steerScore(S.st));
         const mq = S.mq.pressed ? 100 * S.mq.tdw / Math.max(1, S.mq.tw) - S.mq.tbad * 4 : 0;
         result('maxq', 'MAX Q', mq, '', true); setTimeout(() => flashRes('MAX Q', mq), 1100);
@@ -1246,7 +1250,7 @@ const PH_STAR = [
   },
   { id: 'desc', name: 'グリッドフィン',
     card: ['グリッドフィンで かじとり', 'ブースターの うえに ある あみあみの つばさ「<b>グリッドフィン</b>」で くうきを うけて かじを とるよ。<b>◀ ▶ で タワーの まうえ（ずれ 0m）に あわせよう。</b>'],
-    init() { const b = S.bst; S.ts = 1; S.dx = clamp(predictImpact(b.x, b.h, b.vx, b.vh), -6000, 6000); S.wind = 0; b.ang = 0; b.vx = 0; b.eng = Array(33).fill(0); setDock([]); showSteer(true); gauge('gS', null); S.zT = zPad() * 0.8; },
+    init() { const b = S.bst; S.ts = 1; S.dx = clamp(predictImpact(b.x, b.h, b.vx, b.vh), -6000, 6000); S.wind = rnd(-40, 40); b.ang = 0; b.vx = 0; b.eng = Array(33).fill(0); setDock([]); showSteer(true); gauge('gS', null); S.zT = zPad() * 0.8; },
     update(dt) {
       const b = S.bst, dts = dt * S.ts; S.T += dts;
       const v = lerp(300, 750, clamp((b.h - 4000) / 11000, 0, 1));
@@ -1470,8 +1474,9 @@ function h3Fly(dts) {
     const v = n.v(t), p = n.p(t);
     c.h = ML_TOP + n.h(t); c.x += v * Math.sin(p) * dts; c.ang = p + (S.st ? S.st.e * 0.3 : 0); c.v = v; c.vx = v * Math.sin(p); c.vh = v * Math.cos(p);
     c.lh2 = c.lox = clamp(1 - t / 300, 0, 1);
-    c.srbThr = c.srbOn && c.attachedSrb ? (t < 100 ? 1 : Math.max(0, 1 - (t - 100) / 16)) : 0;
-    c.srbProp = clamp(1 - t / 116, 0, 1);
+    const sb = S.srbBurn || 116;
+    c.srbThr = c.srbOn && c.attachedSrb ? (t < sb - 16 ? 1 : Math.max(0, 1 - (t - sb + 16) / 16)) : 0;
+    c.srbProp = clamp(1 - t / sb, 0, 1);
     const top = along(c, H1); u.x = top.x; u.h = top.h; u.ang = c.ang; u.v = v; u.vx = c.vx; u.vh = c.vh;
   } else {
     if (u.eng) u.v += 4.1 * dts;
@@ -1564,7 +1569,7 @@ const PH_H3 = [
         S.deb.push({ kind: 'srb', side, x: p.x + Math.cos(c.ang) * side * off, h: p.h - Math.sin(c.ang) * side * off, vx: c.vx + side * 6, vh: c.vh - 4, ang: c.ang, va: side * 0.35, prop: 0 });
       }
       bang(0.5); say('エスアールビー ぶんり');
-      const late = Math.max(0, S.T - 116 - (ruka() ? 8 : 3));
+      const late = Math.max(0, S.T - (S.srbBurn || 116) - (ruka() ? 8 : 3));
       result('srbsep', 'SRB-3 ぶんり', auto ? 40 : 100 - late * 6 - S.early * 20, 'X+' + S.T.toFixed(0) + 's');
       S.nextIn = 2.5;
     },
@@ -1659,25 +1664,25 @@ const PH_H3 = [
     tip() { return S.mst === 0 ? (this.prop() > 5 ? 'ねんりょうが へって いく…（5% いかで MECO）' : 'いまだ！ ① MECO') : S.mst === 1 ? '② だん ぶんり！' : S.mst === 2 ? '③ だい2だん {点火|てんか}！ はやく！' : 'だい2だんで うちゅうへ！ だい1だんは うみへ おちる'; },
   },
   { id: 'h3seco', name: 'SECO',
-    card: ['うちゅうの はやさ', 'えいせいが ちきゅうを まわりつづける ためには <b>じそく やく 27,000km</b>（1びょうで 7.5km！）が ひつよう。その はやさに なったら「<b>エンジン ストップ（SECO）</b>」を おそう。'],
+    card: ['うちゅうの はやさ', 'えいせいが ちきゅうを まわりつづける ためには <b>じそく やく 27,400km</b>（1びょうで 7.6km！）が ひつよう。その はやさに なったら「<b>エンジン ストップ（SECO）</b>」を おそう。'],
     init() { S.ts = 20; S.done2 = false; setDock([{ id: 'stop', label: '⏹ エンジン ストップ', sub: 'SECO＝2だんめ ストップ (Space)', key: 'Space' }]); },
     press(id, d) { if (d && id === 'stop' && !S.done2) this.stop(false); },
     stop(auto) {
       const u = S.up, sp = kmh(u.v), tol = ruka() ? 700 : 280;
       S.done2 = true; u.eng = 0; say('エンジン カットオフ');
-      result('h3seco', 'SECO', auto ? 45 : 100 - Math.max(0, Math.abs(sp - 27100) - tol) / (ruka() ? 25 : 14), sp.toLocaleString() + 'km/h');
+      result('h3seco', 'SECO', auto ? 45 : 100 - Math.max(0, Math.abs(sp - 27400) - tol) / (ruka() ? 25 : 14), sp.toLocaleString() + 'km/h');
       S.nextIn = 2.2;
     },
     update(dt) {
       const u = S.up;
       if (!S.q4 && !S.done2 && kmh(u.v) > 19000) { S.q4 = true; quiz('q4', 'H3の だい1だんは この あと どうなる？', ['タワーで キャッチ', 'うみに おちる（つかいすて）'], 1, 'H3の だんは つかいすて。スターシップの ブースターは キャッチして また つかう！'); }
-      if (!S.done2) { const want = Math.abs(kmh(u.v) - 27100) > 900 ? 1100 : (ruka() ? 110 : 160); S.ts = clamp(want / 14.76, 1, 80); if (u.v >= 7650) this.stop(true); } else S.ts = 3;
+      if (!S.done2) { const want = Math.abs(kmh(u.v) - 27400) > 900 ? 1100 : (ruka() ? 110 : 160); S.ts = clamp(want / 14.76, 1, 80); if (u.v >= 7720) this.stop(true); } else S.ts = 3;
       const dts = dt * S.ts; S.T += dts; h3Fly(dts);
       const sp = kmh(u.v), tol = ruka() ? 700 : 280;
-      gauge('gA', { label: 'はやさ（めあて じそく 27,100km）', min: 17000, max: 28500, green: [27100 - tol, 27100 + tol], value: sp, text: sp.toLocaleString() + ' km/h' });
+      gauge('gA', { label: 'はやさ（めあて じそく 27,400km）', min: 17000, max: 28500, green: [27400 - tol, 27400 + tol], value: sp, text: sp.toLocaleString() + ' km/h' });
       follow(u, 6); S.zT = zPad() * 1.4;
     },
-    glow() { return !S.done2 && Math.abs(kmh(S.up.v) - 27100) < (ruka() ? 600 : 220) ? 'stop' : null; },
+    glow() { return !S.done2 && Math.abs(kmh(S.up.v) - 27400) < (ruka() ? 600 : 220) ? 'stop' : null; },
     tip() { return S.done2 ? 'きどうに のった！' : 'みどりに なったら「エンジン ストップ」'; },
   },
   { id: 'pay', name: 'えいせい ぶんり',
@@ -1858,7 +1863,7 @@ function render() {
     g.fillStyle = '#fff'; for (const s of STARS) { g.globalAlpha = 0.3 + 0.7 * s.a; g.fillRect(s.x * W, s.y * H, s.r, s.r); } g.globalAlpha = 1;
     return;
   }
-  const sh = S.shake || 0, v = { x: 0, y: 0, w: W, h: H, cx: S.cam.x + (Math.random() - 0.5) * sh / S.z, ch: S.cam.h + (Math.random() - 0.5) * sh / S.z, z: S.z };
+  const sh = RMOTION ? 0 : (S.shake || 0), v = { x: 0, y: 0, w: W, h: H, cx: S.cam.x + (Math.random() - 0.5) * sh / S.z, ch: S.cam.h + (Math.random() - 0.5) * sh / S.z, z: S.z };
   renderScene(v);
   drawConfetti();
   if (P && P.overlay && !S.cardOpen && !S.done) P.overlay(v);
@@ -1907,7 +1912,7 @@ function hud(dt) {
     teleT = 0.1;
     if (S.rocket === 'star') {
       const b = S.bst, s = S.ship;
-      $('v1').textContent = kmh(b.v || 0).toLocaleString(); $('h1').textContent = Math.max(0, (b.h - (S.lifted ? OLM : b.h)) / 1000).toFixed(1);
+      $('v1').textContent = kmh(b.v || 0).toLocaleString(); $('h1').textContent = S.caught ? 'タワー' : Math.max(0, (b.h - (S.lifted ? OLM : b.h)) / 1000).toFixed(1); $('h1').nextElementSibling.style.display = S.caught ? 'none' : '';
       $('v2').textContent = kmh(s.v || 0).toLocaleString(); $('h2').textContent = Math.max(0, (!S.lifted ? 0 : S.attached ? s.h - OLM - SH : s.h) / 1000).toFixed(1);
       drawEngineRing($('e1'), L_SH, b.eng); drawEngineRing($('e2'), L_SS, s.eng);
     } else {
@@ -1949,7 +1954,7 @@ function step(dt) {
   stepParts(dt * Math.min(S.ts, 2));
   emit(dt);
   S.z += (S.zT - S.z) * Math.min(1, dt * 1.5);
-  S.shake = (S.shake || 0) * Math.exp(-2.5 * dt);
+  S.shake = RMOTION ? 0 : (S.shake || 0) * Math.exp(-2.5 * dt);
   if (S.rocket === 'star' ? (S.lifted && S.bst.h < OLM + 600 && S.bst.eng[20]) : (S.lifted && S.core.h < ML_TOP + 600 && S.core.srbThr > 0)) S.shake = Math.max(S.shake, 7);
   stepConfetti(dt);
   if (S.nextIn > 0 && dockBtns.length) setDock([]);
