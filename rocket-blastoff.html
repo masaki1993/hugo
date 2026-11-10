@@ -1232,7 +1232,7 @@ const PH_STAR = [
       g.save(); g.setLineDash([10, 8]); g.strokeStyle = '#ffd23f'; g.lineWidth = 4;
       g.beginPath(); g.moveTo(X, Y); g.lineTo(X + Math.sin(S.target) * L, Y - Math.cos(S.target) * L); g.stroke();
       g.setLineDash([]); g.fillStyle = '#ffd23f'; g.font = '900 15px sans-serif'; g.textAlign = 'center';
-      if (flashT <= 0) g.fillText('この むきに あたまを むける', X + Math.sin(S.target) * L, Y - Math.cos(S.target) * L - 10);
+      if (flashT <= -0.6) g.fillText('この むきに あたまを むける', X + Math.sin(S.target) * L, Y - Math.cos(S.target) * L - 10);
       g.restore();
     },
     glow() { if (S.coast) return null; if (Math.abs(S.bst.ang - S.target) > 0.4) return null; const e = this.imp(); return Math.abs(e) > (ruka() ? 3000 : 1000) && e > 0 ? 'burn' : null; },
@@ -1921,7 +1921,7 @@ function hud(dt) {
   const gid = P && P.glow && (ruka() || P.glowAlways) ? P.glow() : null;
   for (const b of dockBtns) b.el.classList.toggle('glow', b.id === gid);
   tip(P && P.tip ? P.tip() : '');
-  if (flashT > 0) { flashT -= dt; if (flashT <= 0) $('flash').style.opacity = 0; }
+  if (flashT > -1) { const was = flashT; flashT -= dt; if (was > 0 && flashT <= 0) $('flash').style.opacity = 0; }
   if (factT > 0) { factT -= dt; if (factT <= 0) $('fact').style.opacity = 0; }
   if (rumbleG) {
     let k = 0, alt = 0;
