@@ -87,6 +87,7 @@
   .rk { width: min(46%, 380px); min-width: 250px; border-radius: 18px; border: 4px solid #cfe0ff; background: #0b1630; color: #fff; cursor: pointer; padding: 8px; font-family: inherit; text-align: center; }
   .rk.sel { border-color: #ffd23f; box-shadow: 0 0 0 4px rgba(255,210,63,.5); }
   .rk canvas { width: 100%; height: auto; display: block; border-radius: 12px; }
+  @media (max-height: 520px) { .rk canvas { height: 84px; object-fit: cover; } .rk p { display: none; } #title .ov, #title { padding-top: 44px; } #title h1 { font-size: 22px; } }
   .rk h3 { font-size: 22px; margin-top: 4px; } .rk p { font-size: 13px; font-weight: 700; opacity: .9; line-height: 1.6; }
   .modes { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
   .modes button { min-width: 200px; padding: 10px 16px; border-radius: 16px; border: 3px solid #fff; color: #fff; font-family: inherit; font-weight: 900; font-size: 22px; cursor: pointer; box-shadow: 0 6px 0 rgba(0,0,0,.35); }
@@ -95,7 +96,8 @@
   .keys { font-size: 12px; font-weight: 700; color: #456; margin-top: 10px; line-height: 1.8; }
   .keys kbd { background: #123; color: #fff; border-radius: 5px; padding: 0 6px; margin: 0 2px; font-family: inherit; }
 
-  #resList { list-style: none; margin: 8px 0; }
+  #resList { list-style: none; margin: 8px 0; display: grid; grid-template-columns: 1fr; column-gap: 22px; }
+  @media (min-width: 820px) { #resList { grid-template-columns: 1fr 1fr; } #result .box { width: min(100%, 980px); } }
   #resList li { display: flex; justify-content: space-between; gap: 10px; border-bottom: 1px dashed #b8c8e8; padding: 3px 0; }
   #resList li span:last-child { white-space: nowrap; }
   #resTotal { font-size: clamp(30px, 6vw, 52px); font-weight: 900; text-align: center; color: #d03a10; }
@@ -122,6 +124,7 @@
     #gA { top: 66px; bottom: auto; } #gS { top: 108px; bottom: auto; }
     #dock { bottom: 8px; } .steer { bottom: 8px; }
     #tip { top: 36px; }
+    #fact { bottom: 64px; font-size: 11px; max-width: 58vw; padding: 3px 8px; }
   }
 </style>
 </head>
@@ -182,9 +185,10 @@ const kmh = v => Math.round(Math.abs(v) * 3.6);
 // ================================================================= canvas
 const cv = $('cv'); let g = cv.getContext('2d');
 let W = 0, H = 0, DPR = 1;
+let VC = 0.5;
 function resize() {
   DPR = Math.min(2, window.devicePixelRatio || 1);
-  W = window.innerWidth; H = window.innerHeight;
+  W = window.innerWidth; H = window.innerHeight; VC = H < 520 ? 0.6 : 0.5;
   cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
 }
 window.addEventListener('resize', resize); resize();
@@ -212,7 +216,6 @@ const CLOUDS = Array.from({ length: 22 }, (_, i) => ({ h: 1500 + Math.random() *
 // ================================================================= view helpers
 // a view = { x, y, w, h (screen rect), cx, ch (camera world), z (px per m) }
 function sx(v, x) { return v.x + v.w / 2 + (x - v.cx) * v.z; }
-const VC = 0.5;
 function sy(v, h) { return v.y + v.h * VC - (h - v.ch) * v.z; }
 
 function drawBackground(v, site) {
@@ -270,7 +273,7 @@ function drawBackground(v, site) {
     if (site === 'star') {
       const cx2 = clamp(sx(v, 260), v.x, v.x + v.w);
       const ag = g.createLinearGradient(0, hz, 0, gy); ag.addColorStop(0, '#d9cfae'); ag.addColorStop(1, '#bda874');
-      g.fillStyle = ag; g.beginPath(); g.moveTo(v.x, hz); g.lineTo(cx2 - (gy - hz) * 0.8, hz); g.lineTo(cx2, gy); g.lineTo(v.x, gy); g.fill();
+      g.fillStyle = ag; g.beginPath(); g.moveTo(v.x, hz); g.lineTo(cx2 - Math.min(gy - hz, 60) * 0.8, hz); g.lineTo(cx2, gy); g.lineTo(v.x, gy); g.fill();
     } else if (site === 'h3') {
       g.fillStyle = '#3f8a3f';
       g.beginPath(); g.moveTo(v.x, gy); g.lineTo(v.x, hz + 6);
@@ -525,8 +528,11 @@ function drawShip(s) {
   g.fillStyle = '#3a3e43';
   g.beginPath(); g.moveTo(-r + 0.3, -body - 1); g.lineTo(-r - 1.9, -body - 2); g.lineTo(-r - 1.2, -body - 7.5); g.lineTo(-r + 0.9, -body - 7); g.fill();
   g.beginPath(); g.moveTo(r - 0.3, -body - 1); g.lineTo(r + 1.9, -body - 2); g.lineTo(r + 1.2, -body - 7.5); g.lineTo(r - 0.9, -body - 7); g.fill();
-  // plasma sheath
+  // plasma sheath + wake
   if (s.plasma > 0) {
+    const wg = g.createLinearGradient(r, -SS / 2, -60, -SS / 2 + 40);
+    wg.addColorStop(0, `rgba(255,150,210,${0.55 * s.plasma})`); wg.addColorStop(1, 'rgba(255,120,200,0)');
+    g.fillStyle = wg; g.beginPath(); g.moveTo(r, -SS + 4); g.quadraticCurveTo(-30, -SS / 2, -70, -4); g.lineTo(-40, 10); g.quadraticCurveTo(-10, 4, r, -2); g.fill();
     const pg = g.createRadialGradient(r + 3, -SS / 2, 2, r + 3, -SS / 2, 34);
     pg.addColorStop(0, `rgba(255,140,220,${0.75 * s.plasma})`); pg.addColorStop(0.4, `rgba(255,120,60,${0.45 * s.plasma})`); pg.addColorStop(1, 'rgba(255,60,120,0)');
     g.fillStyle = pg; g.beginPath(); g.ellipse(r + 4, -SS / 2, 12, 34, 0, 0, Math.PI * 2); g.fill();
@@ -631,7 +637,7 @@ function plume(x, y0, w, len, kind, alt, k) {
 
 // ---------------- particles (world space)
 let parts = [];
-function puff(x, h, vx, vh, r, life, col, grow = 1.6) { if (parts.length < 900) parts.push({ x, h, vx, vh, r, life, max: life, col, grow }); }
+function puff(x, h, vx, vh, r, life, col, grow = 1.6) { if (parts.length < 1500) parts.push({ x, h, vx, vh, r, life, max: life, col, grow }); }
 function stepParts(dt) {
   for (let i = parts.length - 1; i >= 0; i--) {
     const p = parts[i];
@@ -810,7 +816,7 @@ function newH3() {
 // nominal ascent profiles (time t in seconds after liftoff)
 const NOM = {
   star: { h: t => 70000 * Math.pow(clamp(t / 165, 0, 2), 1.85), v: t => 1500 * Math.pow(clamp(t / 165, 0, 2), 1.6), p: t => 0.96 * Math.pow(sm(8, 165, t), 0.8) },
-  h3: { h: t => 230000 * Math.pow(clamp(t / 300, 0, 2), 2.0), v: t => 4800 * Math.pow(clamp(t / 300, 0, 2), 1.35), p: t => 1.2 * Math.pow(sm(6, 300, t), 0.75) },
+  h3: { h: t => 230000 * Math.pow(clamp(t / 300, 0, 2), 1.7), v: t => 4800 * Math.pow(clamp(t / 300, 0, 2), 1.35), p: t => 1.2 * Math.pow(sm(6, 300, t), 0.75) },
 };
 function qMaxOf(n) { let m = 0, tm = 0; for (let t = 0; t < 200; t += 0.5) { const q = 0.5 * rho(n.h(t)) * n.v(t) ** 2; if (q > m) { m = q; tm = t; } } return [m, tm]; }
 const QSTAR = qMaxOf(NOM.star), QH3 = qMaxOf(NOM.h3);
@@ -830,7 +836,7 @@ const FACTS = {
   splash: 'まめちしき：テストでは うみに おりる。いつかは タワーで シップも キャッチする けいかく',
   le9: 'まめちしき：LE-9 は H3の ために あたらしく つくられた エンジン',
   srb: 'まめちしき：SRB-3 の ねんりょうは ゴムのような かたい こたい。もえはじめたら さいごまで もえる',
-  srbsep: 'まめちしき：H3は SRB-3 を 0本・2本・4本 から えらべる（H3-30・H3-22・H3-24）',
+  srbsep: 'まめちしき：H3-22 の まえの 2 は LE-9 が 2こ、うしろの 2 は SRB-3 が 2ほん。H3-30 なら LE-9 3こ で SRB-3 なし！',
   fair: 'まめちしき：フェアリングが ないと、えいせいは くうきの ねつと ちからで こわれちゃう',
   meco: 'まめちしき：だい1だんは つかいすて。うみに おちるよ',
   stage2: 'まめちしき：LE-5B-3 は うちゅうで なんども つけたり けしたり できる エンジン',
@@ -967,7 +973,7 @@ function drawDiagram(cd, kind) {
 // ================================================================= flight helpers
 const nozW = (o, d = 3) => ({ x: o.x - Math.sin(o.ang) * d, h: o.h - Math.cos(o.ang) * d });
 const along = (o, d) => ({ x: o.x + Math.sin(o.ang) * d, h: o.h + Math.cos(o.ang) * d });
-function zPad() { return S.rocket === 'star' ? Math.min(H * 0.64 / 190, W * 0.9 / 110) : Math.min(H * 0.8 / 115, W * 0.9 / 90); }
+function zPad() { return (H < 520 ? 0.8 : 1) * (S.rocket === 'star' ? Math.min(H * 0.64 / 190, W * 0.9 / 110) : Math.min(H * 0.8 / 115, W * 0.9 / 90)); }
 function follow(o, dh, minH = -1e9) {
   const p = along(o, dh);
   S.cam.x = p.x; S.cam.h = Math.max(minH, p.h);
@@ -986,7 +992,7 @@ function shipFly(dts) {
   if (!s.free) return;
   if (S.shipOff) { s.x += s.vx * dts; s.h += s.vh * dts; return; }
   const T = Math.min(S.T, P && P.id === 'seco' ? 1e9 : 505);
-  const v = 1500 + 5900 * Math.pow(sm(158, 520, T), 0.9);
+  const v0 = S.sepV || 1500, t0 = S.sepT0 || 158, v = v0 + (7400 - v0) * Math.pow(sm(t0, 520, T), 0.9);
   const p = lerp(S.sepP || 0.92, 1.53, sm(158, 300, T));
   s.v = v; s.vx = v * Math.sin(p); s.vh = v * Math.cos(p);
   s.x += s.vx * dts; s.h += s.vh * dts; s.ang = p;
@@ -1112,7 +1118,7 @@ const PH_STAR = [
       if (id === 'meco') { b.eng = b.eng.map((_, i) => i < 3 ? 1 : 0); b.thr = 0.7; flash('MECO！ のこり 3こ', '#fff', 1.2); sfx.ok(); say('メコ'); }
       if (id === 'sign') { s.eng = Array(6).fill(1); s.thr = 1; b.vent = 1; flash('シップ{点火|てんか}！ ホットステージング', '#ffd27a', 1.4); sfx.ok(); bang(0.3); }
       if (id === 'sep') {
-        S.attached = false; s.free = true; S.sepP = b.ang; b.vent = 0.6; b.eng = b.eng.map((_, i) => i < 3 ? 1 : 0); b.thr = 0.3;
+        S.attached = false; s.free = true; S.sepP = b.ang; S.sepV = b.v; S.sepT0 = S.T; b.vent = 0.6; b.eng = b.eng.map((_, i) => i < 3 ? 1 : 0); b.thr = 0.3;
         bang(0.6); say('ステージ セパレーション'); flash('ぶんり せいこう！', '#7fffb0', 1.4);
         result('stage', 'ホットステージング', 100 - S.wrong * 25);
         S.nextIn = 2.6;
@@ -1135,7 +1141,7 @@ const PH_STAR = [
       S.zT = zPad() * 0.75;
     },
     glow() { return ['meco', 'sign', 'sep'][S.step] || null; },
-    tip() { return ['① ブースターの エンジンを 3こに（MECO）', '② くっついた まま シップに 点火！', '③ ぶんり！'][S.step] || 'シップは うちゅうへ、ブースターは もどる じゅんび'; },
+    tip() { return ['① ブースターの エンジンを 3こに（MECO）', '② くっついた まま シップに {点火|てんか}！', '③ ぶんり！'][S.step] || 'シップは うちゅうへ、ブースターは もどる じゅんび'; },
   },
   { id: 'bb', name: 'ブーストバック',
     card: ['ブーストバック（もどる！）', 'ブースターは すてないで、はっしゃ した ばしょに もどって くる！<br><b>① ◀ を おして くるっと まわり、きいろの やじるしの むきに あわせる<br>② ブーストバック ボタンを おしている あいだ、13この エンジンで もどる<br>③ おちる ばしょの よそう ● が みどり（タワー）に きたら はなす</b>'],
@@ -1238,6 +1244,7 @@ const PH_STAR = [
     press(id, d) {
       if (!d) return;
       const b = S.bst;
+      if (id === 'ign' && !S.lit && ruka() && b.h > S.hMin + 20 + 2 * S.band + 250) { flash('まだ たかい！ メーターが みどりに なってから', '#ffe45c', 1.2); return; }
       if (id === 'ign' && !S.lit) {
         S.lit = 1; S.ignH = b.h; const err = Math.abs(b.h - S.idealIgn);
         result('lb', 'ランディングバーン', b.h < S.hMin ? 20 : 100 - Math.max(0, err - S.band) / (ruka() ? 9 : 6), Math.round(b.h) + 'm');
@@ -1362,7 +1369,7 @@ const PH_STAR = [
   },
   { id: 'reent', name: 'さいとつにゅう',
     card: ['さいとつにゅう（あつい！）', 'やく 45ふん ご、シップは インドようの うえで くうきの なかへ。はやすぎて まわりの くうきが 1000℃いじょうの「プラズマ」に なる！<br>くろい「たいねつ タイル」の ある おなかを まえに むけて まもろう。<b>◀ ▶ で はりを みどりに</b>（フラップで しせいを なおす）。'],
-    init() { const s = S.ship; S.pip = null; S.T = 2700; S.p = 0; S.st = steerNew(); S.heat = 0; s.h = 120000; s.v = 7300; s.ang = 1.22; s.eng = Array(6).fill(0); s.x = 0; S.ts = 1; S.siteNow = 'ocean'; S.zT = zPad() * 0.85;
+    init() { const s = S.ship; S.pip = null; S.T = 2700; S.p = 0; S.st = steerNew(); S.heat = 0; s.h = 120000; s.v = 7300; s.ang = 0.45; s.eng = Array(6).fill(0); s.x = 0; S.ts = 1; S.siteNow = 'ocean'; S.zT = zPad() * 1.4;
       showSteer(true); setDock([]); },
     update(dt) {
       const s = S.ship; S.p += dt / 28; const p = clamp(S.p, 0, 1);
@@ -1370,9 +1377,8 @@ const PH_STAR = [
       s.h = lerp(120000, 16000, p); s.v = lerp(7300, 650, Math.pow(p, 1.25)); s.vx = s.v; s.vh = -s.v * 0.08;
       s.plasma = clamp(Math.sin(Math.PI * clamp((p - 0.03) / 0.75, 0, 1)) * 1.15, 0, 1);
       steerStep(S.st, dt, 0.5 + s.plasma * 0.9, 1.4);
-      s.ang = 1.22 + S.st.e * 0.45; s.flap = steerIn() * 0.8;
+      s.ang = 0.45 + S.st.e * 0.45; s.flap = steerIn() * 0.8;
       if (Math.abs(S.st.e) > 0.25) S.heat = Math.min(1, S.heat + (Math.abs(S.st.e) - 0.25) * dt * s.plasma * 1.5);
-      if (s.plasma > 0.2 && Math.random() < 0.8) { const q = along(s, SS * 0.5); puff(q.x + rnd(-5, 5) - 20, q.h + rnd(-8, 8), -60, 0, 4, 0.6, Math.random() < 0.5 ? '#ff8fd0' : '#ffb070', 0.5); }
       steerGauge(S.st, 'おなかの むき（◀ ▶ で みどりに）');
       gauge('gA', { label: 'タイルの ねつ ダメージ', min: 0, max: 1, green: [0, 0.3], value: S.heat, fill: true, text: Math.round(S.heat * 100) + '%' });
       follow(s, SS / 2);
@@ -1541,7 +1547,7 @@ const PH_H3 = [
     tip() { return !S.core.attachedSrb ? 'SRB-3 は うみへ おちていく…' : S.core.srbThr > 0.02 ? 'もえつきるまで まって…' : 'いまだ！ SRB-3 ぶんり！'; },
   },
   { id: 'fair', name: 'フェアリング',
-    card: ['フェアリング ぶんり', 'いちばん うえの カバー「<b>フェアリング</b>」は、えいせいを くうきの ちからと ねつから まもる。くうきが ほとんど なくなったら（<b>たかさ 120km いじょう</b>）2つに わって すてるよ。かるく なって とおくまで いける！'],
+    card: ['フェアリング ぶんり', 'いちばん うえの カバー「<b>フェアリング</b>」は、えいせいを くうきの ちからと ねつから まもる。くうきが ほとんど なくなったら（<b>たかさ やく 120〜150km</b>）2つに わって すてるよ。かるく なって とおくまで いける！'],
     init() { S.ts = 4; S.early = 0; showSteer(false); gauge('gS', null); S.st = null; setDock([{ id: 'fair', label: '🥚 フェアリング ぶんり', sub: 'Space', key: 'Space' }]); },
     press(id, d) {
       if (!d || id !== 'fair' || !S.up.fairing) return;
@@ -1839,10 +1845,10 @@ function emit(dt) {
   } else {
     const c = S.core;
     if (c.attachedSrb && c.srbThr > 0 && c.h < 48000 && S.lifted) {
-      const p = nozW(c, 4), lp = S.lastNoz || p, dist = Math.hypot(p.x - lp.x, p.h - lp.h), r0 = c.h < 3000 ? 4.5 : 3.2;
+      const p = nozW(c, 4), lp = S.lastNoz || p, dist = Math.hypot(p.x - lp.x, p.h - lp.h), r0 = c.h < 3000 ? 5.5 : 4.2;
       const n = Math.min(14, Math.max(1, Math.ceil(dist / (r0 * 0.9))));
       for (let k = 1; k <= n; k++) { const t = k / n, x = lerp(lp.x, p.x, t), hh = lerp(lp.h, p.h, t);
-        for (const sd of [-1, 1]) { const off = HD / 2 + SRB_D / 2; puff(x + Math.cos(c.ang) * sd * off, hh - Math.sin(c.ang) * sd * off, rnd(-3, 3), rnd(-3, 3), r0, c.h < 3000 ? 7 : 4.5, '#f4f4f4', 1.3); } }
+        for (const sd of [-1, 1]) { const off = HD / 2 + SRB_D / 2; puff(x + Math.cos(c.ang) * sd * off, hh - Math.sin(c.ang) * sd * off, rnd(-3, 3), rnd(-3, 3), r0, c.h < 3000 ? 9 : 7, '#f4f4f4', 1.5); } }
       S.lastNoz = p;
       if (c.h < ML_TOP + 150) for (let i = 0; i < 4; i++) puff(rnd(-8, 8), rnd(1, 6), rnd(-50, 50), rnd(1, 10), rnd(5, 9), rnd(3, 6), '#eeeeee');
     }
@@ -1865,8 +1871,8 @@ function hud(dt) {
       drawEngineRing($('e1'), L_SH, b.eng); drawEngineRing($('e2'), L_SS, s.eng);
     } else {
       const c = S.core, u = S.up;
-      $('v1').textContent = kmh(c.v || 0).toLocaleString(); $('h1').textContent = Math.max(0, (S.lifted ? c.h - ML_TOP : 0) / 1000).toFixed(1);
-      $('v2').textContent = kmh(u.v || 0).toLocaleString(); $('h2').textContent = Math.max(0, (S.lifted ? u.h - ML_TOP - H1 : 0) / 1000).toFixed(1);
+      if (S.staged) { $('v1').textContent = '—'; $('h1').textContent = 'うみへ'; } else { $('v1').textContent = kmh(c.v || 0).toLocaleString(); $('h1').textContent = Math.max(0, (S.lifted ? c.h - ML_TOP : 0) / 1000).toFixed(1); }
+      $('v2').textContent = kmh(u.v || 0).toLocaleString(); $('h2').textContent = Math.max(0, (!S.lifted ? 0 : S.staged ? u.h : u.h - ML_TOP - H1) / 1000).toFixed(1);
       drawEngineRing($('e1'), L_H1, [c.eng[0], c.eng[1], c.attachedSrb && c.srbThr > 0, c.attachedSrb && c.srbThr > 0]);
       drawEngineRing($('e2'), L_H2, [u.eng]);
     }
@@ -1905,6 +1911,7 @@ function step(dt) {
   S.shake = (S.shake || 0) * Math.exp(-2.5 * dt);
   if (S.rocket === 'star' ? (S.lifted && S.bst.h < OLM + 600 && S.bst.eng[20]) : (S.lifted && S.core.h < ML_TOP + 600 && S.core.srbThr > 0)) S.shake = Math.max(S.shake, 7);
   stepConfetti(dt);
+  if (S.nextIn > 0 && dockBtns.length) setDock([]);
   if (S.nextIn > 0) { S.nextIn -= dt; if (S.nextIn <= 0) { S.nextIn = 0; nextPhase(); } }
   hud(dt);
 }
