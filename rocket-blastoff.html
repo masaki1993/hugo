@@ -91,7 +91,7 @@
   #title .box { width: min(100%, 900px); text-align: center; }
   #title h1 { font-size: clamp(26px, 5vw, 46px); color: #0d4fb0; letter-spacing: 2px; }
   .pick { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin: 10px 0; }
-  .rk { width: min(46%, 380px); min-width: 250px; border-radius: 18px; border: 4px solid #cfe0ff; background: #0b1630; color: #fff; cursor: pointer; padding: 8px; font-family: inherit; text-align: center; }
+  .rk { width: min(31%, 300px); min-width: 210px; border-radius: 18px; border: 4px solid #cfe0ff; background: #0b1630; color: #fff; cursor: pointer; padding: 8px; font-family: inherit; text-align: center; }
   .rk.sel { border-color: #ffd23f; box-shadow: 0 0 0 4px rgba(255,210,63,.5); }
   .rk canvas { width: 100%; height: auto; display: block; border-radius: 12px; }
   @media (max-height: 520px) { .rk canvas { height: 84px; object-fit: cover; } .rk p { display: none; } #title .ov, #title { padding-top: 44px; } #title h1 { font-size: 22px; } }
@@ -165,6 +165,7 @@
     <div class="pick">
       <button class="rk sel" data-r="star" type="button"><canvas width="380" height="230" id="pk1"></canvas><h3>スターシップ <small class="best" id="best_star"></small></h3><p>せかい さいだいの ロケット。ブースターを タワーの「おはし」で キャッチ！</p></button>
       <button class="rk" data-r="h3" type="button"><canvas width="380" height="230" id="pk2"></canvas><h3>H3（エイチスリー） <small class="best" id="best_h3"></small></h3><p>にっぽんの ロケット。SRB-3 と フェアリングを きりはなして えいせいを うちゅうへ！</p></button>
+      <button class="rk" data-r="a6" type="button"><canvas width="380" height="230" id="pk3"></canvas><h3>アリアン6 <small class="best" id="best_a6"></small></h3><p>ヨーロッパの ロケット。Vinci エンジンを うちゅうで なんども {点火|てんか}！</p></button>
     </div>
     <div class="modes">
       <button class="m-ruka" data-m="ruka" type="button">ルカ モード<small>かんたん ・ ボタンが ひかって おしえる</small></button>
@@ -212,7 +213,12 @@ window.addEventListener('resize', resize); resize();
 const SH = 71, SS = 52, SD = 9;          // Super Heavy length, Ship length, diameter
 const OLM = 22, TOWER_X = -27, TOWER_H = 146, ARM_H = 105, FIT = 61;  // pad / tower / catch geometry
 const H_REST = ARM_H - FIT;              // booster base height when hanging on the arms
-const H1 = 37, H2L = 10, HF = 10, HD = 5.2, SRB_L = 15, SRB_D = 2.5, ML_TOP = 16;
+let H1 = 37, H2L = 10, HF = 10, HD = 5.2, SRB_L = 15, SRB_D = 2.5, ML_TOP = 16;
+// Ariane 62: core ~30 m, upper ~11 m, short fairing 14 m, 5.4 m wide, P120C 13.5 m x 3.4 m
+function setDims(r) {
+  if (r === 'a6') { H1 = 30; H2L = 11; HF = 14; HD = 5.4; SRB_L = 13.5; SRB_D = 3.4; ML_TOP = 10; }
+  else { H1 = 37; H2L = 10; HF = 10; HD = 5.2; SRB_L = 15; SRB_D = 2.5; ML_TOP = 16; }
+}
 
 // ================================================================= colors / sky
 const hex = c => [parseInt(c.slice(1, 3), 16), parseInt(c.slice(3, 5), 16), parseInt(c.slice(5, 7), 16)];
@@ -252,7 +258,7 @@ function drawBackground(v, site) {
   const ecx = v.x + v.w / 2, ecy = hz + Rpx;
   g.save(); g.beginPath(); g.rect(v.x, v.y, v.w, v.h); g.clip();
   const eg = g.createLinearGradient(0, hz, 0, hz + v.h * 0.6);
-  if (site === 'h3') { eg.addColorStop(0, '#8fbfe0'); eg.addColorStop(0.15, '#2c6fa8'); eg.addColorStop(1, '#13406e'); }
+  if ((site === 'h3' || site === 'a6')) { eg.addColorStop(0, '#8fbfe0'); eg.addColorStop(0.15, '#2c6fa8'); eg.addColorStop(1, '#13406e'); }
   else if (site === 'ocean') { eg.addColorStop(0, '#9cc8e8'); eg.addColorStop(0.15, '#2a73b0'); eg.addColorStop(1, '#0d3a6a'); }
   else { eg.addColorStop(0, '#b9d2e6'); eg.addColorStop(0.15, '#3f7fb6'); eg.addColorStop(1, '#1c4e80'); }
   g.fillStyle = eg; g.beginPath(); g.arc(ecx, ecy, Rpx, 0, Math.PI * 2); g.fill();
@@ -260,9 +266,9 @@ function drawBackground(v, site) {
   const hiA = clamp((h - 30000) / 60000, 0, 1);
   if (hiA > 0) {
     g.globalAlpha = hiA * 0.55;
-    g.fillStyle = site === 'h3' ? '#4f7f45' : '#8d8a5a';
+    g.fillStyle = (site === 'h3' || site === 'a6') ? '#4f7f45' : '#8d8a5a';
     for (let i = 0; i < 4; i++) {
-      const ang = -Math.PI / 2 + ((i - 1.5) * 0.22 * v.w + (site === 'h3' ? 0.05 : -0.08) * v.w) / Rpx;
+      const ang = -Math.PI / 2 + ((i - 1.5) * 0.22 * v.w + ((site === 'h3' || site === 'a6') ? 0.05 : -0.08) * v.w) / Rpx;
       g.beginPath(); g.ellipse(ecx + Math.cos(ang) * (Rpx - v.h * 0.03), ecy + Math.sin(ang) * (Rpx - v.h * 0.03), v.w * 0.07, v.h * 0.018, ang + Math.PI / 2, 0, Math.PI * 2); g.fill();
     }
     g.globalAlpha = hiA;
@@ -289,7 +295,7 @@ function drawBackground(v, site) {
       const cx2 = clamp(sx(v, 260), v.x, v.x + v.w);
       const ag = g.createLinearGradient(0, hz, 0, gy); ag.addColorStop(0, '#d9cfae'); ag.addColorStop(1, '#bda874');
       g.fillStyle = ag; g.beginPath(); g.moveTo(v.x, hz); g.lineTo(cx2 - Math.min(gy - hz, 60) * 0.8, hz); g.lineTo(cx2, gy); g.lineTo(v.x, gy); g.fill();
-    } else if (site === 'h3') {
+    } else if ((site === 'h3' || site === 'a6')) {
       g.fillStyle = '#3f8a3f';
       g.beginPath(); g.moveTo(v.x, gy); g.lineTo(v.x, hz + 6);
       const cx2 = clamp(sx(v, 170), v.x, v.x + v.w), ww = cx2 - v.x;
@@ -335,7 +341,7 @@ function drawGround(v, site) {
   const sxx = sx(v, seaX);
   if (sxx < v.x + v.w) { g.fillStyle = '#2c6fa8'; g.fillRect(Math.max(v.x, sxx), gy, v.w, v.y + v.h - gy); g.fillStyle = '#e8d9a8'; g.fillRect(sxx - 8 * v.z, gy, 8 * v.z, 3 * v.z); }
   g.fillStyle = '#8b8f94'; g.fillRect(sx(v, -70), gy, 140 * v.z, 2.5 * v.z); // pad concrete
-  if (site === 'star') drawStarbase(v); else drawYoshinobu(v);
+  if (site === 'star') drawStarbase(v); else if (site === 'a6') drawKourou(v); else drawYoshinobu(v);
   g.restore();
 }
 
@@ -406,6 +412,34 @@ function drawYoshinobu(v) {
   g.fillStyle = '#555'; g.fillRect(X(-14), Y(0.3), 28 * z, 1.4 * z);
   // rails for the mobile launcher
   g.fillStyle = '#6b6f75'; g.fillRect(X(-330), Y(0.4), 340 * z, 0.4 * z);
+}
+function drawKourou(v) {
+  const z = v.z, X = x => sx(v, x), Y = h => sy(v, h);
+  // jungle
+  g.fillStyle = '#2f6b33';
+  for (let i = 0; i < 14; i++) { const x = -320 + i * 22 + (i % 3) * 5, r = 9 + (i % 4) * 3; g.beginPath(); g.arc(X(x), Y(r * 0.8), r * z, Math.PI, 0); g.fill(); }
+  // lightning masts
+  for (const lx of [-50, 50]) { g.fillStyle = '#c33'; g.fillRect(X(lx - 0.8), Y(85), 1.6 * z, 85 * z); g.fillStyle = '#eee'; for (let y = 10; y < 85; y += 20) g.fillRect(X(lx - 0.8), Y(y + 10), 1.6 * z, 10 * z); }
+  // flame trench, launch table and fixed umbilical mast
+  g.fillStyle = '#555'; g.fillRect(X(-12), Y(0.3), 24 * z, 1.4 * z);
+  g.fillStyle = '#9aa1a8'; for (const lx of [-11, 11]) g.fillRect(X(lx - 1.5), Y(ML_TOP), 3 * z, ML_TOP * z);
+  g.fillStyle = '#b7bec5'; g.fillRect(X(-14), Y(ML_TOP), 28 * z, 2.5 * z);
+  g.fillStyle = '#3b3f44'; g.fillRect(X(-4), Y(ML_TOP), 8 * z, 2.5 * z);
+  lattice(X(-17), Y(ML_TOP + 58), 4 * z, (ML_TOP + 58) * z, 4 * z, '#5d6670', Math.max(1, 0.4 * z));
+  if (!S || !S.lifted) { g.strokeStyle = '#5d6670'; g.lineWidth = Math.max(1, 0.8 * z); g.beginPath(); g.moveTo(X(-13), Y(ML_TOP + 22)); g.lineTo(X(-HD / 2), Y(ML_TOP + 22)); g.moveTo(X(-13), Y(ML_TOP + 38)); g.lineTo(X(-HD / 2), Y(ML_TOP + 38)); g.stroke(); }
+  // rails for the mobile gantry
+  g.fillStyle = '#6b6f75'; g.fillRect(X(-24), Y(0.4), 170 * z, 0.4 * z);
+}
+function drawGantry(v) {
+  // ELA-4 mobile gantry (about 90 m tall) that rolls away before launch
+  const z = v.z, gx = S.gx ?? 120, X = x => sx(v, gx + x), Y = h => sy(v, h);
+  g.save(); g.globalAlpha = gx < 30 ? 0.86 : 1;
+  g.fillStyle = '#dfe3e7'; g.fillRect(X(-17), Y(90), 34 * z, 90 * z);
+  g.fillStyle = '#2b5fa8'; g.fillRect(X(-17), Y(90), 34 * z, 4 * z);
+  g.strokeStyle = 'rgba(80,90,100,.45)'; g.lineWidth = Math.max(1, 0.3 * z);
+  for (let h = 8; h < 88; h += 8) { g.beginPath(); g.moveTo(X(-17), Y(h)); g.lineTo(X(17), Y(h)); g.stroke(); }
+  g.fillStyle = '#7c858d'; for (const lx of [-15, 13]) g.fillRect(X(lx), Y(4), 2 * z, 4 * z);
+  g.restore();
 }
 function drawML(v, mx) {
   const z = v.z, X = x => sx(v, mx + x), Y = h => sy(v, h);
@@ -557,20 +591,22 @@ function drawShip(s) {
 // H3 first stage (+ optional SRBs attached)
 function drawH3Core(c) {
   const r = HD / 2;
-  nozzle(-1.25, -0.6, 3.6, 0.9, 1.9, '#3a3d42'); nozzle(1.25, -0.6, 3.6, 0.9, 1.9, '#3a3d42');
+  const a6 = S && S.rocket === 'a6';
+  if (a6) nozzle(0, -0.6, 3.6, 1.1, 2.4, '#3a3d42'); else { nozzle(-1.25, -0.6, 3.6, 0.9, 1.9, '#3a3d42'); nozzle(1.25, -0.6, 3.6, 0.9, 1.9, '#3a3d42'); }
   g.fillStyle = white(r); g.fillRect(-r, -H1, HD, H1);
   g.fillStyle = '#6d747b'; g.fillRect(-r, -3, HD, 3);        // engine section
   g.fillStyle = '#4a5056'; g.fillRect(-r, -H1, HD, 1.5);      // interstage ring
   if (S && S.xray) {
     tank(-r + 0.5, -H1 + 3, HD - 1, 9, c.lox, 'rgba(70,140,255,.85)', 0, 'さんそ');
     tank(-r + 0.5, -H1 + 13, HD - 1, 19, c.lh2, 'rgba(160,230,255,.85)', 0, 'すいそ');
-    g.fillStyle = '#fff'; g.font = '900 1.3px sans-serif'; g.textAlign = 'center'; g.fillText('LE-9', 0, -1.3);
+    g.fillStyle = '#fff'; g.font = '900 1.3px sans-serif'; g.textAlign = 'center'; g.fillText(a6 ? 'Vulcain' : 'LE-9', 0, -1.3);
   } else {
     frostBand(r, -4, -4 - 19 * c.lh2, S ? S.frost : 0);
     // markings
-    g.fillStyle = '#c8102e'; g.beginPath(); g.arc(0, -H1 + 9, 0.9, 0, Math.PI * 2); g.fill();
+    if (a6) { g.fillStyle = '#5e666e'; g.fillRect(-r, -H1 + 1.5, HD, 1.2); g.fillStyle = '#1a3d8f'; g.font = '900 1.7px sans-serif'; g.textAlign = 'center'; g.save(); g.translate(0.2, -H1 + 15); g.rotate(-Math.PI / 2); g.fillText('ARIANE 6', 0, 0); g.restore(); }
+    else { g.fillStyle = '#c8102e'; g.beginPath(); g.arc(0, -H1 + 9, 0.9, 0, Math.PI * 2); g.fill(); }
     g.fillStyle = '#1a3d8f'; g.font = '900 2.4px sans-serif'; g.textAlign = 'center';
-    g.save(); g.translate(0.2, -H1 + 22); g.rotate(-Math.PI / 2); g.fillText('H3', 0, 0); g.restore();
+    if (!a6) { g.save(); g.translate(0.2, -H1 + 22); g.rotate(-Math.PI / 2); g.fillText('H3', 0, 0); g.restore(); }
   }
 }
 function drawSRB(sb, side) {
@@ -807,6 +843,7 @@ const ring = (n, rr, size, off = 0) => Array.from({ length: n }, (_, i) => [Math
 const L_SH = [...ring(3, 0.14, 0.085, 0.5), ...ring(10, 0.43, 0.085), ...ring(20, 0.8, 0.075, 0.15)];
 const L_SS = [...ring(3, 0.24, 0.13, 0.5), ...ring(3, 0.62, 0.22, 1.55)];
 const L_H1 = [[-0.3, 0, 0.22], [0.3, 0, 0.22], [-0.78, 0, 0.14], [0.78, 0, 0.14]];
+const L_A1 = [[0, 0, 0.3], [-0.74, 0, 0.2], [0.74, 0, 0.2]];
 const L_H2 = [[0, 0, 0.3]];
 
 // ================================================================= mission state
@@ -821,10 +858,11 @@ function newStar() {
     cam: { x: 0, h: 80 }, zoom: 0, view2: 'ship',
   };
 }
-function newH3() {
+function newH3(r = 'h3') {
+  const a6 = r === 'a6';
   return {
-    rocket: 'h3', T: -600, srbBurn: 116 + rnd(-4, 4), ts: 1, pi: 0, results: [], retries: 0, xray: false, frost: 0, lifted: false, site: 'h3', mlx: -295,
-    core: { x: -295, h: ML_TOP, ang: 0, vx: 0, vh: 0, v: 0, lox: 0, lh2: 0, eng: [0, 0], srbOn: false, srbThr: 0, attachedSrb: true, upper: true },
+    rocket: r, T: -600, srbBurn: (a6 ? 132 : 116) + rnd(-4, 4), coreBurn: a6 ? 460 : 300, upA: a6 ? 5 : 4.1, ts: 1, pi: 0, results: [], retries: 0, xray: false, frost: 0, lifted: false, site: r, mlx: a6 ? 0 : -295, gx: a6 ? 0 : undefined,
+    core: { x: a6 ? 0 : -295, h: ML_TOP, ang: 0, vx: 0, vh: 0, v: 0, lox: 0, lh2: 0, eng: [0, 0], srbOn: false, srbThr: 0, attachedSrb: true, upper: true },
     up: { x: 0, h: 0, ang: 0, v: 0, lox: 0, lh2: 0, eng: 0, fairing: true, free: false, satGone: false },
     srbs: [], fair: [], sat: null,
     cam: { x: 0, h: 60 }, zoom: 0,
@@ -834,10 +872,11 @@ function newH3() {
 // nominal ascent profiles (time t in seconds after liftoff)
 const NOM = {
   star: { h: t => 70000 * Math.pow(clamp(t / 165, 0, 2), 1.85), v: t => 1600 * Math.pow(clamp(t / 165, 0, 2), 1.6), p: t => 0.96 * Math.pow(sm(8, 165, t), 0.8) },
+  a6: { h: t => 200000 * Math.pow(1 - Math.exp(-t / 220), 1.6), v: t => 5500 * Math.pow(clamp(t / 460, 0, 2), 1.3), p: t => 1.25 * Math.pow(sm(6, 460, t), 0.7) },
   h3: { h: t => 230000 * Math.pow(clamp(t / 300, 0, 2), 1.6), v: t => 4800 * Math.pow(clamp(t / 300, 0, 2), 1.35), p: t => 1.2 * Math.pow(sm(6, 300, t), 0.75) },
 };
 function qMaxOf(n) { let m = 0, tm = 0; for (let t = 0; t < 200; t += 0.5) { const q = 0.5 * rho(n.h(t)) * n.v(t) ** 2; if (q > m) { m = q; tm = t; } } return [m, tm]; }
-const QSTAR = qMaxOf(NOM.star), QH3 = qMaxOf(NOM.h3);
+const QSTAR = qMaxOf(NOM.star), QH3 = qMaxOf(NOM.h3), QA6 = qMaxOf(NOM.a6);
 
 const FACTS = {
   fuel: 'まめちしき：ブースターには やく 3400トンの ねんりょうが はいるよ',
@@ -859,6 +898,16 @@ const FACTS = {
   meco: 'まめちしき：だい1だんは つかいすて。うみに おちるよ',
   stage2: 'まめちしき：LE-5B-3 は うちゅうで なんども つけたり けしたり できる エンジン',
   h3seco: 'まめちしき：じそく 27,400km だと、ちきゅう 1しゅう やく 1じかん 35ふん！',
+  vul: 'まめちしき：Vulcain 2.1 は アリアン5の エンジンを かいりょう した もの',
+  p120: 'まめちしき：P120C は 1ほんに こたい ねんりょうが やく 140トン！',
+  a6srb: 'まめちしき：アリアン62 は P120C が 2ほん、アリアン64 は 4ほん',
+  a6fair: 'まめちしき：アリアン6の フェアリングは ながさ 14m と 20m から えらべる',
+  a6meco: 'まめちしき：コア（だい1だん）は うみへ おちる。つかいすて だよ',
+  a6stage2: 'まめちしき：Vinci は うちゅうで なんども つけたり けしたり できる エンジン',
+  a6seco1: 'まめちしき：いまは たまごがたの みち。いちばん たかい ところへ むかって のぼって いく',
+  a6relight: 'まめちしき：いちばん たかい ところで かそく すると、まるい きどうに なる',
+  a6pay: 'まめちしき：アリアン6は いくつもの えいせいを べつべつの きどうに はこべる',
+  a6deorbit: 'まめちしき：うちゅうごみは ほかの えいせいに ぶつかると あぶない。だから かたづける！',
   pay: 'まめちしき：えいせいは うちゅうから ちきゅうの しゃしんを とったり、てんきを しらべたり する',
 };
 let factT = 0;
@@ -888,7 +937,7 @@ function quiz(key, q, choices, ok, why) {
   showCard('🧠 クイズ！', q, null, order.map((i, pos) => [choices[i], () => {
     const good = i === ok;
     S.results = S.results.filter(r => r.key !== key);
-    S.results.push({ key, quiz: true, name: 'クイズ：' + ({ q1: 'エンジンの かず', q2: 'ねんりょう', q3: 'SRB-3', q4: 'つかいすて', q5: 'たいねつ タイル', q6: 'たいよう でんち' }[key] || ''), score: good ? 100 : 0, note: good ? 'せいかい ⭕' : 'ざんねん' });
+    S.results.push({ key, quiz: true, name: 'クイズ：' + ({ q1: 'エンジンの かず', q2: 'ねんりょう', q3: 'SRB-3', q4: 'つかいすて', q5: 'たいねつ タイル', q6: 'たいよう でんち', q7: 'はっしゃじょう', q8: 'Vinci', q9: 'うちゅうごみ' }[key] || ''), score: good ? 100 : 0, note: good ? 'せいかい ⭕' : 'ざんねん' });
     (good ? sfx.ok : sfx.bad)();
     flash(good ? 'せいかい！ ⭕' : 'おしい！ こたえを みてね', good ? '#7fffb0' : '#ffd27a', 1.6);
     const el = $('fact'); el.innerHTML = '💡 ' + R(why); el.style.opacity = 1; factT = 5;
@@ -997,6 +1046,17 @@ function drawDiagram(cd, kind) {
     lab(bx + 32, by - 9 * z, 560, 350, 'SRB-3（こたい ロケット）');
     lab(bx + 6, by - 2, 560, 450, 'LE-9 エンジン 2こ');
     c.textAlign = 'left'; c.font = '900 24px sans-serif'; c.fillStyle = '#9fd0ff'; c.fillText('たかさ やく 57m ・ ふとさ 5.2m', 24, 34);
+  } else if (kind === 'a6') {
+    const z = 8, bx = 300, by = h - 30;
+    c.save(); c.translate(bx, by); c.scale(z, z);
+    for (const sd of [-1, 1]) { c.save(); c.translate(sd * (HD / 2 + SRB_D / 2), -1); drawSRB({ prop: 1 }, sd); c.restore(); }
+    drawH3Core({ ...S.core, lox: 1, lh2: 1 }); c.translate(0, -H1); drawH3Upper({ ...S.up, lox: 1, lh2: 1 }); c.restore();
+    lab(bx + 14, by - (H1 + H2L + HF - 4) * z, 560, 60, 'フェアリング（えいせいの カバー）');
+    lab(bx + 14, by - (H1 + 5) * z, 560, 150, 'だい2だん（Vinci エンジン）');
+    lab(bx + 14, by - 20 * z, 560, 250, 'コア（すいそ と さんそ）');
+    lab(bx + 34, by - 8 * z, 560, 350, 'P120C（こたい）2ほん');
+    lab(bx + 6, by - 2, 560, 450, 'Vulcain 2.1 エンジン');
+    c.textAlign = 'left'; c.font = '900 24px sans-serif'; c.fillStyle = '#9fd0ff'; c.fillText('アリアン62 ・ たかさ やく 56m ・ ふとさ 5.4m', 24, 34);
   } else if (kind === 'h3seq') {
     c.fillStyle = '#fff'; c.font = '900 30px sans-serif'; c.textAlign = 'center';
     const steps = ['①LE-9 てんか', '②SRB-3 てんか', '③SRB-3 ぶんり', '④フェアリング', '⑤だん ぶんり', '⑥えいせい ぶんり'];
@@ -1469,17 +1529,17 @@ const PH_STAR = [
 
 // ================================================================= phases: H3
 function h3Fly(dts) {
-  const c = S.core, u = S.up, t = S.T, n = NOM.h3;
+  const c = S.core, u = S.up, t = S.T, n = NOM[S.rocket === 'a6' ? 'a6' : 'h3'], cb = S.coreBurn || 300;
   if (!S.staged) {
     const v = n.v(t), p = n.p(t);
     c.h = ML_TOP + n.h(t); c.x += v * Math.sin(p) * dts; c.ang = p + (S.st ? S.st.e * 0.3 : 0); c.v = v; c.vx = v * Math.sin(p); c.vh = v * Math.cos(p);
-    c.lh2 = c.lox = clamp(1 - t / 300, 0, 1);
+    c.lh2 = c.lox = clamp(1 - t / cb, 0, 1);
     const sb = S.srbBurn || 116;
     c.srbThr = c.srbOn && c.attachedSrb ? (t < sb - 16 ? 1 : Math.max(0, 1 - (t - sb + 16) / 16)) : 0;
     c.srbProp = clamp(1 - t / sb, 0, 1);
     const top = along(c, H1); u.x = top.x; u.h = top.h; u.ang = c.ang; u.v = v; u.vx = c.vx; u.vh = c.vh;
   } else {
-    if (u.eng) u.v += 4.1 * dts;
+    if (u.eng) u.v += (S.upA || 4.1) * dts;
     u.ang += (Math.PI / 2 - 0.02 - u.ang) * Math.min(1, dts * 0.01);
     u.vx = u.v * Math.sin(u.ang); u.vh = u.v * Math.cos(u.ang);
     u.x += u.vx * dts; u.h += u.vh * dts;
@@ -1491,7 +1551,7 @@ const PH_H3 = [
     card: ['H3ロケットを はっしゃ しよう！', 'H3は にっぽんの あたらしい ロケット（JAXA と {三菱重工|みつびしじゅうこう}）。かごしまけんの たねがしま うちゅう センターから とぶよ。1だんめの エンジンは「LE-9」、2だんめは「LE-5B-3」。よこの しろい つつは「SRB-3（こたい ロケット ブースター）」。ねんりょうは「えきたい すいそ（マイナス253℃！）」と「えきたい さんそ」。<br><b>「はっしゃだいへ いどう」を おして、うごく はっしゃだい で ロケットを はこぼう。</b>', 'h3'],
     init() { S.T = -12 * 3600; S.mlx = -295; S.moving = false; S.fill = 0; S.z = S.zT = zPad(); S.cam = { x: -295, h: 50 };
       setDock([{ id: 'go', label: '🚚 はっしゃだいへ いどう', sub: 'Space', key: 'Space' }]); },
-    press(id, d) { if (d && id === 'go' && !S.moving) { S.moving = true; sfx.ok(); } },
+    press(id, d) { if (d && id === 'go' && !S.moving) { S.moving = true; sfx.ok(); setDock([]); } },
     update(dt) {
       const c = S.core;
       if (S.moving && S.mlx < 0) S.mlx = Math.min(0, S.mlx + 55 * dt);
@@ -1712,6 +1772,288 @@ const PH_H3 = [
   },
 ];
 
+// ================================================================= phases: ARIANE 6 (Ariane 62)
+const PH_A6 = [
+  { id: 'a6roll', name: 'ガントリー・ほきゅう',
+    card: ['アリアン6を はっしゃ しよう！', 'アリアン6は ヨーロッパの あたらしい ロケット（ESA と アリアングループ）。みなみアメリカの フランスりょう ギアナ・クールーから とぶよ。せきどうの ちかく なので、ちきゅうが まわる いきおいを もらえる！ 1だんめ（コア）の エンジンは「Vulcain 2.1（ヴァルカン）」、2だんめは「Vinci（ヴィンチ）」。よこの 2ほんの しろい つつは こたい ロケット「P120C」。<br><b>ロケットを かこんでいる「うごく たてもの（ガントリー）」を うごかそう。</b>', 'a6'],
+    init() { S.T = -11 * 3600; S.gx = 0; S.moving = false; S.fill = 0; S.z = S.zT = Math.min(H * 0.8 / 125, W * 0.9 / 170); S.cam = { x: 30, h: 50 };
+      setDock([{ id: 'go', label: '🏗 ガントリーを うごかす', sub: 'Space', key: 'Space' }]); },
+    press(id, d) { if (d && id === 'go' && !S.moving) { S.moving = true; sfx.ok(); setDock([]); } },
+    update(dt) {
+      const c = S.core;
+      if (S.moving && S.gx < 120) S.gx = Math.min(120, S.gx + 30 * dt);
+      if (S.gx >= 120) { S.fill = Math.min(100, S.fill + 22 * dt); S.xray = S.fill < 100; if (S.fill >= 100 && !S.nextIn) S.nextIn = 1.4; S.zT = zPad(); }
+      S.T = -11 * 3600 + S.gx / 120 * 6 * 3600 + S.fill / 100 * 4.9 * 3600;
+      c.x = 0; c.h = ML_TOP; const f = S.fill / 100; c.lox = c.lh2 = S.up.lox = S.up.lh2 = f; S.frost = f;
+      if (S.gx >= 120 && S.fill < 100 && Math.random() < 0.4) puff(rnd(-3, 3), ML_TOP + rnd(10, 40), rnd(3, 8), rnd(-1, 1), 1.5, 2, '#f4f7fb');
+      S.cam.x = lerp(40, 0, S.gx / 120); S.cam.h = 46;
+      gauge('gA', S.gx < 120 ? null : { label: 'ねんりょう ほきゅう（じどう）', min: 0, max: 100, value: S.fill, fill: true, text: Math.round(S.fill) + '%' });
+    },
+    glow() { return S.moving ? null : 'go'; },
+    tip() { return !S.moving ? '「ガントリーを うごかす」を おそう' : S.gx < 120 ? 'ガントリーが レールの うえを うごいて いく…' : 'ねんりょうを いれているよ（すいそは マイナス253℃）'; },
+  },
+  { id: 'a6count', name: 'カウントダウン',
+    card: ['{点火|てんか}の じゅんばん', '<b>① さきに「Vulcain 2.1」（えきたいの エンジン）に {点火|てんか}（T-7びょう ごろ）。</b>コンピューターが ちゃんと うごいて いるか しらべて から…<br><b>② T-0 で「P120C」に {点火|てんか} → リフトオフ！</b><br>P120C は こたい ねんりょう なので、いちど もえたら とめられない。だから さいごに つけるんだ。'],
+    init() { S.T = -15; S.xray = false; S.vT = null; S.pT = null; S.wrong = 0; S.beep = null; gauge('gA', null);
+      setDock([{ id: 'vul', label: '① Vulcain {点火|てんか}', sub: 'えきたい エンジン (1)', key: 'Digit1' }, { id: 'p120', label: '② P120C {点火|てんか}', sub: 'リフトオフ (2)', key: 'Digit2', cls: 'c2' }]); },
+    press(id, d) {
+      if (!d) return;
+      const c = S.core;
+      if (id === 'vul' && S.vT === null) {
+        if (S.T < (ruka() ? -12 : -10)) { S.wrong++; sfx.bad(); flash('はやすぎ！ T-7 ごろ', '#ff9a7a', 1.2); return; }
+        S.vT = S.T; c.eng = [1, 0];
+        result('vul', 'Vulcain {点火|てんか}', 100 - Math.max(0, Math.abs(S.T + 7) - (ruka() ? 1.6 : 0.6)) * (ruka() ? 12 : 25), 'T' + S.T.toFixed(1));
+      }
+      if (id === 'p120' && S.pT === null) {
+        if (S.vT === null) { S.wrong++; sfx.bad(); flash('さきに ① Vulcain！ P120C は とめられないよ', '#ff9a7a', 1.6); return; }
+        if (S.T < -2.5) { S.wrong++; sfx.bad(); flash('まだ はやい！ T-0 で', '#ff9a7a', 1.2); return; }
+        this.lift();
+      }
+    },
+    lift() {
+      const c = S.core; S.pT = S.T; c.srbOn = true; c.srbThr = 1;
+      result('p120', 'P120C {点火|てんか}', 100 - Math.max(0, Math.abs(S.T) - (ruka() ? 1.2 : 0.4)) * (ruka() ? 18 : 40) - S.wrong * 15, 'T' + S.T.toFixed(1));
+      S.lifted = true; S.T = 0; say('リフトオフ！'); flash('リフトオフ！ 🚀', '#fff', 1.6); bang(0.6); nextPhase();
+    },
+    update(dt) {
+      S.T += dt;
+      const sec = Math.ceil(-S.T);
+      if (S.T < 0 && sec <= 10 && sec !== S.beep) { S.beep = sec; sfx.beep(); say(['ゼロ', 'いち', 'に', 'さん', 'よん', 'ご', 'ろく', 'なな', 'はち', 'きゅう', 'じゅう'][sec]); }
+      if (S.vT === null && S.T > -1.5) { S.vT = S.T; S.core.eng = [1, 0]; result('vul', 'Vulcain {点火|てんか}', 30, 'おそかった'); }
+      if (S.pT === null && S.T > 2.5) { S.wrong += 2; this.lift(); return; }
+      if (S.vT !== null && Math.random() < 0.9) puff(rnd(-6, 6), rnd(1, 6), rnd(-30, 30), rnd(2, 10), rnd(3, 6), rnd(2, 4), '#f2f5f8');
+      follow(S.core, 28, 46);
+      gauge('gA', { label: 'カウントダウン', min: -15, max: 0, green: S.vT === null ? [-7 - (ruka() ? 1.6 : 0.6), -7 + (ruka() ? 1.6 : 0.6)] : [-(ruka() ? 1.2 : 0.4), 0], value: S.T, text: 'T' + S.T.toFixed(1) });
+    },
+    glow() { if (S.vT === null) return Math.abs(S.T + 7) < 1.5 ? 'vul' : null; return S.T > -1.2 ? 'p120' : null; },
+    tip() { return S.vT === null ? 'T-7 ごろに ①Vulcain {点火|てんか}' : S.T < -1.2 ? 'Vulcain OK！ T-0 まで まって…' : 'いまだ！ ② P120C {点火|てんか}！'; },
+  },
+  { id: 'a6asc', name: 'うちあげ',
+    card: ['コースを まもろう', 'アリアン6は P120C の しろい けむりを ひいて のぼる。Vulcain の すいその ほのおは すきとおって ほとんど みえないよ。<b>◀ ▶ で コース メーターの はりを みどりに</b> あわせよう。とちゅうで くうきの ちからが いちばん つよい「MAX Q」を とおるよ。'],
+    init() { S.ts = 4.2; S.st = steerNew(); showSteer(true); setDock([]); S.zT = zPad() * 0.8; },
+    update(dt) {
+      const dts = dt * S.ts; S.T += dts; const c = S.core;
+      steerStep(S.st, dt, 0.9, 1.5); h3Fly(dts);
+      if (S.T > QA6[1] && !S.mqFlash) { S.mqFlash = true; flash('MAX Q（くうきの ちからが いちばん つよい）', '#fff', 1.6); }
+      steerGauge(S.st); gauge('gA', null);
+      follow(c, 28, 46);
+      if (S.T >= 110) { result('steer', 'コースを まもる', steerScore(S.st)); nextPhase(); }
+    },
+    glow() { return null; }, tip() { return '◀ ▶ で コース メーターを みどりに'; },
+  },
+  { id: 'a6srb', name: 'P120C ぶんり',
+    card: ['P120C ぶんり', 'P120C は やく 2ふん すこしで もえつきる。<b>ちからが 0 に なった あとで「P120C ぶんり」！</b> はずした P120C は うみに おちる（つかいすて）。P120C は ちいさな ロケット「ヴェガC」の 1だんめ にも つかわれて いるんだ。'],
+    init() { S.ts = 1.1; S.early = 0; showSteer(true); setDock([{ id: 'sep', label: '✂ P120C ぶんり', sub: 'Space', key: 'Space' }]); },
+    press(id, d) {
+      if (!d || id !== 'sep' || !S.core.attachedSrb) return;
+      if (S.core.srbThr > 0.02) { S.early++; sfx.bad(); flash('まだ もえてる！ ちからが 0 に なってから', '#ff9a7a', 1.4); return; }
+      this.sep(false);
+    },
+    sep(auto) {
+      const c = S.core; c.attachedSrb = false;
+      for (const side of [-1, 1]) {
+        const p = along(c, 1), off = HD / 2 + SRB_D / 2;
+        S.deb.push({ kind: 'srb', side, x: p.x + Math.cos(c.ang) * side * off, h: p.h - Math.sin(c.ang) * side * off, vx: c.vx + side * 6, vh: c.vh - 4, ang: c.ang, va: side * 0.35, prop: 0 });
+      }
+      bang(0.5); say('ブースター ぶんり');
+      const late = Math.max(0, S.T - S.srbBurn - (ruka() ? 8 : 3));
+      result('a6srb', 'P120C ぶんり', auto ? 40 : 100 - late * 6 - S.early * 20, 'T+' + S.T.toFixed(0) + 's');
+      S.nextIn = 2.5;
+    },
+    update(dt) {
+      const dts = dt * S.ts; S.T += dts; const c = S.core;
+      steerStep(S.st, dt, 0.5, 1.5); h3Fly(dts);
+      if (c.attachedSrb && S.T > S.srbBurn + 24) this.sep(true);
+      gauge('gA', { label: 'P120C の ちから（0に なったら ぶんり）', min: 0, max: 100, green: [0, 2], value: c.srbThr * 100, fill: true, text: Math.round(c.srbThr * 100) + '%' });
+      steerGauge(S.st);
+      follow(c, 25);
+    },
+    glow() { return S.core.attachedSrb && S.core.srbThr <= 0.02 ? 'sep' : null; },
+    tip() { return !S.core.attachedSrb ? 'P120C は うみへ おちていく…' : S.core.srbThr > 0.02 ? 'もえつきるまで まって…' : 'いまだ！ P120C ぶんり！'; },
+  },
+  { id: 'a6fair', name: 'フェアリング',
+    card: ['フェアリング ぶんり', 'いちばん うえの カバー「<b>フェアリング</b>」は、えいせいを くうきの ちからと ねつから まもる。くうきが ほとんど なくなったら（<b>たかさ やく 110km いじょう</b>）2つに わって すてるよ。'],
+    init() { S.ts = 4; S.early = 0; showSteer(false); gauge('gS', null); S.st = null; setDock([{ id: 'fair', label: '🥚 フェアリング ぶんり', sub: 'Space', key: 'Space' }]); },
+    press(id, d) {
+      if (!d || id !== 'fair' || !S.up.fairing) return;
+      if (S.core.h < 100000) { S.early++; sfx.bad(); flash('まだ くうきが ある！ えいせいが あつく なっちゃう', '#ff9a7a', 1.6); return; }
+      this.sep(false);
+    },
+    sep(auto) {
+      const c = S.core, u = S.up; u.fairing = false;
+      const base = along(c, H1 + H2L);
+      for (const side of [-1, 1]) S.deb.push({ kind: 'fair', side, x: base.x, h: base.h, vx: c.vx + Math.cos(c.ang) * side * 8, vh: c.vh - Math.sin(c.ang) * side * 8, ang: c.ang, va: side * 0.9 });
+      bang(0.35); say('フェアリング ぶんり');
+      const h = c.h / 1000;
+      result('a6fair', 'フェアリング ぶんり', auto ? 40 : (h <= 150 ? 100 : 100 - (h - 150) / 1.2) - S.early * 15, Math.round(h) + 'km');
+      S.nextIn = 2.4;
+    },
+    update(dt) {
+      const c = S.core; S.ts = c.h > 85000 ? 2 : 5;
+      if (!S.q7 && S.T > 170) { S.q7 = true; quiz('q7', 'アリアン6が はっしゃ される ばしょは？', ['フランスの パリ', 'みなみアメリカの ギアナ（クールー）', 'うみの うえの ふね'], 1, 'せきどうに ちかい ギアナ。ちきゅうが まわる いきおいを もらえるんだ'); }
+      const dts = dt * S.ts; S.T += dts; h3Fly(dts);
+      if (S.up.fairing && S.T > S.coreBurn - 20) this.sep(true);
+      gauge('gA', { label: 'たかさ（110km いじょうで ぶんり）', min: 30, max: 200, green: [110, 150], value: c.h / 1000, marks: [[100, 'うちゅう']], text: (c.h / 1000).toFixed(0) + ' km' });
+      follow(c, 30);
+    },
+    glow() { return S.up.fairing && S.core.h > 110000 && S.core.h < 150000 ? 'fair' : null; },
+    tip() { return !S.up.fairing ? 'えいせいが みえた！' : S.core.h < 110000 ? 'くうきが うすく なるまで まって…' : 'いまだ！ フェアリング ぶんり！'; },
+  },
+  { id: 'a6meco', name: 'だん ぶんり',
+    card: ['コア → Vinci', 'コア（だい1だん）の ねんりょうが なくなる まえに<br><b>① エンジン ていし（MECO）→ ② だん ぶんり → ③ だい2だん エンジン「Vinci」{点火|てんか}！</b><br>Vinci は うちゅうで なんども {点火|てんか} できる すごい エンジン。この あとも また つかうよ！'],
+    init() { S.ts = 3; S.mst = 0; S.wrong = 0; S.mecoT = null; S.sepT = null; showSteer(false);
+      setDock([{ id: 'meco', label: '① MECO', sub: 'メインエンジン ストップ (1)', key: 'Digit1' }, { id: 'sep', label: '② だん ぶんり', sub: '(2)', key: 'Digit2', cls: 'c2' }, { id: 'seig', label: '③ Vinci {点火|てんか}', sub: 'だい2だん (3)', key: 'Digit3', cls: 'c3' }]); },
+    prop() { return clamp(1 - S.T / S.coreBurn, 0, 1) * 100; },
+    press(id, d) {
+      if (!d) return;
+      const order = ['meco', 'sep', 'seig'], k = order.indexOf(id);
+      if (k < S.mst) return;
+      if (k !== S.mst) { S.wrong++; sfx.bad(); flash(['さきに ① MECO', 'さきに ② だん ぶんり', ''][S.mst], '#ff9a7a', 1.3); return; }
+      if (id === 'meco' && this.prop() > 5) { S.wrong++; sfx.bad(); flash('まだ ねんりょうが ある！', '#ff9a7a', 1.2); return; }
+      this.act(id, false);
+    },
+    act(id, auto) {
+      const c = S.core, u = S.up;
+      if (id === 'meco') { S.mecoT = S.T; c.eng = [0, 0]; say('メコ'); result('a6meco', 'MECO', auto ? 65 : 100 - S.wrong * 15, auto ? 'ねんりょう ぎれ' : Math.round(this.prop()) + '%'); }
+      if (id === 'sep') {
+        S.sepT = S.T; S.staged = true; u.free = true;
+        S.deb.push({ kind: 'stage1', x: c.x, h: c.h, vx: c.vx * 0.98, vh: c.vh - 3, ang: c.ang, va: 0.05, keep: false });
+        c.alive = false; bang(0.5); say('だん ぶんり');
+      }
+      if (id === 'seig') {
+        u.eng = 1; bang(0.3); say('ヴィンチ てんか');
+        const w1 = S.sepT - S.mecoT, w2 = S.T - S.sepT;
+        result('a6stage2', 'ぶんり ＆ Vinci {点火|てんか}', 100 - Math.max(0, w1 - 10) * 3 - Math.max(0, w2 - 15) * 4 - S.wrong * 15, '');
+        S.nextIn = 2.6;
+      }
+      S.mst++;
+    },
+    update(dt) {
+      S.ts = S.T < S.coreBurn - 14 ? 4 : 1;
+      if (S.mst >= 1) S.ts = 1.2;
+      const dts = dt * S.ts; S.T += dts;
+      if (S.mst === 0 && S.T >= S.coreBurn) this.act('meco', true);
+      if (S.mst === 0) h3Fly(dts);
+      else { const c = S.core, u = S.up; if (!S.staged) { c.x += c.vx * dts; c.h += c.vh * dts; const top = along(c, H1); u.x = top.x; u.h = top.h; u.v = c.v; u.vx = c.vx; u.vh = c.vh; } else h3Fly(dts); }
+      if (S.mst === 2 && S.T - S.sepT > (ruka() ? 40 : 30) && !this.failed) {
+        this.failed = true; sfx.bad();
+        showCard('Vinci に {火|ひ}が つかなかった…', 'ぶんり したら すぐ（15びょう いない）に Vinci に {点火|てんか} しよう！', null,
+          [['🔁 もういちど（この ステップ）', retryPhase], ['▶ じどうで {点火|てんか}', () => { this.failed = false; S.wrong += 3; this.act('seig', true); }, 'blue']]);
+      }
+      const o = S.staged ? S.up : S.core;
+      if (S.mst === 0) gauge('gA', { label: 'コアの ねんりょう（みどりで MECO）', min: 0, max: 100, green: [0, 5], value: this.prop(), fill: true, text: Math.round(this.prop()) + '%' });
+      else gauge('gA', { label: S.mst === 1 ? 'MECO から（10びょう いないに ぶんり）' : 'ぶんり から（15びょう いないに {点火|てんか}）', min: 0, max: 30, green: [0, S.mst === 1 ? 10 : 15], value: S.T - (S.mst === 1 ? S.mecoT : S.sepT), fill: true, text: (S.T - (S.mst === 1 ? S.mecoT : S.sepT)).toFixed(1) + ' びょう' });
+      follow(o, S.staged ? 6 : 25);
+      S.zT = zPad() * (S.staged ? 1.3 : 0.9);
+    },
+    failed: false,
+    glow() { if (S.mst === 0) return this.prop() <= 5 ? 'meco' : null; return ['meco', 'sep', 'seig'][S.mst]; },
+    tip() { return S.mst === 0 ? (this.prop() > 5 ? 'ねんりょうが へって いく…（5% いかで MECO）' : 'いまだ！ ① MECO') : S.mst === 1 ? '② だん ぶんり！' : S.mst === 2 ? '③ Vinci {点火|てんか}！ はやく！' : 'Vinci で うちゅうへ！ コアは うみへ おちる'; },
+  },
+  { id: 'a6seco1', name: 'SECO-1',
+    card: ['いったん エンジン ストップ', 'まず Vinci で <b>じそく やく 28,000km</b> まで かそく したら「<b>いったん ストップ（SECO-1）</b>」。ここから ロケットは たまごがたの みちで、たかい ところへ のぼって いくよ。'],
+    init() { S.ts = 20; S.done2 = false; setDock([{ id: 'stop', label: '⏹ いったん ストップ', sub: 'SECO-1 (Space)', key: 'Space' }]); },
+    press(id, d) { if (d && id === 'stop' && !S.done2) this.stop(false); },
+    stop(auto) {
+      const u = S.up, sp = kmh(u.v), tol = ruka() ? 700 : 280;
+      S.done2 = true; u.eng = 0; say('エンジン カットオフ');
+      result('a6seco1', 'SECO-1', auto ? 45 : 100 - Math.max(0, Math.abs(sp - 28000) - tol) / (ruka() ? 25 : 14), sp.toLocaleString() + 'km/h');
+      S.nextIn = 2.2;
+    },
+    update(dt) {
+      const u = S.up;
+      if (!S.q8 && !S.done2 && kmh(u.v) > 22000) { S.q8 = true; quiz('q8', 'Vinci エンジンの すごい ところは？', ['うちゅうで なんども {点火|てんか} できる', 'みずで うごく', 'ずっと とまらない'], 0, 'つけたり けしたり できるから、えいせいを ちょうど いい きどうに はこべる'); }
+      if (!S.done2) { const want = Math.abs(kmh(u.v) - 28000) > 900 ? 1100 : (ruka() ? 110 : 160); S.ts = clamp(want / (S.upA * 3.6), 1, 80); if (u.v >= 7900) this.stop(true); } else S.ts = 3;
+      const dts = dt * S.ts; S.T += dts; h3Fly(dts);
+      const sp = kmh(u.v), tol = ruka() ? 700 : 280;
+      gauge('gA', { label: 'はやさ（めあて じそく 28,000km）', min: 18000, max: 29000, green: [28000 - tol, 28000 + tol], value: sp, text: sp.toLocaleString() + ' km/h' });
+      follow(u, 6); S.zT = zPad() * 1.4;
+    },
+    glow() { return !S.done2 && Math.abs(kmh(S.up.v) - 28000) < (ruka() ? 600 : 220) ? 'stop' : null; },
+    tip() { return S.done2 ? 'たまごがたの みちに のった！' : 'みどりに なったら「いったん ストップ」'; },
+  },
+  { id: 'a6relight', name: 'Vinci さいてんか',
+    card: ['Vinci もういちど {点火|てんか}！', 'エンジンを とめても ロケットは たかい ところへ のぼって いく。のぼると すこし おそく なるよ。<b>いちばん たかい ところ（やく 800km）で Vinci を もういちど {点火|てんか}</b>すると、まるい きどうに なって ずっと まわりつづけられる！'],
+    init() { const u = S.up; S.cp = 0; S.h0 = u.h; S.v0 = u.v; S.relit = false; S.ts = 1; u.eng = 0;
+      setDock([{ id: 'relight', label: '🔥 Vinci さいてんか', sub: 'Space', key: 'Space' }]); },
+    alt() { return S.h0 + (800000 - S.h0) * Math.sin(Math.min(S.cp, 2) * Math.PI / 2); },
+    press(id, d) {
+      if (!d || id !== 'relight' || S.relit) return;
+      const u = S.up, err = Math.abs(u.h - 800000) / 1000, tol = ruka() ? 30 : 12;
+      S.relit = true; u.eng = 1; bang(0.3); say('ヴィンチ さいてんか');
+      result('a6relight', 'Vinci さいてんか', 100 - Math.max(0, err - tol) * (ruka() ? 1.2 : 2), Math.round(u.h / 1000) + 'km');
+    },
+    update(dt) {
+      const u = S.up;
+      if (!S.relit) {
+        S.cp += dt / 12; u.h = this.alt();
+        u.v = S.v0 - (S.v0 - 7230) * clamp((u.h - S.h0) / (800000 - S.h0), 0, 1);
+        if (S.cp >= 2) { S.relit = true; u.eng = 1; result('a6relight', 'Vinci さいてんか', 30, 'おそかった'); }
+      } else if (u.eng) {
+        u.v += S.upA * 6 * dt;
+        if (kmh(u.v) >= 26800) { u.v = 26800 / 3.6; u.eng = 0; say('まるい きどうに のった'); flash('まるい きどうに のった！', '#7fffb0', 1.6); S.nextIn = 2.2; }
+      }
+      u.ang = Math.PI / 2; u.vx = u.v; u.vh = 0; u.x += u.v * dt;
+      const tol = ruka() ? 30 : 12;
+      gauge('gA', { label: 'たかさ（いちばん たかい ところで さいてんか）', min: 300, max: 850, green: [800 - tol, 800 + tol], value: u.h / 1000, marks: [[800, 'てっぺん']], text: (u.h / 1000).toFixed(0) + ' km ・ ' + kmh(u.v).toLocaleString() + ' km/h' });
+      follow(u, 6); S.zT = zPad() * 1.4;
+    },
+    glow() { return !S.relit && Math.abs(S.up.h - 800000) < (ruka() ? 25000 : 10000) ? 'relight' : null; },
+    tip() { return S.relit ? 'もういちど かそく ちゅう…' : S.cp < 1 ? 'のぼって いく…（すこしずつ おそく なる）' : 'てっぺんを すぎた！ いそいで さいてんか'; },
+  },
+  { id: 'a6pay', name: 'えいせい ぶんり',
+    card: ['えいせい ぶんり', 'ロケットの むきが ぴたっと とまったら（<b>はりが みどり</b>）「<b>えいせい ぶんり</b>」！ えいせいは たいよう でんちを ひろげて しごと スタート！'],
+    init() { S.ts = 1; S.att = 0.95; S.attPh = 0; S.sepd = false; setDock([{ id: 'dep', label: '🛰 えいせい ぶんり', sub: 'Space', key: 'Space' }]); },
+    e() { return S.att * Math.sin(S.attPh); },
+    press(id, d) {
+      if (!d || id !== 'dep' || S.sepd) return;
+      const u = S.up, e = Math.abs(this.e()); S.sepd = true; u.satGone = true;
+      const top = along(u, H2L);
+      S.sat = { x: top.x + 2, h: top.h, ang: u.ang, vx: u.vx + 3.5, vh: 0, deploy: 0 };
+      result('a6pay', 'えいせい ぶんり', e < 0.2 ? 100 : 100 - (e - 0.2) * 120, e < 0.2 ? 'ぴたっ' : 'ぐらぐら');
+      sfx.fan(); say('えいせい ぶんり せいこう！'); confetti(); S.nextIn = 5;
+    },
+    update(dt) {
+      const u = S.up; S.T += dt;
+      if (S.sepd && !S.q9 && S.nextIn > 0 && S.nextIn < 0.6) { S.q9 = true; quiz('q9', 'しごとを おえた ロケットの だい2だんは さいごに どうする？', ['ずっと うちゅうに のこる', 'エンジンで ブレーキして おちる', 'ちきゅうに もどって また つかう'], 1, 'のこると「うちゅうごみ」に なる。つぎで やってみよう！'); }
+      S.att *= Math.exp(-0.32 * dt); S.attPh += dt * 2.3;
+      u.ang = Math.PI / 2 + this.e() * 0.25;
+      u.x += u.vx * dt;
+      if (S.sat) { S.sat.x += S.sat.vx * dt; S.sat.h += 0.6 * dt; S.sat.deploy = Math.min(1, S.sat.deploy + dt / 3); S.sat.ang = u.ang; }
+      gauge('gA', { label: 'ロケットの むき（みどりで ぶんり）', min: -1, max: 1, green: [-0.2, 0.2], value: this.e(), text: Math.abs(this.e()) < 0.2 ? 'ぴたっ！' : 'ぐらぐら' });
+      follow(u, 8); S.zT = zPad() * 1.6;
+    },
+    glow() { return !S.sepd && Math.abs(this.e()) < 0.2 ? 'dep' : null; },
+    tip() { return S.sepd ? 'えいせいが たいよう でんちを ひろげた！' : Math.abs(this.e()) < 0.2 ? 'いまだ！ えいせい ぶんり！' : 'ぐらぐらが おさまるまで まって…'; },
+  },
+  { id: 'a6deorbit', name: 'おかたづけ',
+    card: ['うちゅうごみを つくらない！', 'さいごに Vinci を もう1かい（3かいめ）{点火|てんか}。<b>◀ で くるっと まわって、エンジンを すすむ むきに むけ</b>（うしろむき）、「ブレーキ {点火|てんか}」！ だい2だんは おそく なって おちて、くうきの なかで もえるか、ひとの いない うみへ おちる。<br>（2024ねんの 1ごうきでは、この 3かいめの {点火|てんか}が できなかった。つぎの フライトから うまく いったよ）'],
+    init() { const u = S.up; S.sat = null; S.target = -Math.PI / 2; S.braked = false; S.fall = 0; showSteer(true); u.eng = 0;
+      setDock([{ id: 'brake', label: '🔥 ブレーキ {点火|てんか}', sub: 'Vinci 3かいめ (Space)', key: 'Space' }]); },
+    press(id, d) {
+      if (!d || id !== 'brake' || S.braked) return;
+      const u = S.up, err = Math.abs(u.ang - S.target);
+      if (err > (ruka() ? 0.6 : 0.45)) { flash('まず ◀ で うしろむきに', '#ffe45c', 1.2); return; }
+      S.braked = true; u.eng = 1; bang(0.3); say('ブレーキ');
+      result('a6deorbit', 'おかたづけ（ブレーキ）', 100 - Math.max(0, err - (ruka() ? 0.25 : 0.12)) * 150, '');
+    },
+    update(dt) {
+      const u = S.up; S.T += dt;
+      if (!S.braked) { u.ang += steerIn() * (ruka() ? 1.3 : 0.95) * dt; u.ang = clamp(u.ang, -2.2, 2.2); }
+      else {
+        S.fall += dt;
+        if (S.fall < 2.5) u.v -= 40 * dt; else { u.eng = 0; u.h -= 60000 * dt; }
+        if (S.fall > 2.5 && !S.nextIn) { flash('うちゅうごみ ゼロ！ ♻️', '#7fffb0', 2); sfx.fan(); S.nextIn = 3.2; }
+      }
+      u.x += u.v * dt * 0.01;
+      gauge('gA', { label: 'だい2だんの むき（みどり ＝ うしろむき）', min: -2.2, max: 2.2, green: [S.target - 0.2, S.target + 0.2], value: u.ang, text: Math.abs(u.ang - S.target) < 0.2 ? 'OK!' : '◀ で まわる' });
+      follow(u, 6); S.zT = zPad() * 1.4;
+    },
+    glow() { return !S.braked && Math.abs(S.up.ang - S.target) < 0.2 ? 'brake' : null; },
+    tip() { return S.braked ? 'ブレーキ！ だい2だんは おちて いく…' : Math.abs(S.up.ang - S.target) < 0.2 ? 'いまだ！ ブレーキ {点火|てんか}！' : '◀ で うしろむきに まわろう'; },
+  },
+];
+
 // ================================================================= phase flow
 function showSteer(on) { $('stL').classList.toggle('hidden', !on); $('stR').classList.toggle('hidden', !on); }
 function gotoPhase(i, skipCard) {
@@ -1742,14 +2084,14 @@ function buildSteps() {
 }
 
 function startMission(r) {
-  rocket = r; PH = r === 'star' ? PH_STAR : PH_H3;
-  S = r === 'star' ? newStar() : newH3();
+  rocket = r; PH = r === 'star' ? PH_STAR : r === 'a6' ? PH_A6 : PH_H3; setDims(r);
+  S = r === 'star' ? newStar() : newH3(r);
   S.deb = []; S.pip = null; S.siteNow = null; S.cardOpen = false; S.done = false;
   parts = [];
   $('title').classList.add('hidden'); $('result').classList.add('hidden');
-  $('mName').textContent = r === 'star' ? 'スターシップ' : 'H3';
-  $('n1').textContent = r === 'star' ? 'SUPER HEAVY' : 'H3 だい1だん';
-  $('n2').textContent = r === 'star' ? 'STARSHIP' : 'だい2だん';
+  $('mName').textContent = r === 'star' ? 'スターシップ' : r === 'a6' ? 'アリアン6' : 'H3';
+  $('n1').textContent = r === 'star' ? 'SUPER HEAVY' : r === 'a6' ? 'ARIANE 6 コア' : 'H3 だい1だん';
+  $('n2').textContent = r === 'star' ? 'STARSHIP' : r === 'a6' ? 'Vinci（だい2だん）' : 'だい2だん';
   $('tele1').style.display = '';
   $('bX').classList.remove('on');
   gotoPhase(0);
@@ -1761,7 +2103,7 @@ function finish() {
   try { const k = 'rocketBest_' + S.rocket, prev = +(localStorage.getItem(k) || 0); if (tot > prev) { localStorage.setItem(k, tot); if (prev) setTimeout(() => flash('🏅 ベスト きろく こうしん！', '#ffd23f', 2.5), 600); } } catch (e) {}
   showBest();
   const rank = tot >= 95 ? 'スーパー フライトディレクター' : tot >= 85 ? 'ベテラン かんせいかん' : tot >= 70 ? 'うちゅう ひこうし' : 'みならい ひこうし';
-  $('rT').textContent = S.rocket === 'star' ? 'スターシップ ミッション かんりょう！' : 'H3 ミッション かんりょう！';
+  $('rT').textContent = (S.rocket === 'star' ? 'スターシップ' : S.rocket === 'a6' ? 'アリアン6' : 'H3') + ' ミッション かんりょう！';
   $('resTotal').innerHTML = `${tot}てん <span style="font-size:.45em;color:#0d4fb0">${rank}</span>`;
   $('resList').innerHTML = rs.map(r => `<li><span>${R(r.name)}${r.note ? ` <small style="color:#678">(${R(r.note)})</small>` : ''}</span><span>${'★'.repeat(r.score >= 95 ? 3 : r.score >= 75 ? 2 : r.score >= 40 ? 1 : 0)}${'☆'.repeat(3 - (r.score >= 95 ? 3 : r.score >= 75 ? 2 : r.score >= 40 ? 1 : 0))} ${r.score}</span></li>`).join('');
   const learn = S.rocket === 'star' ? [
@@ -1771,6 +2113,12 @@ function finish() {
     'ブーストバック → グリッドフィン → ランディングバーン で はっしゃばに もどる。',
     'タワーの うで（チョップスティック）で キャッチ。あしが いらないので かるく なる。',
     'シップは くろい たいねつ タイルで あつい さいとつにゅうに たえる。',
+  ] : S.rocket === 'a6' ? [
+    'アリアン6は ヨーロッパ（ESA）の ロケット。みなみアメリカ・ギアナの クールーから はっしゃ。',
+    'さきに Vulcain 2.1（えきたい）、さいごに P120C（こたい）に {点火|てんか}。',
+    'P120C と フェアリングを すてて かるく する。',
+    'Vinci は うちゅうで なんども {点火|てんか} できる。いちばん たかい ところで もういちど {点火|てんか}して まるい きどうへ。',
+    'さいごに だい2だんを おとして、うちゅうごみを ふやさない。',
   ] : [
     'H3は JAXA と {三菱重工|みつびしじゅうこう}が つくった にっぽんの ロケット。たねがしま から はっしゃ。',
     'さきに LE-9（えきたい）、さいごに SRB-3（こたい）に {点火|てんか}。こたいは とめられない から。',
@@ -1786,7 +2134,7 @@ function finish() {
   if (S.retries) $('resList').insertAdjacentHTML('beforeend', `<li><span>やりなおし</span><span>${S.retries}かい</span></li>`);
 }
 $('rAgain').onclick = () => { audioInit(); startMission(rocket); };
-$('rOther').onclick = () => { audioInit(); $('result').classList.add('hidden'); S = null; P = null; $('title').classList.remove('hidden'); pickRocket(rocket === 'star' ? 'h3' : 'star'); };
+$('rOther').onclick = () => { audioInit(); $('result').classList.add('hidden'); S = null; P = null; $('title').classList.remove('hidden'); pickRocket(rocket === 'star' ? 'h3' : rocket === 'h3' ? 'a6' : 'star'); };
 
 // ================================================================= rendering
 function drawStarVehicles(v, site) {
@@ -1826,7 +2174,7 @@ function drawH3Vehicles(v) {
   }
   if (c.alive !== false) {
     drawAt(v, c, () => {
-      if (c.eng[0]) { plume(-1.25, 3, 1.9, 36, 'hydro', c.h, 1); plume(1.25, 3, 1.9, 36, 'hydro', c.h, 1); }
+      if (c.eng[0]) { if (S.rocket === 'a6') plume(0, 3, 2.4, 42, 'hydro', c.h, 1); else { plume(-1.25, 3, 1.9, 36, 'hydro', c.h, 1); plume(1.25, 3, 1.9, 36, 'hydro', c.h, 1); } }
       if (c.attachedSrb) for (const sd of [-1, 1]) {
         g.save(); g.translate(sd * (HD / 2 + SRB_D / 2), -1);
         if (c.srbThr > 0) plume(sd * 0.3, 2.2, 1.6, 22 + 45 * c.srbThr, 'srb', c.h, c.srbThr);
@@ -1852,7 +2200,7 @@ function renderScene(v) {
   if (S.rocket === 'h3') drawML(v, S.mlx ?? 0);
   drawParts(v);
   if (S.rocket === 'star') { for (const d of S.deb) if (d.kind === 'ring') drawAt(v, d, () => { g.fillStyle = '#3b3f44'; g.fillRect(-4.5, -2.2, 9, 2.4); }); drawStarVehicles(v, site); }
-  else drawH3Vehicles(v);
+  else { drawH3Vehicles(v); if (S.rocket === 'a6' && site !== 'ocean') drawGantry(v); }
   if (S.rocket === 'star' && site !== 'ocean') drawArms(v, 'front');
 }
 function render() {
@@ -1919,7 +2267,8 @@ function hud(dt) {
       const c = S.core, u = S.up;
       if (S.staged) { $('v1').textContent = '—'; $('h1').textContent = '—'; $('tele1').style.display = 'none'; } else { $('v1').textContent = kmh(c.v || 0).toLocaleString(); $('h1').textContent = Math.max(0, (S.lifted ? c.h - ML_TOP : 0) / 1000).toFixed(1); }
       $('v2').textContent = kmh(u.v || 0).toLocaleString(); $('h2').textContent = Math.max(0, (!S.lifted ? 0 : S.staged ? u.h : u.h - ML_TOP - H1) / 1000).toFixed(1);
-      drawEngineRing($('e1'), L_H1, [c.eng[0], c.eng[1], c.attachedSrb && c.srbThr > 0, c.attachedSrb && c.srbThr > 0]);
+      if (S.rocket === 'a6') drawEngineRing($('e1'), L_A1, [c.eng[0], c.attachedSrb && c.srbThr > 0, c.attachedSrb && c.srbThr > 0]);
+      else drawEngineRing($('e1'), L_H1, [c.eng[0], c.eng[1], c.attachedSrb && c.srbThr > 0, c.attachedSrb && c.srbThr > 0]);
       drawEngineRing($('e2'), L_H2, [u.eng]);
     }
   }
@@ -1969,14 +2318,15 @@ document.querySelectorAll('.rk').forEach(b => b.addEventListener('click', () => 
 document.querySelectorAll('.modes [data-m]').forEach(b => b.addEventListener('click', () => { audioInit(); mode = b.dataset.m; startMission(rocket); }));
 function drawPreview(cvs, r) {
   const c = cvs.getContext('2d'), prevG = g, prevS = S;
-  g = c; S = r === 'star' ? newStar() : newH3(); S.deb = []; S.mlx = 0; if (r === 'h3') S.core.x = 0;
+  setDims(r); g = c; S = r === 'star' ? newStar() : newH3(r); S.deb = []; S.mlx = 0; S.gx = 120; if (r !== 'star') S.core.x = 0;
   if (r === 'star') { S.bst.lox = S.bst.ch4 = S.ship.lox = S.ship.ch4 = 1; syncStack(); } else { S.core.lox = S.core.lh2 = 1; }
   const v = { x: 0, y: 0, w: cvs.width, h: cvs.height, cx: r === 'star' ? -6 : 0, ch: r === 'star' ? 82 : 46, z: r === 'star' ? cvs.height * 0.86 / 190 : cvs.height * 0.86 / 105 };
   renderScene(v);
   g = prevG; S = prevS;
 }
-drawPreview($('pk1'), 'star'); drawPreview($('pk2'), 'h3');
-function showBest() { for (const r of ['star', 'h3']) { let b = 0; try { b = +(localStorage.getItem('rocketBest_' + r) || 0); } catch (e) {} $('best_' + r).textContent = b ? '🏅 ベスト ' + b + 'てん' : ''; } }
+drawPreview($('pk1'), 'star'); drawPreview($('pk2'), 'h3'); drawPreview($('pk3'), 'a6');
+document.querySelectorAll('.rk p').forEach(p => { p.innerHTML = R(p.innerHTML); });
+function showBest() { for (const r of ['star', 'h3', 'a6']) { let b = 0; try { b = +(localStorage.getItem('rocketBest_' + r) || 0); } catch (e) {} $('best_' + r).textContent = b ? '🏅 ベスト ' + b + 'てん' : ''; } }
 showBest();
 
 // test hook
