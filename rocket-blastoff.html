@@ -31,11 +31,11 @@
   .tele .num { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 17px; font-weight: 800; }
   .tele small { font-size: 10px; color: #9ab; margin-left: 2px; }
 
-  #tip { position: fixed; left: 50%; top: 74px; transform: translateX(-50%); z-index: 5; max-width: min(92vw, 760px); text-align: center;
+  #tip { position: fixed; left: 50%; top: 74px; transform: translateX(-50%); z-index: 5; max-width: min(92vw, 760px); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     background: rgba(255,255,255,.94); color: #123; border-radius: 14px; padding: 6px 14px; font-weight: 900; font-size: clamp(14px, 2vw, 19px); box-shadow: 0 4px 0 rgba(0,0,0,.35); pointer-events: none; }
   #tip:empty { display: none; }
-  #flash { position: fixed; left: 0; right: 0; top: 30%; text-align: center; z-index: 5; pointer-events: none; font-weight: 900;
-    font-size: clamp(24px, 5vw, 54px); text-shadow: 0 3px 0 #000, 0 0 14px #000; opacity: 0; transition: opacity .25s; }
+  #flash { position: fixed; left: 0; right: 0; top: 30%; text-align: center; z-index: 5; pointer-events: none; font-weight: 900; white-space: nowrap; overflow: hidden;
+    font-size: clamp(18px, 4.2vw, 48px); text-shadow: 0 3px 0 #000, 0 0 14px #000; opacity: 0; transition: opacity .25s; }
 
   #fact { position: fixed; left: 50%; bottom: 92px; transform: translateX(-50%); z-index: 5; max-width: min(92vw, 640px); pointer-events: none;
     background: rgba(255,247,214,.96); color: #5a3a00; border-radius: 14px; padding: 6px 14px; font-weight: 800; font-size: clamp(13px, 1.8vw, 16px);
@@ -43,7 +43,7 @@
   #fact b { color: #c0360a; }
   .gauge { position: fixed; left: 50%; transform: translateX(-50%); z-index: 5; width: min(80vw, 560px); pointer-events: none;
     background: rgba(4,8,20,.75); border: 1px solid rgba(255,255,255,.25); border-radius: 12px; padding: 5px 12px 7px; }
-  #gA { top: 110px; } #gS { top: 160px; }
+  #gA { top: 116px; } #gS { top: 166px; }
   .gauge .gl { display: flex; justify-content: space-between; font-weight: 800; font-size: 13px; margin-bottom: 3px; }
   .gauge .gl span:last-child { font-family: ui-monospace, Menlo, Consolas, monospace; color: #ffe27a; }
   .gauge .tr { position: relative; height: 16px; background: rgba(255,255,255,.14); border-radius: 8px; overflow: hidden; }
@@ -69,7 +69,7 @@
   #stL { left: 14px; } #stR { right: 14px; }
   .steer.down { background: #ffd23f; color: #222; }
 
-  .ov { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; background: rgba(2,6,18,.78); padding: 14px; overflow: auto; }
+  .ov { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; background: rgba(2,6,18,.78); padding: 48px 14px 14px; overflow: auto; }
   .box { background: linear-gradient(#ffffff, #e8f1ff); color: #10203a; border-radius: 22px; padding: 18px 22px; width: min(100%, 780px); box-shadow: 0 10px 0 rgba(0,0,0,.35); margin: auto; }
   .box h2 { font-size: clamp(22px, 3.6vw, 32px); color: #0d4fb0; margin-bottom: 6px; line-height: 1.5; }
   .box p, .box li { font-size: clamp(15px, 2vw, 18px); font-weight: 700; line-height: 1.9; }
@@ -88,7 +88,7 @@
   .rk.sel { border-color: #ffd23f; box-shadow: 0 0 0 4px rgba(255,210,63,.5); }
   .rk canvas { width: 100%; height: auto; display: block; border-radius: 12px; }
   @media (max-height: 520px) { .rk canvas { height: 84px; object-fit: cover; } .rk p { display: none; } #title .ov, #title { padding-top: 44px; } #title h1 { font-size: 22px; } }
-  .rk h3 { font-size: 22px; margin-top: 4px; } .rk p { font-size: 13px; font-weight: 700; opacity: .9; line-height: 1.6; }
+  .rk h3 { font-size: 22px; margin-top: 4px; } .rk .best { font-size: 13px; color: #ffd23f; } .rk p { font-size: 13px; font-weight: 700; opacity: .9; line-height: 1.6; }
   .modes { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
   .modes button { min-width: 200px; padding: 10px 16px; border-radius: 16px; border: 3px solid #fff; color: #fff; font-family: inherit; font-weight: 900; font-size: 22px; cursor: pointer; box-shadow: 0 6px 0 rgba(0,0,0,.35); }
   .modes button small { display: block; font-size: 12px; font-weight: 700; }
@@ -125,6 +125,10 @@
     #dock { bottom: 8px; } .steer { bottom: 8px; }
     #tip { top: 36px; }
     #fact { bottom: 64px; font-size: 11px; max-width: 58vw; padding: 3px 8px; }
+    .box canvas { max-height: 120px; width: auto; }
+    .box { padding: 10px 14px; } .box p, .box li { font-size: 13px; line-height: 1.7; } .box h2 { font-size: 18px; }
+    .bigbtn { padding: 8px 20px; font-size: 16px; margin-top: 6px; }
+    #flash { top: 55%; }
   }
 </style>
 </head>
@@ -149,8 +153,8 @@
     <h1>🚀 ロケット はっしゃ しれいしつ</h1>
     <p>どの ロケットを とばす？</p>
     <div class="pick">
-      <button class="rk sel" data-r="star" type="button"><canvas width="380" height="230" id="pk1"></canvas><h3>スターシップ</h3><p>せかい さいだいの ロケット。ブースターを タワーの「おはし」で キャッチ！</p></button>
-      <button class="rk" data-r="h3" type="button"><canvas width="380" height="230" id="pk2"></canvas><h3>H3（エイチスリー）</h3><p>にっぽんの ロケット。SRB-3 と フェアリングを きりはなして えいせいを うちゅうへ！</p></button>
+      <button class="rk sel" data-r="star" type="button"><canvas width="380" height="230" id="pk1"></canvas><h3>スターシップ <small class="best" id="best_star"></small></h3><p>せかい さいだいの ロケット。ブースターを タワーの「おはし」で キャッチ！</p></button>
+      <button class="rk" data-r="h3" type="button"><canvas width="380" height="230" id="pk2"></canvas><h3>H3（エイチスリー） <small class="best" id="best_h3"></small></h3><p>にっぽんの ロケット。SRB-3 と フェアリングを きりはなして えいせいを うちゅうへ！</p></button>
     </div>
     <div class="modes">
       <button class="m-ruka" data-m="ruka" type="button">ルカ モード<small>かんたん ・ ボタンが ひかって おしえる</small></button>
@@ -816,7 +820,7 @@ function newH3() {
 // nominal ascent profiles (time t in seconds after liftoff)
 const NOM = {
   star: { h: t => 70000 * Math.pow(clamp(t / 165, 0, 2), 1.85), v: t => 1500 * Math.pow(clamp(t / 165, 0, 2), 1.6), p: t => 0.96 * Math.pow(sm(8, 165, t), 0.8) },
-  h3: { h: t => 230000 * Math.pow(clamp(t / 300, 0, 2), 1.7), v: t => 4800 * Math.pow(clamp(t / 300, 0, 2), 1.35), p: t => 1.2 * Math.pow(sm(6, 300, t), 0.75) },
+  h3: { h: t => 230000 * Math.pow(clamp(t / 300, 0, 2), 1.6), v: t => 4800 * Math.pow(clamp(t / 300, 0, 2), 1.35), p: t => 1.2 * Math.pow(sm(6, 300, t), 0.75) },
 };
 function qMaxOf(n) { let m = 0, tm = 0; for (let t = 0; t < 200; t += 0.5) { const q = 0.5 * rho(n.h(t)) * n.v(t) ** 2; if (q > m) { m = q; tm = t; } } return [m, tm]; }
 const QSTAR = qMaxOf(NOM.star), QH3 = qMaxOf(NOM.h3);
@@ -824,14 +828,14 @@ const QSTAR = qMaxOf(NOM.star), QH3 = qMaxOf(NOM.h3);
 const FACTS = {
   fuel: 'まめちしき：ブースターには やく 3400トンの ねんりょうが はいるよ',
   ign: 'まめちしき：33この エンジンは まとめて やく 7000トンいじょうの ちからで おしあげる',
-  steer: 'まめちしき：まっすぐ うえ だけでなく、よこに はやく なることが うちゅうへの カギ',
+  steer: 'まめちしき：うえ だけでなく、よこに はやく なることが うちゅうへの カギ（だから すこしずつ たおれて とぶ）',
   maxq: 'まめちしき：MAX Q の あとは くうきが うすく なって、また フルパワー！',
   stage: 'まめちしき：ホットステージングで、エンジンを とめる すきまが なくなり ちからを むだに しない',
   bb: 'まめちしき：ブーストバックで、はっしゃ した ばしょへ むかって ぎゃくに すすむ',
   desc: 'まめちしき：グリッドフィンは ステンレス（はがね）で できた あみの つばさ。あつく なっても へいき',
   lb: 'まめちしき：さいごは まんなかの 3この エンジンだけで、そっと ブレーキ',
   catch: 'まめちしき：キャッチ した ブースターは、また つぎの フライトに つかえる！',
-  seco: 'まめちしき：SECO の あとは エンジンを とめても、いきおいで ちきゅうの まわりを ぐるっと とんで インドようへ',
+  seco: 'まめちしき：SECO の あとは エンジンを とめても、いきおいで ちきゅうを 3/4しゅう ぐらい とんで インドようへ',
   reent: 'まめちしき：おなかの くろい タイルは やく 18,000まい。1まい 1まいが ねつを ふせぐ',
   splash: 'まめちしき：テストでは うみに おりる。いつかは タワーで シップも キャッチする けいかく',
   le9: 'まめちしき：LE-9 は H3の ために あたらしく つくられた エンジン',
@@ -840,7 +844,7 @@ const FACTS = {
   fair: 'まめちしき：フェアリングが ないと、えいせいは くうきの ねつと ちからで こわれちゃう',
   meco: 'まめちしき：だい1だんは つかいすて。うみに おちるよ',
   stage2: 'まめちしき：LE-5B-3 は うちゅうで なんども つけたり けしたり できる エンジン',
-  h3seco: 'まめちしき：じそく 27,000km だと、ちきゅう 1しゅう やく 90ぷん！',
+  h3seco: 'まめちしき：じそく 27,000km だと、ちきゅう 1しゅう やく 1じかん 30ぷん！',
   pay: 'まめちしき：えいせいは うちゅうから ちきゅうの しゃしんを とったり、てんきを しらべたり する',
 };
 let factT = 0;
@@ -860,6 +864,17 @@ function flashRes(name, score) {
   (score >= 60 ? sfx.ok : sfx.bad)();
 }
 
+// quiz (pauses the game)
+function quiz(key, q, choices, ok, why) {
+  showCard('🧠 クイズ！', q, null, choices.map((c, i) => [c, () => {
+    const good = i === ok;
+    S.results = S.results.filter(r => r.key !== key);
+    S.results.push({ key, name: 'クイズ' + ({ q1: '①', q2: '②', q3: '①', q4: '②' }[key] || ''), score: good ? 100 : 40, note: good ? 'せいかい' : 'ざんねん' });
+    (good ? sfx.ok : sfx.bad)();
+    flash(good ? 'せいかい！ ⭕' : 'ざんねん…', good ? '#7fffb0' : '#ff9a7a', 1.6);
+    const el = $('fact'); el.innerHTML = '💡 ' + R(why); el.style.opacity = 1; factT = 5;
+  }, i ? 'blue' : '']));
+}
 // steering mini-game shared state
 function steerNew() { return { e: 0, d: 0, acc: 0, n: 0 }; }
 function steerStep(st, dt, gust, rate) {
@@ -871,7 +886,7 @@ function steerStep(st, dt, gust, rate) {
 }
 const steerScore = st => st.n ? 100 * clamp(1 - Math.max(0, st.acc / st.n - 0.1) / 0.45, 0, 1) : 100;
 function steerGauge(st, label) {
-  gauge('gS', { label: label || 'まっすぐ メーター ◀ ▶ で はりを みどりに', min: -1, max: 1, green: [-0.25, 0.25], value: st.e, text: Math.abs(st.e) < 0.25 ? 'OK!' : (st.e > 0 ? '◀ へ' : '▶ へ') });
+  gauge('gS', { label: label || 'コース メーター（みどり ＝ ただしい コース）', min: -1, max: 1, green: [-0.25, 0.25], value: st.e, text: Math.abs(st.e) < 0.25 ? 'OK!' : (st.e > 0 ? '◀ へ' : '▶ へ') });
 }
 
 // ================================================================= cards
@@ -1067,9 +1082,9 @@ const PH_STAR = [
     tip() { return S.ignT === null ? (S.T < -4 ? 'じゅんび ちゅう…（T-3 ごろに {点火|てんか}）' : 'いまだ！「エンジン{点火|てんか}」！') : 'エンジンが じゅんばんに ついていく…'; },
   },
   { id: 'ascent', name: 'うちあげ',
-    card: ['まっすぐ とぼう ＆ MAX Q', 'ロケットは すこしずつ よこに たおれながら うちゅうへ（グラビティターン）。<b>◀ ▶ で はりを みどりに</b> あわせよう。<br>はやく なると、くうきの ちからが いちばん つよく なる「<b>MAX Q</b>」が くる。メーターが みどりに はいったら <b>▼ で エンジンを よわく</b>、すぎたら <b>▲ で もとに</b> もどそう。'],
+    card: ['コースを まもろう ＆ MAX Q', 'ロケットは すこしずつ よこに たおれながら うちゅうへ（グラビティターン）。<b>◀ ▶ で コース メーターの はりを みどりに</b> あわせよう。<br>はやく なると、くうきの ちからが いちばん つよく なる「<b>MAX Q</b>」が くる。メーターが みどりに はいったら <b>▼ で エンジンを よわく</b>、すぎたら <b>▲ で もとに</b> もどそう。'],
     init() { S.ts = 3.5; S.st = steerNew(); S.thrDown = false; S.mq = { tw: 0, tdw: 0, tbad: 0, pressed: false }; showSteer(true); S.zT = zPad() * 0.8;
-      setDock([{ id: 'dn', label: '▼ スロットル ダウン', sub: 'エンジンを よわく (↓)', key: 'ArrowDown', cls: 'c2' }, { id: 'up', label: '▲ スロットル アップ', sub: 'もとに もどす (↑)', key: 'ArrowUp', cls: 'c3' }]); },
+      setDock([{ id: 'dn', label: '▼ エンジン よわく', sub: 'スロットル ダウン (↓)', key: 'ArrowDown', cls: 'c2' }, { id: 'up', label: '▲ エンジン もとに', sub: 'スロットル アップ (↑)', key: 'ArrowUp', cls: 'c3' }]); },
     press(id, d) { if (!d) return; if (id === 'dn' && !S.thrDown) { S.thrDown = true; S.mq.pressed = true; sfx.beep(); } if (id === 'up' && S.thrDown) { S.thrDown = false; sfx.beep(); } },
     q() { const b = S.bst; return 0.5 * rho(b.h) * b.v * b.v / QSTAR[0]; },
     update(dt) {
@@ -1089,19 +1104,19 @@ const PH_STAR = [
       if (b.h < 9000 && Math.random() < 0.5) { const q = nozW(b, 6); puff(q.x, q.h, rnd(-3, 3), rnd(-3, 3), 3, 3, '#ffffff'); }
       S.vapor = v > 270 && v < 430 ? 1 : 0;
       if (t >= 152) {
-        result('steer', 'まっすぐ とぶ', steerScore(S.st));
+        result('steer', 'コースを まもる', steerScore(S.st));
         const mq = S.mq.pressed ? 100 * S.mq.tdw / Math.max(1, S.mq.tw) - S.mq.tbad * 4 : 0;
         result('maxq', 'MAX Q', mq, '', true); setTimeout(() => flashRes('MAX Q', mq), 1100);
         S.vapor = 0; nextPhase();
       }
     },
     glow() { const qn = this.q(); if (!S.thrDown && qn > 0.82 && S.T < QSTAR[1] + 5) return 'dn'; if (S.thrDown && S.T > QSTAR[1] && qn < 0.85) return 'up'; return null; },
-    tip() { const qn = this.q(); if (!S.thrDown && qn > 0.82 && S.T < QSTAR[1] + 5) return 'MAX Q ゾーン！ ▼で エンジンを よわく'; if (S.thrDown && S.T > QSTAR[1] && qn < 0.85) return 'MAX Q を こえた！ ▲で もとに もどそう'; return '◀ ▶ で まっすぐ メーターを みどりに'; },
+    tip() { const qn = this.q(); if (!S.thrDown && qn > 0.82 && S.T < QSTAR[1] + 5) return 'MAX Q ゾーン！ ▼で エンジンを よわく'; if (S.thrDown && S.T > QSTAR[1] && qn < 0.85) return 'MAX Q を こえた！ ▲で もとに もどそう'; return '◀ ▶ で コース メーターを みどりに'; },
   },
   { id: 'stage', name: 'ホットステージ',
     card: ['ホットステージング', 'ブースターの ねんりょうが へったら きりはなす。スターシップは とくべつな やりかた：<br><b>① ブースターの エンジンを まんなか 3こ だけに（MECO）<br>② くっついた まま シップの エンジンに {点火|てんか}<br>③ ぶんり！</b><br>シップの ほのおは ブースターの うえの「ホットステージ リング」の あなから にげるよ。', 'hot'],
     init() { S.ts = 0.45; S.step = 0; S.wrong = 0; showSteer(false); gauge('gS', null); gauge('gA', null);
-      setDock([{ id: 'meco', label: '① ブースター MECO', sub: 'エンジン 33→3こ (1)', key: 'Digit1' }, { id: 'sign', label: '② シップ{点火|てんか}', sub: 'エンジン 6こ (2)', key: 'Digit2', cls: 'c2' }, { id: 'sep', label: '③ ぶんり！', sub: '(3)', key: 'Digit3', cls: 'c3' }]); },
+      setDock([{ id: 'meco', label: '① ブースター MECO', sub: 'メインエンジン ストップ 33→3こ (1)', key: 'Digit1' }, { id: 'sign', label: '② シップ{点火|てんか}', sub: 'エンジン 6こ (2)', key: 'Digit2', cls: 'c2' }, { id: 'sep', label: '③ ぶんり！', sub: '(3)', key: 'Digit3', cls: 'c3' }]); },
     press(id, d) {
       if (!d || S.step >= 3) return;
       const order = ['meco', 'sign', 'sep'], k = order.indexOf(id);
@@ -1185,9 +1200,10 @@ const PH_STAR = [
           const err = Math.abs(imp);
           result('bb', 'ブーストバック', 100 * clamp(1 - (err - tol) / (ruka() ? 14000 : 8000), 0, 1), (err / 1000).toFixed(1) + 'km');
           gauge('gS', null);
-          setTimeout(() => { if (S && S.bst.ring) { S.bst.ring = false; S.deb.push({ kind: 'ring', x: b.x, h: b.h + SH + 1, vx: b.vx, vh: b.vh + 5, ang: b.ang, va: 0.8 }); flash('ホットステージ リングを すてて かるく！', '#cde', 1.6); } }, 1200);
+          setTimeout(() => { if (S && S.bst.ring) { S.bst.ring = false; S.deb.push({ kind: 'ring', x: b.x, h: b.h + SH + 1, vx: b.vx, vh: b.vh + 5, ang: b.ang, va: 0.8 }); flash('ホットステージ リングを すてて かるく！（V2）', '#cde', 1.6); } }, 1200);
         }
       } else {
+        if (!S.q1 && b.vh < 0) { S.q1 = true; quiz('q1', 'ブースターの エンジンは ぜんぶで いくつ？', ['6こ', '33こ', '100こ'], 1, 'ブースターは 33こ、シップは 6こ！'); }
         gauge('gA', { label: 'コースト ちゅう… おちる ばしょ よそう', min: -20000, max: 20000, green: [-tol, tol], value: clamp(imp, -20000, 20000), marks: [[0, 'タワー']], text: (imp / 1000).toFixed(1) + ' km' });
         if (b.vh < 0 && b.h < 15000) nextPhase();
       }
@@ -1205,7 +1221,7 @@ const PH_STAR = [
     },
     glow() { if (S.coast) return null; if (Math.abs(S.bst.ang - S.target) > 0.4) return null; const e = this.imp(); return Math.abs(e) > (ruka() ? 3000 : 1000) && e > 0 ? 'burn' : null; },
     tip() {
-      if (S.coast) return 'コースト：エンジンを とめて そらを とんで いるよ（はやおくり ちゅう）';
+      if (S.coast) return 'コースト ちゅう（エンジン オフ・はやおくり）';
       if (Math.abs(S.bst.ang - S.target) > 0.4) return '◀ を おして、あたまを きいろの やじるしの むきに';
       const e = this.imp(); const tol = ruka() ? 3000 : 1000;
       if (S.burning) return Math.abs(e) <= tol ? 'いまだ！ はなそう！' : 'もえてる！ ● が タワーに くるまで…';
@@ -1346,7 +1362,7 @@ const PH_STAR = [
   { id: 'seco', name: 'SECO',
     card: ['そのころ シップは…', 'シップの エンジンは 6こ（うちゅう よう の おおきい「ラプター バキューム」3こ と、ふつうの ラプター 3こ）。<b>じそく やく 26,400km</b>（1びょうで やく 7km！）に なったら「<b>エンジン ストップ（SECO）</b>」を おそう。'],
     init() { S.pip = 'booster'; S.secoDone = false; S.ts = 8; showSteer(false); gauge('gS', null); if (S.T > 470) S.T = 470; S.zT = zPad() * 0.6;
-      setDock([{ id: 'stop', label: '⏹ エンジン ストップ', sub: 'SECO (Space)', key: 'Space' }]); },
+      setDock([{ id: 'stop', label: '⏹ エンジン ストップ', sub: 'SECO＝2だんめ ストップ (Space)', key: 'Space' }]); },
     press(id, d) { if (!d || id !== 'stop' || S.secoDone) return; this.stop(false); },
     stop(auto) {
       const s = S.ship, sp = kmh(s.v), tol = ruka() ? 700 : 260;
@@ -1400,6 +1416,7 @@ const PH_STAR = [
       const s = S.ship;
       if (S.splashed) { s.h = 0; return; }
       let a = 0;
+      if (!S.q2 && S.flipAt === null && s.h < 4500) { S.q2 = true; quiz('q2', 'スターシップの ねんりょうは どれ？', ['ガソリン と みず', 'メタン と えきたい さんそ', 'すいそ と さんそ'], 1, 'スターシップは メタン と えきたい さんそ。H3 は すいそ と さんそ だよ'); }
       if (S.flipAt === null) { S.ts = s.h > 1600 ? 4 : 1; s.vh = -95; s.flap = Math.sin(S.T * 3) * 0.3; }
       else {
         S.ts = 1; S.flipT += dt;
@@ -1504,7 +1521,7 @@ const PH_H3 = [
     tip() { return S.le9T === null ? 'X-6 ごろに ①LE-9 {点火|てんか}' : S.T < -1.2 ? 'LE-9 OK！ X-0 まで まって…' : 'いまだ！ ② SRB-3 {点火|てんか}！'; },
   },
   { id: 'h3asc', name: 'うちあげ',
-    card: ['まっすぐ とぼう', 'H3は SRB-3 の しろい けむりを ひいて ぐんぐん のぼる。LE-9 の すいその ほのおは すきとおって ほとんど みえないよ。<b>◀ ▶ で まっすぐ メーターの はりを みどりに</b> あわせよう。とちゅうで くうきの ちからが いちばん つよい「MAX Q」を とおるよ。'],
+    card: ['コースを まもろう', 'H3は SRB-3 の しろい けむりを ひいて ぐんぐん のぼる。LE-9 の すいその ほのおは すきとおって ほとんど みえないよ。<b>◀ ▶ で コース メーターの はりを みどりに</b> あわせよう。とちゅうで くうきの ちからが いちばん つよい「MAX Q」を とおるよ。'],
     init() { S.ts = 4.2; S.st = steerNew(); showSteer(true); setDock([]); S.zT = zPad() * 0.8; },
     update(dt) {
       const dts = dt * S.ts; S.T += dts; const c = S.core;
@@ -1512,9 +1529,9 @@ const PH_H3 = [
       if (S.T > QH3[1] && !S.mqFlash) { S.mqFlash = true; flash('MAX Q（くうきの ちからが いちばん つよい）', '#fff', 1.6); }
       steerGauge(S.st); gauge('gA', null);
       follow(c, 30, 52);
-      if (S.T >= 100) { result('steer', 'まっすぐ とぶ', steerScore(S.st)); nextPhase(); }
+      if (S.T >= 100) { result('steer', 'コースを まもる', steerScore(S.st)); nextPhase(); }
     },
-    glow() { return null; }, tip() { return '◀ ▶ で まっすぐ メーターを みどりに'; },
+    glow() { return null; }, tip() { return '◀ ▶ で コース メーターを みどりに'; },
   },
   { id: 'srbsep', name: 'SRB-3 ぶんり',
     card: ['SRB-3 ぶんり', 'SRB-3 は やく 2ふんで もえつきる。<b>ちからが 0 に なった あとで「SRB-3 ぶんり」！</b> もえて いる あいだに はずすと あぶない。はずした SRB-3 は うみに おちる（つかいすて）。'],
@@ -1565,6 +1582,7 @@ const PH_H3 = [
     },
     update(dt) {
       const c = S.core; S.ts = c.h > 95000 ? 2 : 4;
+      if (!S.q3 && S.T > 135) { S.q3 = true; quiz('q3', 'SRB-3（こたい ロケット）は いちど もえはじめたら…？', ['とちゅうで とめられる', 'さいごまで とめられない'], 1, 'だから SRB-3 は いちばん さいごに {点火|てんか} するんだね'); }
       const dts = dt * S.ts; S.T += dts; h3Fly(dts);
       if (S.up.fairing && S.T > 285) this.sep(true);
       gauge('gA', { label: 'たかさ（120km いじょうで ぶんり）', min: 40, max: 240, green: [120, 165], value: c.h / 1000, marks: [[100, 'うちゅう']], text: (c.h / 1000).toFixed(0) + ' km' });
@@ -1576,7 +1594,7 @@ const PH_H3 = [
   { id: 'meco', name: 'だん ぶんり',
     card: ['だい1だん → だい2だん', 'だい1だんの ねんりょうが なくなる まえに<br><b>① エンジン ていし（MECO）→ ② だん ぶんり → ③ だい2だん エンジン「LE-5B-3」{点火|てんか}！</b><br>2023ねんの 1ごうきは、でんきの トラブルで だい2だんに {火|ひ}が つかず しっぱい した。2024ねんの 2ごうきで せいこう！ だいじな しゅんかん だよ。', 'h3seq'],
     init() { S.ts = 3; S.mst = 0; S.wrong = 0; S.mecoT = null; S.sepT = null; showSteer(false);
-      setDock([{ id: 'meco', label: '① MECO', sub: 'だい1だん ていし (1)', key: 'Digit1' }, { id: 'sep', label: '② だん ぶんり', sub: '(2)', key: 'Digit2', cls: 'c2' }, { id: 'seig', label: '③ だい2だん {点火|てんか}', sub: 'LE-5B-3 (3)', key: 'Digit3', cls: 'c3' }]); },
+      setDock([{ id: 'meco', label: '① MECO', sub: 'メインエンジン ストップ (1)', key: 'Digit1' }, { id: 'sep', label: '② だん ぶんり', sub: '(2)', key: 'Digit2', cls: 'c2' }, { id: 'seig', label: '③ だい2だん {点火|てんか}', sub: 'LE-5B-3 (3)', key: 'Digit3', cls: 'c3' }]); },
     prop() { return clamp(1 - S.T / 300, 0, 1) * 100; },
     press(id, d) {
       if (!d) return;
@@ -1626,7 +1644,7 @@ const PH_H3 = [
   },
   { id: 'h3seco', name: 'SECO',
     card: ['うちゅうの はやさ', 'えいせいが ちきゅうを まわりつづける ためには <b>じそく やく 27,000km</b>（1びょうで 7.5km！）が ひつよう。その はやさに なったら「<b>エンジン ストップ（SECO）</b>」を おそう。'],
-    init() { S.ts = 20; S.done2 = false; setDock([{ id: 'stop', label: '⏹ エンジン ストップ', sub: 'SECO (Space)', key: 'Space' }]); },
+    init() { S.ts = 20; S.done2 = false; setDock([{ id: 'stop', label: '⏹ エンジン ストップ', sub: 'SECO＝2だんめ ストップ (Space)', key: 'Space' }]); },
     press(id, d) { if (d && id === 'stop' && !S.done2) this.stop(false); },
     stop(auto) {
       const u = S.up, sp = kmh(u.v), tol = ruka() ? 700 : 280;
@@ -1636,6 +1654,7 @@ const PH_H3 = [
     },
     update(dt) {
       const u = S.up;
+      if (!S.q4 && !S.done2 && kmh(u.v) > 19000) { S.q4 = true; quiz('q4', 'H3の だい1だんは この あと どうなる？', ['タワーで キャッチ', 'うみに おちる（つかいすて）'], 1, 'H3の だんは つかいすて。スターシップの ブースターは キャッチして また つかう！'); }
       if (!S.done2) { const want = Math.abs(kmh(u.v) - 27100) > 900 ? 1100 : (ruka() ? 110 : 160); S.ts = clamp(want / 14.76, 1, 80); if (u.v >= 7650) this.stop(true); } else S.ts = 3;
       const dts = dt * S.ts; S.T += dts; h3Fly(dts);
       const sp = kmh(u.v), tol = ruka() ? 700 : 280;
@@ -1716,6 +1735,8 @@ function startMission(r) {
 function finish() {
   S.done = true; setDock([]); showSteer(false); gauge('gA', null); gauge('gS', null); tip('');
   const rs = S.results, tot = rs.length ? Math.round(rs.reduce((a, r) => a + r.score, 0) / rs.length) : 0;
+  try { const k = 'rocketBest_' + S.rocket, prev = +(localStorage.getItem(k) || 0); if (tot > prev) { localStorage.setItem(k, tot); if (prev) setTimeout(() => flash('🏅 ベスト きろく こうしん！', '#ffd23f', 2.5), 600); } } catch (e) {}
+  showBest();
   const rank = tot >= 95 ? 'スーパー フライトディレクター' : tot >= 85 ? 'ベテラン かんせいかん' : tot >= 70 ? 'うちゅう ひこうし' : 'みならい ひこうし';
   $('rT').textContent = S.rocket === 'star' ? 'スターシップ ミッション かんりょう！' : 'H3 ミッション かんりょう！';
   $('resTotal').innerHTML = `${tot}てん <span style="font-size:.45em;color:#0d4fb0">${rank}</span>`;
@@ -1871,7 +1892,7 @@ function hud(dt) {
       drawEngineRing($('e1'), L_SH, b.eng); drawEngineRing($('e2'), L_SS, s.eng);
     } else {
       const c = S.core, u = S.up;
-      if (S.staged) { $('v1').textContent = '—'; $('h1').textContent = 'うみへ'; } else { $('v1').textContent = kmh(c.v || 0).toLocaleString(); $('h1').textContent = Math.max(0, (S.lifted ? c.h - ML_TOP : 0) / 1000).toFixed(1); }
+      if (S.staged) { $('v1').textContent = '—'; $('h1').textContent = '—'; $('n1').textContent = 'だい1だん（うみへ）'; } else { $('v1').textContent = kmh(c.v || 0).toLocaleString(); $('h1').textContent = Math.max(0, (S.lifted ? c.h - ML_TOP : 0) / 1000).toFixed(1); }
       $('v2').textContent = kmh(u.v || 0).toLocaleString(); $('h2').textContent = Math.max(0, (!S.lifted ? 0 : S.staged ? u.h : u.h - ML_TOP - H1) / 1000).toFixed(1);
       drawEngineRing($('e1'), L_H1, [c.eng[0], c.eng[1], c.attachedSrb && c.srbThr > 0, c.attachedSrb && c.srbThr > 0]);
       drawEngineRing($('e2'), L_H2, [u.eng]);
@@ -1930,6 +1951,8 @@ function drawPreview(cvs, r) {
   g = prevG; S = prevS;
 }
 drawPreview($('pk1'), 'star'); drawPreview($('pk2'), 'h3');
+function showBest() { for (const r of ['star', 'h3']) { let b = 0; try { b = +(localStorage.getItem('rocketBest_' + r) || 0); } catch (e) {} $('best_' + r).textContent = b ? '🏅 ベスト ' + b + 'てん' : ''; } }
+showBest();
 
 // test hook
 if (location.hash === '#debug') window.__r = {
