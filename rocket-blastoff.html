@@ -46,7 +46,8 @@
   #gA { top: 116px; } #gS { top: 166px; }
   .gauge .gl { display: flex; justify-content: space-between; font-weight: 800; font-size: 13px; margin-bottom: 3px; }
   .gauge .gl span:last-child { font-family: ui-monospace, Menlo, Consolas, monospace; color: #ffe27a; }
-  .gauge .tr { position: relative; height: 16px; background: rgba(255,255,255,.14); border-radius: 8px; overflow: hidden; }
+  .gauge .tr { position: relative; height: 16px; background: rgba(255,255,255,.14); border-radius: 8px; }
+  .gauge .fill, .gauge .gr { border-radius: 8px; }
   .gauge .gr { position: absolute; top: 0; bottom: 0; background: rgba(60,220,120,.55); border-left: 2px solid #5f5; border-right: 2px solid #5f5; }
   .gauge .fill { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(90deg, #3a8bff, #7fd3ff); opacity: .75; }
   .gauge .nd { position: absolute; top: -2px; bottom: -2px; width: 4px; margin-left: -2px; background: #ffd23f; box-shadow: 0 0 6px #ff0; border-radius: 2px; }
@@ -128,7 +129,8 @@
     .box canvas { max-height: 120px; width: auto; }
     .box { padding: 10px 14px; } .box p, .box li { font-size: 13px; line-height: 1.7; } .box h2 { font-size: 18px; }
     .bigbtn { padding: 8px 20px; font-size: 16px; margin-top: 6px; }
-    #flash { top: 55%; }
+    #flash { top: 150px; font-size: 18px; } #flash span { background: rgba(0,0,0,.45); border-radius: 10px; padding: 0 10px; }
+    #cD { display: none !important; }
   }
 </style>
 </head>
@@ -769,9 +771,10 @@ function gauge(id, cfg) {
     mk.dataset.k = key; mk.innerHTML = '';
     for (const [x, t] of cfg.marks || []) mk.insertAdjacentHTML('beforeend', `<div class="mk" style="left:${pct(x)}%"></div><div class="mkl" style="left:${pct(x)}%">${t}</div>`);
   }
+  mk.querySelectorAll('.mkl').forEach((l, k) => { const x = (cfg.marks || [])[k]; l.style.visibility = x && Math.abs(pct(x[0]) - pct(cfg.value)) < 7 ? 'hidden' : ''; });
 }
 let flashT = 0;
-function flash(t, col = '#ffe45c', dur = 1.8) { const f = $('flash'); f.innerHTML = R(t); f.style.color = col; f.style.opacity = 1; flashT = dur; }
+function flash(t, col = '#ffe45c', dur = 1.8) { const f = $('flash'); f.innerHTML = '<span>' + R(t) + '</span>'; f.style.color = col; f.style.opacity = 1; flashT = dur; }
 function tip(t) { const el = $('tip'); const h = R(t || ''); if (el.dataset.t !== h) { el.dataset.t = h; el.innerHTML = h; } }
 
 function toggleXray() { if (!S) return; S.xray = !S.xray; $('bX').classList.toggle('on', S.xray); }
@@ -866,14 +869,15 @@ function flashRes(name, score) {
 
 // quiz (pauses the game)
 function quiz(key, q, choices, ok, why) {
-  showCard('🧠 クイズ！', q, null, choices.map((c, i) => [c, () => {
+  const order = choices.map((_, i) => i).sort(() => Math.random() - 0.5);
+  showCard('🧠 クイズ！', q, null, order.map((i, pos) => [choices[i], () => {
     const good = i === ok;
     S.results = S.results.filter(r => r.key !== key);
-    S.results.push({ key, name: 'クイズ' + ({ q1: '①', q2: '②', q3: '①', q4: '②' }[key] || ''), score: good ? 100 : 40, note: good ? 'せいかい' : 'ざんねん' });
+    S.results.push({ key, quiz: true, name: 'クイズ：' + ({ q1: 'エンジンの かず', q2: 'ねんりょう', q3: 'SRB-3', q4: 'つかいすて' }[key] || ''), score: good ? 100 : 0, note: good ? 'せいかい ⭕' : 'ざんねん' });
     (good ? sfx.ok : sfx.bad)();
     flash(good ? 'せいかい！ ⭕' : 'ざんねん…', good ? '#7fffb0' : '#ff9a7a', 1.6);
     const el = $('fact'); el.innerHTML = '💡 ' + R(why); el.style.opacity = 1; factT = 5;
-  }, i ? 'blue' : '']));
+  }, pos % 2 ? 'blue' : '']));
 }
 // steering mini-game shared state
 function steerNew() { return { e: 0, d: 0, acc: 0, n: 0 }; }
@@ -1734,7 +1738,7 @@ function startMission(r) {
 
 function finish() {
   S.done = true; setDock([]); showSteer(false); gauge('gA', null); gauge('gS', null); tip('');
-  const rs = S.results, tot = rs.length ? Math.round(rs.reduce((a, r) => a + r.score, 0) / rs.length) : 0;
+  const rs = S.results.filter(r => !r.quiz), qs = S.results.filter(r => r.quiz), tot = rs.length ? Math.round(rs.reduce((a, r) => a + r.score, 0) / rs.length) : 0;
   try { const k = 'rocketBest_' + S.rocket, prev = +(localStorage.getItem(k) || 0); if (tot > prev) { localStorage.setItem(k, tot); if (prev) setTimeout(() => flash('🏅 ベスト きろく こうしん！', '#ffd23f', 2.5), 600); } } catch (e) {}
   showBest();
   const rank = tot >= 95 ? 'スーパー フライトディレクター' : tot >= 85 ? 'ベテラン かんせいかん' : tot >= 70 ? 'うちゅう ひこうし' : 'みならい ひこうし';
@@ -1758,6 +1762,7 @@ function finish() {
   $('resLearn').innerHTML = '<b>📘 わかったこと</b><ul>' + learn.map(t => `<li>${R(t)}</li>`).join('') + '</ul>';
   $('result').classList.remove('hidden');
   if (tot >= 70) sfx.fan();
+  for (const q of qs) $('resList').insertAdjacentHTML('beforeend', `<li><span>🧠 ${R(q.name)}</span><span>${q.score ? '⭕ せいかい' : '❌ ざんねん'}</span></li>`);
   if (S.retries) $('resList').insertAdjacentHTML('beforeend', `<li><span>やりなおし</span><span>${S.retries}かい</span></li>`);
 }
 $('rAgain').onclick = () => { audioInit(); startMission(rocket); };
