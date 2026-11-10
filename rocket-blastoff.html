@@ -50,7 +50,7 @@
   .gauge.hasmk { padding-bottom: 19px; }
   body.gAmk #gS { top: 184px; }
   @media (max-width: 760px), (max-height: 560px) { body.gAmk #gS { top: 132px; } }
-  @media (max-height: 520px) { body.gAmk #gS { top: 126px; } }
+  @media (max-height: 520px) { body.gAmk #gS { top: 126px; } body.gAmk #flash { top: 196px; } }
   @media (max-aspect-ratio: 1/1) { body.gAmk #gS { top: 138px; } }
   .gauge .fill, .gauge .gr { border-radius: 8px; }
   .gauge .gr { position: absolute; top: 0; bottom: 0; background: rgba(60,220,120,.55); border-left: 2px solid #5f5; border-right: 2px solid #5f5; }
@@ -871,7 +871,9 @@ function flashRes(name, score) {
   score = Math.round(clamp(score, 0, 100));
   const col = score >= 85 ? '#7fffb0' : score >= 60 ? '#ffe45c' : '#ff9a7a';
   const word = score >= 95 ? 'パーフェクト！' : score >= 85 ? 'すごい！' : score >= 60 ? 'いいね！' : 'ドンマイ！';
-  flash(`${word} ${name} ${score}てん`, col, 2.2);
+  S.streak = score >= 95 ? (S.streak || 0) + 1 : 0; S.bestStreak = Math.max(S.bestStreak || 0, S.streak);
+  flash(`${word} ${name} ${score}てん` + (S.streak >= 2 ? ` 🔥×${S.streak}` : ''), col, 2.2);
+  if (S.streak >= 3 && S.streak % 3 === 0) { confetti(50); say('れんぞく パーフェクト！'); }
   (score >= 60 ? sfx.ok : sfx.bad)();
 }
 
@@ -1742,6 +1744,7 @@ function startMission(r) {
   $('mName').textContent = r === 'star' ? 'スターシップ' : 'H3';
   $('n1').textContent = r === 'star' ? 'SUPER HEAVY' : 'H3 だい1だん';
   $('n2').textContent = r === 'star' ? 'STARSHIP' : 'だい2だん';
+  $('h1').nextElementSibling.style.display = $('v1').nextElementSibling.style.display = '';
   $('bX').classList.remove('on');
   gotoPhase(0);
 }
@@ -1773,6 +1776,7 @@ function finish() {
   $('result').classList.remove('hidden');
   if (tot >= 70) sfx.fan();
   for (const q of qs) $('resList').insertAdjacentHTML('beforeend', `<li><span>🧠 ${R(q.name)}</span><span>${q.score ? '⭕ せいかい' : '❌ ざんねん'}</span></li>`);
+  if (S.bestStreak >= 2) $('resList').insertAdjacentHTML('beforeend', `<li><span>🔥 れんぞく パーフェクト</span><span>${S.bestStreak}かい</span></li>`);
   if (S.retries) $('resList').insertAdjacentHTML('beforeend', `<li><span>やりなおし</span><span>${S.retries}かい</span></li>`);
 }
 $('rAgain').onclick = () => { audioInit(); startMission(rocket); };
@@ -1907,7 +1911,7 @@ function hud(dt) {
       drawEngineRing($('e1'), L_SH, b.eng); drawEngineRing($('e2'), L_SS, s.eng);
     } else {
       const c = S.core, u = S.up;
-      if (S.staged) { $('v1').textContent = '—'; $('h1').textContent = '—'; $('n1').textContent = 'だい1だん（うみへ）'; } else { $('v1').textContent = kmh(c.v || 0).toLocaleString(); $('h1').textContent = Math.max(0, (S.lifted ? c.h - ML_TOP : 0) / 1000).toFixed(1); }
+      if (S.staged) { $('v1').textContent = '—'; $('h1').textContent = '—'; $('n1').textContent = 'だい1だん（うみへ）'; $('h1').nextElementSibling.style.display = $('v1').nextElementSibling.style.display = 'none'; } else { $('v1').textContent = kmh(c.v || 0).toLocaleString(); $('h1').textContent = Math.max(0, (S.lifted ? c.h - ML_TOP : 0) / 1000).toFixed(1); }
       $('v2').textContent = kmh(u.v || 0).toLocaleString(); $('h2').textContent = Math.max(0, (!S.lifted ? 0 : S.staged ? u.h : u.h - ML_TOP - H1) / 1000).toFixed(1);
       drawEngineRing($('e1'), L_H1, [c.eng[0], c.eng[1], c.attachedSrb && c.srbThr > 0, c.attachedSrb && c.srbThr > 0]);
       drawEngineRing($('e2'), L_H2, [u.eng]);
