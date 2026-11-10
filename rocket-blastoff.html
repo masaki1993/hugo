@@ -104,11 +104,12 @@
 
   #resList { list-style: none; margin: 8px 0; display: grid; grid-template-columns: 1fr; column-gap: 22px; }
   @media (min-width: 820px) { #resList { grid-template-columns: 1fr 1fr; } #result .box { width: min(100%, 980px); } }
-  #resList li { display: flex; justify-content: space-between; gap: 10px; border-bottom: 1px dashed #b8c8e8; padding: 3px 0; }
+  #resList li { display: flex; justify-content: space-between; gap: 10px; border-bottom: 1px dashed #b8c8e8; padding: 1px 0; font-size: 14px; line-height: 1.55; }
+  #result .box { padding: 12px 20px; } #result h2 { font-size: 22px; margin-bottom: 0; } #result .bigbtn { margin-top: 6px; padding: 8px 26px; font-size: 18px; }
   #resList li span:last-child { white-space: nowrap; }
-  #resTotal { font-size: clamp(30px, 6vw, 52px); font-weight: 900; text-align: center; color: #d03a10; }
+  #resTotal { font-size: clamp(26px, 5vw, 42px); font-weight: 900; text-align: center; color: #d03a10; }
   #resLearn { background: #fff7d6; border-radius: 12px; padding: 8px 14px; margin-top: 8px; }
-  #resLearn li { font-size: 15px; line-height: 1.7; margin-left: 18px; }
+  #resLearn { padding: 4px 12px; } #resLearn li { font-size: 13px; line-height: 1.5; margin-left: 18px; }
 
   @media (max-width: 760px), (max-height: 560px) {
     #topbar, #steps { left: 120px; right: 96px; } #steps { display: none; }
@@ -885,7 +886,7 @@ function quiz(key, q, choices, ok, why) {
     S.results = S.results.filter(r => r.key !== key);
     S.results.push({ key, quiz: true, name: 'クイズ：' + ({ q1: 'エンジンの かず', q2: 'ねんりょう', q3: 'SRB-3', q4: 'つかいすて', q5: 'たいねつ タイル', q6: 'たいよう でんち' }[key] || ''), score: good ? 100 : 0, note: good ? 'せいかい ⭕' : 'ざんねん' });
     (good ? sfx.ok : sfx.bad)();
-    flash(good ? 'せいかい！ ⭕' : 'ざんねん…', good ? '#7fffb0' : '#ff9a7a', 1.6);
+    flash(good ? 'せいかい！ ⭕' : 'おしい！ こたえを みてね', good ? '#7fffb0' : '#ffd27a', 1.6);
     const el = $('fact'); el.innerHTML = '💡 ' + R(why); el.style.opacity = 1; factT = 5;
   }, pos % 2 ? 'blue' : '']));
 }
@@ -1231,7 +1232,7 @@ const PH_STAR = [
       g.save(); g.setLineDash([10, 8]); g.strokeStyle = '#ffd23f'; g.lineWidth = 4;
       g.beginPath(); g.moveTo(X, Y); g.lineTo(X + Math.sin(S.target) * L, Y - Math.cos(S.target) * L); g.stroke();
       g.setLineDash([]); g.fillStyle = '#ffd23f'; g.font = '900 15px sans-serif'; g.textAlign = 'center';
-      g.fillText('この むきに あたまを むける', X + Math.sin(S.target) * L, Y - Math.cos(S.target) * L - 10);
+      if (flashT <= 0) g.fillText('この むきに あたまを むける', X + Math.sin(S.target) * L, Y - Math.cos(S.target) * L - 10);
       g.restore();
     },
     glow() { if (S.coast) return null; if (Math.abs(S.bst.ang - S.target) > 0.4) return null; const e = this.imp(); return Math.abs(e) > (ruka() ? 3000 : 1000) && e > 0 ? 'burn' : null; },
@@ -1693,7 +1694,7 @@ const PH_H3 = [
     },
     update(dt) {
       const u = S.up; S.T += dt;
-      if (S.sepd && !S.q6 && S.nextIn > 0 && S.nextIn < 2) { S.q6 = true; quiz('q6', 'えいせいが ひろげた あおい パネルは なに？', ['つばさ', 'たいよう でんち', 'ブレーキ'], 1, 'たいようの ひかりで でんきを つくって、うちゅうで はたらくんだ'); }
+      if (S.sepd && !S.q6 && S.nextIn > 0 && S.nextIn < 0.6) { S.q6 = true; quiz('q6', 'えいせいが ひろげた あおい パネルは なに？', ['つばさ', 'たいよう でんち', 'ブレーキ'], 1, 'たいようの ひかりで でんきを つくって、うちゅうで はたらくんだ'); }
       S.att *= Math.exp(-0.32 * dt); S.attPh += dt * 2.3;
       u.ang = Math.PI / 2 + this.e() * 0.25;
       u.x += u.vx * dt; u.h += u.vh * dt * 0;
@@ -1744,7 +1745,7 @@ function startMission(r) {
   $('mName').textContent = r === 'star' ? 'スターシップ' : 'H3';
   $('n1').textContent = r === 'star' ? 'SUPER HEAVY' : 'H3 だい1だん';
   $('n2').textContent = r === 'star' ? 'STARSHIP' : 'だい2だん';
-  $('h1').nextElementSibling.style.display = $('v1').nextElementSibling.style.display = '';
+  $('tele1').style.display = '';
   $('bX').classList.remove('on');
   gotoPhase(0);
 }
@@ -1911,7 +1912,7 @@ function hud(dt) {
       drawEngineRing($('e1'), L_SH, b.eng); drawEngineRing($('e2'), L_SS, s.eng);
     } else {
       const c = S.core, u = S.up;
-      if (S.staged) { $('v1').textContent = '—'; $('h1').textContent = '—'; $('n1').textContent = 'だい1だん（うみへ）'; $('h1').nextElementSibling.style.display = $('v1').nextElementSibling.style.display = 'none'; } else { $('v1').textContent = kmh(c.v || 0).toLocaleString(); $('h1').textContent = Math.max(0, (S.lifted ? c.h - ML_TOP : 0) / 1000).toFixed(1); }
+      if (S.staged) { $('v1').textContent = '—'; $('h1').textContent = '—'; $('tele1').style.display = 'none'; } else { $('v1').textContent = kmh(c.v || 0).toLocaleString(); $('h1').textContent = Math.max(0, (S.lifted ? c.h - ML_TOP : 0) / 1000).toFixed(1); }
       $('v2').textContent = kmh(u.v || 0).toLocaleString(); $('h2').textContent = Math.max(0, (!S.lifted ? 0 : S.staged ? u.h : u.h - ML_TOP - H1) / 1000).toFixed(1);
       drawEngineRing($('e1'), L_H1, [c.eng[0], c.eng[1], c.attachedSrb && c.srbThr > 0, c.attachedSrb && c.srbThr > 0]);
       drawEngineRing($('e2'), L_H2, [u.eng]);
