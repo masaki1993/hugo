@@ -47,12 +47,17 @@
   .gauge .gl { display: flex; justify-content: space-between; font-weight: 800; font-size: 13px; margin-bottom: 3px; }
   .gauge .gl span:last-child { font-family: ui-monospace, Menlo, Consolas, monospace; color: #ffe27a; }
   .gauge .tr { position: relative; height: 16px; background: rgba(255,255,255,.14); border-radius: 8px; }
+  .gauge.hasmk { padding-bottom: 19px; }
+  body.gAmk #gS { top: 184px; }
+  @media (max-width: 760px), (max-height: 560px) { body.gAmk #gS { top: 132px; } }
+  @media (max-height: 520px) { body.gAmk #gS { top: 126px; } }
+  @media (max-aspect-ratio: 1/1) { body.gAmk #gS { top: 138px; } }
   .gauge .fill, .gauge .gr { border-radius: 8px; }
   .gauge .gr { position: absolute; top: 0; bottom: 0; background: rgba(60,220,120,.55); border-left: 2px solid #5f5; border-right: 2px solid #5f5; }
   .gauge .fill { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(90deg, #3a8bff, #7fd3ff); opacity: .75; }
   .gauge .nd { position: absolute; top: -2px; bottom: -2px; width: 4px; margin-left: -2px; background: #ffd23f; box-shadow: 0 0 6px #ff0; border-radius: 2px; }
   .gauge .mk { position: absolute; top: 0; bottom: 0; width: 2px; background: #fff; opacity: .8; }
-  .gauge .mkl { position: absolute; top: 0; font-size: 10px; font-weight: 800; transform: translateX(-50%); color: #fff; text-shadow: 0 0 3px #000; }
+  .gauge .mkl { position: absolute; top: 17px; font-size: 10px; font-weight: 800; transform: translateX(-50%); color: #fff; text-shadow: 0 0 3px #000; }
 
   #dock { position: fixed; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 6; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; width: min(calc(100vw - 470px), 900px); }
   #dock button { min-width: 130px; padding: 10px 16px; border-radius: 16px; border: 3px solid rgba(255,255,255,.85); color: #fff; font-family: inherit; font-weight: 900;
@@ -129,8 +134,9 @@
     .box canvas { max-height: 120px; width: auto; }
     .box { padding: 10px 14px; } .box p, .box li { font-size: 13px; line-height: 1.7; } .box h2 { font-size: 18px; }
     .bigbtn { padding: 8px 20px; font-size: 16px; margin-top: 6px; }
-    #flash { top: 150px; font-size: 18px; } #flash span { background: rgba(0,0,0,.45); border-radius: 10px; padding: 0 10px; }
-    #cD { display: none !important; }
+    #flash { top: 150px; font-size: 16px; left: 20vw; right: 20vw; } #flash span { background: rgba(0,0,0,.45); border-radius: 10px; padding: 0 10px; }
+    #cD { display: none !important; } #card.showD #cD { display: block !important; max-height: 58vh; }
+    #cDbtn:not(.hidden) { display: inline-block !important; }
   }
 </style>
 </head>
@@ -166,7 +172,7 @@
   </div>
 </div>
 
-<div id="card" class="ov hidden"><div class="box"><h2 id="cT"></h2><canvas id="cD" width="1040" height="560"></canvas><div id="cB"></div><div class="row" id="cBtns"></div></div></div>
+<div id="card" class="ov hidden"><div class="box"><h2 id="cT"></h2><canvas id="cD" width="1040" height="560"></canvas><button type="button" id="cDbtn" style="display:none;margin:2px auto 4px;padding:4px 12px;border-radius:10px;border:2px solid #2f6bff;background:#fff;color:#1a5fd0;font:800 13px inherit;font-family:inherit">📐 ずを みる</button><div id="cB"></div><div class="row" id="cBtns"></div></div></div>
 
 <div id="result" class="ov hidden"><div class="box">
   <h2 id="rT">ミッション せいこう！</h2>
@@ -756,7 +762,7 @@ function btnHeld(id) { const b = dockBtns.find(d => d.id === id); return !!(b &&
 
 function gauge(id, cfg) {
   const el = $(id);
-  if (!cfg) { el.classList.add('hidden'); return; }
+  if (!cfg) { el.classList.add('hidden'); if (id === 'gA') document.body.classList.remove('gAmk'); return; }
   el.classList.remove('hidden');
   const span = cfg.max - cfg.min, pct = x => clamp((x - cfg.min) / span, 0, 1) * 100;
   el.querySelector('.lab').innerHTML = R(cfg.label);
@@ -765,13 +771,14 @@ function gauge(id, cfg) {
   if (cfg.green) { gr.style.display = ''; gr.style.left = pct(cfg.green[0]) + '%'; gr.style.width = (pct(cfg.green[1]) - pct(cfg.green[0])) + '%'; } else gr.style.display = 'none';
   el.querySelector('.fill').style.width = cfg.fill ? pct(cfg.value) + '%' : '0';
   const nd = el.querySelector('.nd'); nd.style.display = cfg.fill ? 'none' : ''; nd.style.left = pct(cfg.value) + '%';
+  const hasMk = !!(cfg.marks && cfg.marks.length); el.classList.toggle('hasmk', hasMk); if (id === 'gA') document.body.classList.toggle('gAmk', hasMk);
   const mk = el.querySelector('.marks');
   const key = JSON.stringify(cfg.marks || []) + cfg.min + cfg.max;
   if (mk.dataset.k !== key) {
     mk.dataset.k = key; mk.innerHTML = '';
     for (const [x, t] of cfg.marks || []) mk.insertAdjacentHTML('beforeend', `<div class="mk" style="left:${pct(x)}%"></div><div class="mkl" style="left:${pct(x)}%">${t}</div>`);
   }
-  mk.querySelectorAll('.mkl').forEach((l, k) => { const x = (cfg.marks || [])[k]; l.style.visibility = x && Math.abs(pct(x[0]) - pct(cfg.value)) < 7 ? 'hidden' : ''; });
+  mk.querySelectorAll('.mkl').forEach((l, k) => { const x = (cfg.marks || [])[k]; l.style.visibility = x && Math.abs(pct(x[0]) - pct(cfg.value)) < 4 ? 'hidden' : ''; });
 }
 let flashT = 0;
 function flash(t, col = '#ffe45c', dur = 1.8) { const f = $('flash'); f.innerHTML = '<span>' + R(t) + '</span>'; f.style.color = col; f.style.opacity = 1; flashT = dur; }
@@ -779,6 +786,7 @@ function tip(t) { const el = $('tip'); const h = R(t || ''); if (el.dataset.t !=
 
 function toggleXray() { if (!S) return; S.xray = !S.xray; $('bX').classList.toggle('on', S.xray); }
 $('bX').onclick = () => { audioInit(); toggleXray(); };
+$('cDbtn').onclick = () => $('card').classList.toggle('showD');
 
 // engine-ring telemetry
 function drawEngineRing(cvs, layout, on) {
@@ -873,7 +881,7 @@ function quiz(key, q, choices, ok, why) {
   showCard('🧠 クイズ！', q, null, order.map((i, pos) => [choices[i], () => {
     const good = i === ok;
     S.results = S.results.filter(r => r.key !== key);
-    S.results.push({ key, quiz: true, name: 'クイズ：' + ({ q1: 'エンジンの かず', q2: 'ねんりょう', q3: 'SRB-3', q4: 'つかいすて' }[key] || ''), score: good ? 100 : 0, note: good ? 'せいかい ⭕' : 'ざんねん' });
+    S.results.push({ key, quiz: true, name: 'クイズ：' + ({ q1: 'エンジンの かず', q2: 'ねんりょう', q3: 'SRB-3', q4: 'つかいすて', q5: 'たいねつ タイル', q6: 'たいよう でんち' }[key] || ''), score: good ? 100 : 0, note: good ? 'せいかい ⭕' : 'ざんねん' });
     (good ? sfx.ok : sfx.bad)();
     flash(good ? 'せいかい！ ⭕' : 'ざんねん…', good ? '#7fffb0' : '#ff9a7a', 1.6);
     const el = $('fact'); el.innerHTML = '💡 ' + R(why); el.style.opacity = 1; factT = 5;
@@ -898,7 +906,8 @@ function showCard(title, body, diagram, buttons) {
   S.cardOpen = true;
   $('cT').innerHTML = R(title); $('cB').innerHTML = `<p>${R(body)}</p>`;
   const cd = $('cD');
-  if (diagram) { cd.classList.remove('hidden'); drawDiagram(cd, diagram); } else cd.classList.add('hidden');
+  $('card').classList.remove('showD');
+  if (diagram) { cd.classList.remove('hidden'); drawDiagram(cd, diagram); $('cDbtn').classList.remove('hidden'); } else { cd.classList.add('hidden'); $('cDbtn').classList.add('hidden'); }
   const bb = $('cBtns'); bb.innerHTML = '';
   for (const [label, fn, cls] of buttons || [['わかった！ ▶', null]]) {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'bigbtn ' + (cls || ''); b.innerHTML = R(label);
@@ -1377,7 +1386,7 @@ const PH_STAR = [
     update(dt) {
       const s = S.ship;
       if (!S.secoDone) { const T0 = Math.min(S.T, 519.5), rate = Math.max(1e-3, (1500 + 5900 * Math.pow(sm(158, 520, T0 + 0.5), 0.9) - (1500 + 5900 * Math.pow(sm(158, 520, T0), 0.9))) * 2 * 3.6), want = Math.abs(kmh(s.v) - 26400) > 900 ? 1100 : (ruka() ? 110 : 160); S.ts = clamp(want / rate, 0.5, 40); if (S.T >= 520) this.stop(true); }
-      else S.ts = 3;
+      else { S.ts = 3; if (!S.q5 && S.nextIn > 0 && S.nextIn < 1.6) { S.q5 = true; quiz('q5', 'シップの おなかの くろい タイルは なんの ため？', ['あつさから まもる', 'かっこよく みせる', 'ひかりを あつめる'], 0, 'もどって くる とき、くうきとの まさつで 1000℃ いじょうに なる。タイルが まもるんだ'); } }
       const dts = dt * S.ts; S.T += dts;
       shipFly(dts);
       const sp = kmh(s.v), tol = ruka() ? 700 : 260;
@@ -1682,6 +1691,7 @@ const PH_H3 = [
     },
     update(dt) {
       const u = S.up; S.T += dt;
+      if (S.sepd && !S.q6 && S.nextIn > 0 && S.nextIn < 2) { S.q6 = true; quiz('q6', 'えいせいが ひろげた あおい パネルは なに？', ['つばさ', 'たいよう でんち', 'ブレーキ'], 1, 'たいようの ひかりで でんきを つくって、うちゅうで はたらくんだ'); }
       S.att *= Math.exp(-0.32 * dt); S.attPh += dt * 2.3;
       u.ang = Math.PI / 2 + this.e() * 0.25;
       u.x += u.vx * dt; u.h += u.vh * dt * 0;
