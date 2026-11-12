@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0820">
+<title>Lumina — 願いを叶える音声ガイド</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg1:#0b0820; --bg2:#21154a; --ink:#f6f1ff; --muted:#b8afd9; --dim:#7f76a6;
+  --gold:#f3cf7a; --gold2:#e8a95b; --accent:#a98bff; --accent2:#6d5bd0;
+  --card:rgba(255,255,255,.06); --card2:rgba(255,255,255,.1); --line:rgba(255,255,255,.14);
+  --ok:#7fe0b4; --danger:#ff8a9a;
+  --serif:'Shippori Mincho', 'Hiragino Mincho ProN', serif;
+  --sans:'Zen Maru Gothic', 'Hiragino Maru Gothic ProN', system-ui, sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:var(--sans); color:var(--ink); background:var(--bg1);
+  background-image:radial-gradient(120% 80% at 50% -10%, #3a2477 0%, var(--bg2) 35%, var(--bg1) 75%);
+  background-attachment:fixed; overflow-x:hidden;
+}
+#stars{position:fixed;inset:0;z-index:0;pointer-events:none}
+#app{position:relative;z-index:1;max-width:460px;margin:0 auto;min-height:100dvh;padding:16px 16px calc(24px + env(safe-area-inset-bottom));display:flex;flex-direction:column}
+button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:none}
+textarea,input{font-family:inherit}
+.serif{font-family:var(--serif)}
+.fade{animation:fade .45s ease both}
+@keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* buttons */
+.btn{display:block;width:100%;padding:17px 20px;border-radius:999px;font-size:17px;font-weight:700;letter-spacing:.04em;
+  background:linear-gradient(135deg,var(--gold),var(--gold2));color:#2a1a05;box-shadow:0 8px 30px rgba(243,207,122,.25);transition:transform .15s, opacity .2s}
+.btn:active{transform:scale(.98)}
+.btn:disabled{opacity:.35;box-shadow:none;cursor:not-allowed}
+.btn.ghost{background:var(--card2);color:var(--ink);box-shadow:none;border:1px solid var(--line)}
+.link{color:var(--muted);font-size:14px;text-decoration:underline;text-underline-offset:3px;padding:10px}
+
+/* top bar */
+.topbar{display:flex;align-items:center;gap:12px;height:44px}
+.back{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--card);font-size:18px}
+.bar{flex:1;height:6px;border-radius:9px;background:rgba(255,255,255,.1);overflow:hidden}
+.bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--gold));border-radius:9px;transition:width .4s}
+.count{font-size:12px;color:var(--dim);min-width:42px;text-align:right}
+
+/* onboarding */
+.ob{flex:1;display:flex;flex-direction:column;padding-top:28px}
+.ob h1{font-family:var(--serif);font-size:26px;line-height:1.5;margin-bottom:10px}
+.ob .sub{color:var(--muted);line-height:1.8;font-size:15px;margin-bottom:22px}
+.ob .spacer{flex:1;min-height:20px}
+textarea.answer{width:100%;min-height:150px;resize:vertical;border-radius:18px;border:1px solid var(--line);background:rgba(10,6,30,.55);color:var(--ink);
+  padding:16px;font-size:16px;line-height:1.75;outline:none;transition:border-color .2s}
+textarea.answer:focus{border-color:var(--accent)}
+input.answer{width:100%;border-radius:18px;border:1px solid var(--line);background:rgba(10,6,30,.55);color:var(--ink);padding:16px;font-size:18px;outline:none}
+input.answer:focus{border-color:var(--accent)}
+.meta{display:flex;justify-content:space-between;color:var(--dim);font-size:12px;margin-top:8px}
+.hint{margin-top:14px;padding:12px 14px;border-radius:14px;background:var(--card);color:var(--muted);font-size:13px;line-height:1.7;border-left:3px solid var(--accent)}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{display:flex;align-items:center;gap:12px;text-align:left;padding:16px 18px;border-radius:16px;background:var(--card);border:1px solid var(--line);font-size:16px;transition:all .15s}
+.opt .em{font-size:22px;width:28px;text-align:center}
+.opt.on{background:rgba(169,139,255,.22);border-color:var(--accent)}
+.opt .chk{margin-left:auto;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;font-size:13px}
+.opt.on .chk{background:var(--accent);border-color:var(--accent)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid2 .opt{flex-direction:column;gap:6px;padding:18px 10px;text-align:center;justify-content:center}
+.grid2 .opt .chk{display:none}
+.scale-num{font-family:var(--serif);font-size:72px;text-align:center;color:var(--gold);margin:10px 0}
+input[type=range]{width:100%;accent-color:var(--gold);height:30px}
+.scale-lbl{display:flex;justify-content:space-between;color:var(--dim);font-size:12px}
+.quote{font-family:var(--serif);font-size:19px;line-height:1.8;padding:20px;border-radius:18px;background:var(--card);border:1px solid var(--line);margin:8px 0 18px;position:relative}
+.quote:before{content:'“';position:absolute;left:12px;top:-14px;font-size:46px;color:var(--gold);opacity:.7}
+.illu{display:grid;place-items:center;margin:10px 0 26px}
+.orb{width:150px;height:150px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff6dc,var(--gold) 25%,var(--accent) 60%,transparent 72%);
+  box-shadow:0 0 80px rgba(169,139,255,.55),0 0 160px rgba(243,207,122,.25);animation:breathe 6s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:scale(.92)}50%{transform:scale(1.06)}}
+.hold{position:relative;width:170px;height:170px;margin:10px auto 6px;border-radius:50%;display:grid;place-items:center;user-select:none;-webkit-user-select:none;touch-action:none}
+.hold svg{position:absolute;inset:0;transform:rotate(-90deg)}
+.hold .core{width:124px;height:124px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff3cf,var(--gold) 45%,var(--gold2));display:grid;place-items:center;color:#2a1a05;font-weight:700;font-size:15px;box-shadow:0 0 50px rgba(243,207,122,.45)}
+.hold.done .core{background:radial-gradient(circle,#d8ffe9,var(--ok))}
+.welcome{flex:1;display:flex;flex-direction:column;justify-content:center;text-align:center}
+.logo{font-family:var(--serif);font-size:44px;letter-spacing:.18em;margin:26px 0 8px}
+.tag{color:var(--muted);line-height:1.9}
+.small{font-size:12px;color:var(--dim);line-height:1.7}
+
+/* loading */
+.ring{width:170px;height:170px;margin:30px auto}
+.ring circle{fill:none;stroke-width:8}
+.tasks{display:flex;flex-direction:column;gap:12px;margin-top:20px}
+.task{display:flex;gap:12px;align-items:center;color:var(--dim);transition:color .3s}
+.task .dot{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;font-size:12px;flex:none}
+.task.on{color:var(--ink)}
+.task.done .dot{background:var(--ok);border-color:var(--ok);color:#06331f}
+
+/* plan */
+.pill{display:inline-block;padding:5px 12px;border-radius:999px;background:var(--card2);font-size:13px;margin:0 6px 6px 0;border:1px solid var(--line)}
+.week{display:flex;flex-direction:column;gap:10px;margin:14px 0 22px}
+.week div{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:14px;background:var(--card)}
+.week b{color:var(--gold);white-space:nowrap;font-size:13px;padding-top:2px}
+.week span{font-size:14px;line-height:1.7;color:var(--muted)}
+
+/* paywall */
+.pw-close{position:absolute;right:16px;top:16px;width:34px;height:34px;border-radius:50%;background:var(--card);display:grid;place-items:center;color:var(--dim);font-size:18px;opacity:0;pointer-events:none;transition:opacity .5s}
+.pw-close.show{opacity:1;pointer-events:auto}
+.timer{display:flex;justify-content:center;align-items:center;gap:10px;padding:10px 14px;border-radius:14px;background:linear-gradient(135deg,rgba(255,138,154,.22),rgba(243,207,122,.16));border:1px solid rgba(255,138,154,.4);margin:14px 0 18px;font-size:14px}
+.timer b{font-family:ui-monospace,Menlo,monospace;font-size:24px;color:#ffd1d8;letter-spacing:.05em}
+.feat{display:flex;flex-direction:column;gap:10px;margin:8px 0 18px}
+.feat div{display:flex;gap:10px;font-size:15px;line-height:1.6}
+.feat div:before{content:'✦';color:var(--gold)}
+.plan{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:16px;border-radius:18px;border:1.5px solid var(--line);background:var(--card);margin-bottom:10px;position:relative}
+.plan.on{border-color:var(--gold);background:rgba(243,207,122,.1)}
+.plan .r{width:22px;height:22px;border-radius:50%;border:2px solid var(--line);flex:none}
+.plan.on .r{border:7px solid var(--gold)}
+.plan .p{margin-left:auto;text-align:right}
+.plan s{color:var(--dim);font-size:12px}
+.badge{position:absolute;top:-10px;right:14px;background:var(--gold);color:#2a1a05;font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px}
+.tl{display:flex;flex-direction:column;gap:0;margin:6px 0 18px;padding-left:6px}
+.tl div{position:relative;padding:0 0 14px 24px;font-size:13px;color:var(--muted);line-height:1.6}
+.tl div:before{content:'';position:absolute;left:0;top:4px;width:12px;height:12px;border-radius:50%;background:var(--accent)}
+.tl div:after{content:'';position:absolute;left:5px;top:18px;bottom:0;width:2px;background:var(--line)}
+.tl div:last-child:after{display:none}
+.tl b{color:var(--ink)}
+
+/* home */
+.home{flex:1;padding-bottom:84px}
+.hello{display:flex;justify-content:space-between;align-items:center;margin:10px 0 18px}
+.hello h2{font-family:var(--serif);font-size:23px}
+.streak{display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;background:var(--card2);font-size:14px}
+.card{border-radius:22px;background:var(--card);border:1px solid var(--line);padding:20px;margin-bottom:16px}
+.card h3{font-size:13px;color:var(--gold);letter-spacing:.12em;margin-bottom:12px;font-weight:500}
+.aff{font-family:var(--serif);font-size:21px;line-height:1.85;min-height:110px}
+.row{display:flex;gap:10px;margin-top:16px}
+.chip{flex:1;padding:12px;border-radius:14px;background:var(--card2);font-size:14px;display:flex;align-items:center;justify-content:center;gap:6px}
+.chip.on{background:rgba(243,207,122,.18);color:var(--gold)}
+.deck{display:flex;justify-content:center;gap:12px;perspective:900px;margin:8px 0 4px}
+.tcard{width:92px;height:146px;position:relative;transform-style:preserve-3d;transition:transform .8s cubic-bezier(.2,.8,.2,1);cursor:pointer}
+.tcard.flip{transform:rotateY(180deg)}
+.tcard.dim{opacity:.25;transform:scale(.92);pointer-events:none;transition:opacity .5s,transform .5s}
+.tcard .f,.tcard .b{position:absolute;inset:0;border-radius:12px;backface-visibility:hidden;-webkit-backface-visibility:hidden;display:grid;place-items:center;border:1.5px solid rgba(243,207,122,.55)}
+.tcard .b{background:repeating-linear-gradient(45deg,#2b1d63 0 6px,#251757 6px 12px);box-shadow:0 6px 20px rgba(0,0,0,.4)}
+.tcard .b:after{content:'✧';font-size:30px;color:var(--gold)}
+.tcard .f{transform:rotateY(180deg);background:radial-gradient(circle at 50% 35%,#4b3496,#170f3a);flex-direction:column;padding:8px;text-align:center}
+.tcard .f .sym{font-size:38px}
+.tcard .f .nm{font-family:var(--serif);font-size:14px;color:var(--gold);margin-top:4px}
+.reading{margin-top:16px;text-align:center;line-height:1.85}
+.reading b{font-family:var(--serif);font-size:20px;color:var(--gold);display:block;margin-bottom:6px}
+.sess{display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:16px;border-radius:20px;background:var(--card);border:1px solid var(--line);margin-bottom:12px}
+.sess .ic{width:54px;height:54px;border-radius:16px;display:grid;place-items:center;font-size:26px;flex:none}
+.sess .t{font-weight:700;font-size:16px;margin-bottom:3px}
+.sess .d{font-size:13px;color:var(--muted);line-height:1.5}
+.sess .lk{margin-left:auto;font-size:18px;color:var(--dim)}
+.sess.done .lk{color:var(--ok)}
+.sect{font-family:var(--serif);font-size:22px;margin:10px 0 6px}
+.sectsub{color:var(--muted);font-size:14px;margin-bottom:16px;line-height:1.7}
+.jentry{padding:14px 0;border-top:1px solid var(--line);font-size:15px;line-height:1.75}
+.jentry small{display:block;color:var(--dim);font-size:12px;margin-bottom:4px}
+.kv{padding:12px 0;border-top:1px solid var(--line)}
+.kv small{color:var(--dim);font-size:12px;display:block;margin-bottom:4px}
+.kv p{font-size:15px;line-height:1.7;white-space:pre-wrap}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{padding:9px 14px;border-radius:999px;background:var(--card2);font-size:14px;border:1px solid transparent}
+.seg button.on{border-color:var(--gold);color:var(--gold)}
+nav.tabs{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:460px;z-index:5;display:flex;justify-content:space-around;
+  padding:10px 8px calc(10px + env(safe-area-inset-bottom));background:rgba(13,9,36,.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--line)}
+nav.tabs button{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;color:var(--dim);padding:4px 12px}
+nav.tabs button span{font-size:21px}
+nav.tabs button.on{color:var(--gold)}
+
+/* player */
+#player{position:fixed;inset:0;z-index:20;display:none;flex-direction:column;align-items:center;padding:20px 20px calc(30px + env(safe-area-inset-bottom));
+  background:radial-gradient(120% 90% at 50% 20%,#3a2477,#120b2e 60%,#07051a)}
+#player.show{display:flex}
+#player .ptop{width:100%;max-width:460px;display:flex;justify-content:space-between;align-items:center}
+#player .ptitle{font-size:14px;color:var(--muted);letter-spacing:.08em}
+#player .stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;max-width:460px}
+#player .orb{width:200px;height:200px}
+#player.paused .orb{animation-play-state:paused;opacity:.6}
+#line{font-family:var(--serif);font-size:21px;line-height:1.9;text-align:center;min-height:120px;margin-top:40px;padding:0 6px;transition:opacity .5s}
+#pbar{width:100%;max-width:460px;height:4px;border-radius:4px;background:rgba(255,255,255,.12);overflow:hidden;margin-bottom:24px}
+#pbar i{display:block;height:100%;width:0;background:var(--gold);transition:width .6s}
+.pctl{display:flex;gap:28px;align-items:center}
+.pctl .play{width:76px;height:76px;border-radius:50%;background:var(--gold);color:#2a1a05;font-size:28px;display:grid;place-items:center;box-shadow:0 0 40px rgba(243,207,122,.4)}
+.pctl .sm{width:50px;height:50px;border-radius:50%;background:var(--card2);font-size:18px;display:grid;place-items:center}
+.toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%);background:rgba(30,20,70,.95);border:1px solid var(--line);padding:12px 18px;border-radius:14px;font-size:14px;z-index:30;animation:fade .3s}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<canvas id="stars"></canvas>
+<div id="app"></div>
+<div id="player" aria-live="polite">
+  <div class="ptop"><button class="back" id="pClose" aria-label="閉じる">✕</button><div class="ptitle" id="pTitle"></div><div style="width:36px"></div></div>
+  <div class="stage"><div class="orb"></div><div id="line"></div></div>
+  <div id="pbar"><i></i></div>
+  <div class="pctl"><button class="sm" id="pPrev" aria-label="戻る">⟲</button><button class="play" id="pPlay" aria-label="再生/一時停止">❚❚</button><button class="sm" id="pNext" aria-label="次へ">⟳</button></div>
+</div>
+
+<script>
+/* ---------- storage ---------- */
+const store={
+  get(k,d){try{const v=localStorage.getItem('lumina:'+k);return v?JSON.parse(v):d}catch(e){return d}},
+  set(k,v){try{localStorage.setItem('lumina:'+k,JSON.stringify(v))}catch(e){}},
+  clear(){try{Object.keys(localStorage).filter(k=>k.startsWith('lumina:')).forEach(k=>localStorage.removeItem(k))}catch(e){}}
+};
+const DEFAULT={phase:'welcome',step:0,answers:{},premium:false,streak:0,lastDay:null,done:{},journal:[],card:null,affIdx:0,favs:[],tab:'today',deadline:null};
+let S=Object.assign({},DEFAULT,store.get('state',{}));
+const save=()=>store.set('state',S);
+const $=s=>document.querySelector(s);
+const app=$('#app');
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clip=(s,n=70)=>{s=String(s||'').replace(/\s+/g,' ').trim();return s.length>n?s.slice(0,n)+'…':s};
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()};
+const dayNum=()=>Math.floor((Date.now()-new Date().getTimezoneOffset()*60000)/86400000);
+const A=()=>S.answers;
+const nm=()=>A().name||'あなた';
+let timers=[];
+const later=(fn,ms)=>{const t=setTimeout(fn,ms);timers.push(t);return t};
+const every=(fn,ms)=>{const t=setInterval(fn,ms);timers.push(t);return t};
+function clearTimers(){timers.forEach(t=>{clearTimeout(t);clearInterval(t)});timers=[]}
+function toast(msg){const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2200)}
+
+/* ---------- onboarding steps ---------- */
+const AREAS=[['love','💗','恋愛・パートナー'],['money','💰','お金・豊かさ'],['career','🚀','仕事・キャリア'],['health','🌿','健康・からだ'],['self','✨','自己肯定感'],['peace','🕊️','心の平穏'],['people','🤝','人間関係'],['dream','🌙','夢・創作']];
+const has=k=>(A().areas||[]).includes(k);
+const STEPS=[
+ {type:'info',title:'ここから、あなただけのプランをつくります',body:'いくつかの質問は、少し考えてから書く必要があります。\n\n正解はありません。あなたの言葉そのものが、毎日のアファメーションと音声ガイドの材料になります。',illu:true,cta:'はじめる'},
+ {type:'input',key:'name',title:'あなたのことを、なんて呼べばいい？',sub:'音声ガイドの中で、この名前で呼びかけます。',ph:'例：さき'},
+ {type:'choice',key:'age',title:'年代を教えてください',opts:[['','10代'],['','20代'],['','30代'],['','40代'],['','50代以上']]},
+ {type:'multi',key:'areas',title:'{name}さんが、いちばん変えたい人生の領域は？',sub:'いくつでも選べます。',opts:AREAS,grid:true},
+ {type:'text',key:'wish',title:'いま、心から叶えたい願いはなんですか？',sub:'遠慮しないで。「こうなったら最高」をそのまま書いてください。',ph:'例：自分の好きな仕事で独立して、月100万円を自由な時間の中で稼いでいる',hint:'具体的なほど、ガイドの中でリアルに思い描けます。数字・場所・人の名前を入れてみて。'},
+ {type:'info',title:'その願い、受け取りました。',body:a=>`<div class="quote">${esc(a.wish)}</div>次は、この願いが<b>すでに叶った未来</b>を、一緒に見に行きましょう。`},
+ {type:'text',key:'day',title:'願いが叶ったあとの、ある1日を描写してください',sub:'朝起きてから眠るまで。どこにいて、誰といて、何をしていますか？',ph:'例：海の見える部屋で目を覚まして、ゆっくりコーヒーを淹れる。午前中だけ集中して仕事をして…',min:15},
+ {type:'text',key:'feeling',title:'その1日の中で、どんな気持ちを感じていますか？',sub:'感情の言葉で書いてください。',ph:'例：安心感、自由、ワクワク、誇らしさ'},
+ {type:'text',key:'why',title:'なぜ、それを叶えたいのですか？',sub:'あなたの「本当の理由」は、行動のエンジンになります。',ph:'例：家族に心配をかけずに、自分らしく生きている姿を見せたいから'},
+ {type:'text',key:'obstacle',title:'いま、願いを遠ざけていると感じるものは？',sub:'状況でも、習慣でも、人でも。正直に。',ph:'例：時間がない、失敗が怖くて一歩目が出ない'},
+ {type:'text',key:'belief',title:'つい自分に言ってしまう「否定的な口ぐせ」は？',sub:'この言葉を、ガイドの中でやさしく書き換えていきます。',ph:'例：どうせ私には無理',hint:'頭の中でくり返している声を、そのまま書いてみてください。'},
+ {type:'info',title:'思い込みは、ただの「古い習慣」です',body:a=>`「${esc(a.belief)}」<br><br>この言葉は、事実ではなく<b>くり返してきた考え</b>にすぎません。<br>新しい言葉をくり返せば、新しい習慣になります。`},
+ {type:'choice',key:'rel',title:'いまの恋愛・パートナーの状況は？',opts:[['🌱','シングル'],['💞','恋人がいる'],['💍','結婚している'],['🌀','複雑な関係']]},
+ {type:'text',key:'partner',optional:true,
+   title:a=>a.rel==='シングル'?'どんなパートナーと、どんな関係を築きたい？':'パートナーの名前と、2人で育てたい関係を教えてください',
+   sub:a=>a.rel==='シングル'?'性格、一緒にしたいこと、どんな気持ちでいたいか。':'2人で叶えたいこと、もっと深めたいことは？',
+   ph:a=>a.rel==='シングル'?'例：穏やかで、夢を応援し合える人。週末は一緒に料理をして笑っている':'例：けんと。忙しくても毎日ちゃんと「ありがとう」を伝え合える関係'},
+ {type:'text',key:'money',optional:true,title:'理想のお金の状態は？',sub:'金額でも、感覚でもかまいません。',ph:'例：貯金1000万円。値段を見ずに大切な人へ贈り物ができる',when:()=>has('money')||has('career')||has('dream')},
+ {type:'text',key:'career',optional:true,title:'1年後、どんな仕事をしていたい？',ph:'例：オンライン講座を作って、全国の人に教えている',when:()=>has('career')||has('money')||has('dream')},
+ {type:'text',key:'health',optional:true,title:'からだと心は、どんな状態でいたい？',ph:'例：毎朝ヨガをして、軽やかで疲れにくいからだ',when:()=>has('health')||has('peace')},
+ {type:'text',key:'gratitude',title:'いま、すでに感謝していることを3つ',sub:'感謝は「もう持っている」という感覚をつくります。',ph:'例：健康なからだ、話を聞いてくれる友達、今日の晴れた空',min:6},
+ {type:'text',key:'letter',title:'1年後の{name}さんから、今のあなたへひと言',sub:'願いを叶えた未来の自分になりきって書いてください。',ph:'例：怖がらなくて大丈夫。あの日はじめた小さな一歩が、ちゃんとここにつながってたよ'},
+ {type:'text',key:'words',optional:true,title:'アファメーションに入れたい、お気に入りの言葉は？',sub:'好きな言葉・座右の銘・大切な人の口ぐせなど。',ph:'例：すべてはうまくいっている'},
+ {type:'choice',key:'voice',title:'ガイドの声のトーンは？',opts:[['🌙','おだやか'],['☀️','力強い'],['🫧','やさしい']]},
+ {type:'choice',key:'bg',title:'背景サウンドを選んでください',opts:[['🌌','宇宙のハミング'],['🌧️','雨音'],['🌊','波の音'],['🔇','なし']]},
+ {type:'choice',key:'when',title:'いつ聴くことが多そうですか？',opts:[['🌅','朝、1日のはじまりに'],['🚃','移動中・すきま時間'],['🌙','夜、眠る前に']]},
+ {type:'choice',key:'mins',title:'1日にかけられる時間は？',opts:[['⏱️','5分'],['🕰️','10分'],['🧘','15分以上']]},
+ {type:'scale',key:'commit',title:'この願いを叶えることに、どれくらい本気ですか？',min:1,max:10,def:8},
+ {type:'commit',title:'自分との約束',body:a=>`私、${esc(a.name||'')}は、これから21日間、<br>毎日少しだけ自分の願いに時間を使い、<br>未来の自分を信じることを約束します。`},
+];
+const visSteps=()=>STEPS.filter(s=>!s.when||s.when());
+const val=(v)=>typeof v==='function'?v(A()):v;
+const fill=s=>String(s).replace(/\{name\}/g,esc(nm()));
+
+/* ---------- render ---------- */
+function render(){
+  clearTimers();
+  app.innerHTML='';
+  const ph=S.phase;
+  if(ph==='welcome')renderWelcome();
+  else if(ph==='ob')renderStep();
+  else if(ph==='loading')renderLoading();
+  else if(ph==='plan')renderPlan();
+  else if(ph==='paywall')renderPaywall();
+  else renderHome();
+  window.scrollTo(0,0);
+}
+function go(phase){S.phase=phase;save();render()}
+
+function renderWelcome(){
+  app.innerHTML=`<div class="welcome fade">
+    <div class="illu"><div class="orb"></div></div>
+    <div class="logo">LUMINA</div>
+    <p class="tag">あなたの言葉から生まれる、<br>あなただけのアファメーションと音声ガイド。</p>
+    <div style="height:48px"></div>
+    <button class="btn" id="start">はじめる</button>
+    <p class="small" style="margin-top:14px">所要時間：約10分 ・ 回答はこの端末にのみ保存されます</p>
+  </div>`;
+  $('#start').onclick=()=>{S.step=0;go('ob')};
+}
+
+function header(i,n){
+  return `<div class="topbar"><button class="back" id="back" aria-label="戻る">‹</button><div class="bar"><i style="width:${Math.round((i+1)/n*100)}%"></i></div><div class="count">${i+1}/${n}</div></div>`;
+}
+function next(){const n=visSteps().length;if(S.step<n-1){S.step++;save();render()}else{go('loading')}}
+function prev(){if(S.step>0){S.step--;save();render()}else go('welcome')}
+
+function renderStep(){
+  const steps=visSteps();
+  if(S.step>=steps.length)S.step=steps.length-1;
+  const st=steps[S.step], a=A();
+  const title=fill(val(st.title)||''), sub=st.sub?fill(val(st.sub)):'';
+  let body='';
+  if(st.type==='info'){
+    body=`${st.illu?'<div class="illu"><div class="orb"></div></div>':''}<h1>${title}</h1><div class="sub" style="white-space:pre-line">${val(st.body)}</div><div class="spacer"></div><button class="btn" id="nx">${st.cta||'次へ'}</button>`;
+  }else if(st.type==='input'){
+    body=`<h1>${title}</h1>${sub?`<p class="sub">${sub}</p>`:''}<input class="answer" id="inp" maxlength="20" placeholder="${esc(val(st.ph))}" value="${esc(a[st.key]||'')}" autocomplete="off"><div class="spacer"></div><button class="btn" id="nx">次へ</button>`;
+  }else if(st.type==='text'){
+    const min=st.min||2;
+    body=`<h1>${title}</h1>${sub?`<p class="sub">${sub}</p>`:''}<textarea class="answer" id="inp" maxlength="400" placeholder="${esc(val(st.ph))}">${esc(a[st.key]||'')}</textarea>
+      <div class="meta"><span id="need"></span><span id="cnt"></span></div>${st.hint?`<div class="hint">💡 ${st.hint}</div>`:''}
+      <div class="spacer"></div><button class="btn" id="nx">次へ</button>${st.optional?'<button class="link" id="skip" style="margin-top:6px;align-self:center">あとで書く</button>':''}`;
+    st._min=min;
+  }else if(st.type==='choice'||st.type==='multi'){
+    const multi=st.type==='multi', cur=multi?(a[st.key]||[]):a[st.key];
+    const opts=st.opts.map(o=>{const v=multi?o[0]:o[1], lbl=multi?o[2]:o[1], em=multi?o[1]:o[0];
+      const on=multi?cur.includes(v):cur===v;
+      return `<button class="opt ${on?'on':''}" data-v="${esc(v)}">${em?`<span class="em">${em}</span>`:''}<span>${esc(lbl)}</span><span class="chk">${on?'✓':''}</span></button>`}).join('');
+    body=`<h1>${title}</h1>${sub?`<p class="sub">${sub}</p>`:'<div style="height:14px"></div>'}<div class="${st.grid?'grid2':'opts'}">${opts}</div><div class="spacer"></div>${multi?'<button class="btn" id="nx">次へ</button>':''}`;
+  }else if(st.type==='scale'){
+    const v=a[st.key]||st.def;
+    body=`<h1>${title}</h1><div class="scale-num" id="sv">${v}</div><input type="range" id="rng" min="${st.min}" max="${st.max}" value="${v}"><div class="scale-lbl"><span>なんとなく</span><span>人生をかけて</span></div><div class="spacer"></div><button class="btn" id="nx">次へ</button>`;
+  }else if(st.type==='commit'){
+    body=`<h1>${title}</h1><p class="sub" style="font-family:var(--serif);font-size:17px;color:var(--ink)">${val(st.body)}</p>
+      <div class="hold" id="hold"><svg viewBox="0 0 170 170"><circle cx="85" cy="85" r="80" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="6"/><circle id="hp" cx="85" cy="85" r="80" fill="none" stroke="#f3cf7a" stroke-width="6" stroke-linecap="round" stroke-dasharray="502.6" stroke-dashoffset="502.6"/></svg><div class="core" id="hc">長押しで約束</div></div>
+      <p class="small" style="text-align:center">指を離さずに、3秒間おさえてください</p><div class="spacer"></div>`;
+  }
+  app.innerHTML=header(S.step,steps.length)+`<div class="ob fade">${body}</div>`;
+  $('#back').onclick=prev;
+  const nx=$('#nx');
+  if(st.type==='info'){nx.onclick=next}
+  if(st.type==='input'||st.type==='text'){
+    const inp=$('#inp'), min=st.type==='text'?st._min:1;
+    const upd=()=>{const l=inp.value.trim().length;nx.disabled=l<min;
+      if($('#cnt'))$('#cnt').textContent=inp.value.length+'/400';
+      if($('#need'))$('#need').textContent=l<min?`あと${min-l}文字以上`:'✓ いい感じです'};
+    inp.oninput=()=>{a[st.key]=inp.value;save();upd()};upd();
+    if(st.type==='input')inp.onkeydown=e=>{if(e.key==='Enter'&&!nx.disabled)next()};
+    nx.onclick=()=>{a[st.key]=inp.value.trim();save();next()};
+    if($('#skip'))$('#skip').onclick=()=>{a[st.key]='';save();next()};
+    setTimeout(()=>inp.focus({preventScroll:true}),350);
+  }
+  if(st.type==='choice'){
+    app.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{a[st.key]=b.dataset.v;save();
+      app.querySelectorAll('.opt').forEach(x=>{x.classList.toggle('on',x===b);x.querySelector('.chk').textContent=x===b?'✓':''});later(next,260)});
+  }
+  if(st.type==='multi'){
+    const cur=a[st.key]||[];nx.disabled=!cur.length;
+    app.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{const v=b.dataset.v,i=cur.indexOf(v);if(i<0)cur.push(v);else cur.splice(i,1);
+      a[st.key]=cur;save();b.classList.toggle('on',i<0);b.querySelector('.chk').textContent=i<0?'✓':'';nx.disabled=!cur.length});
+    nx.onclick=next;
+  }
+  if(st.type==='scale'){
+    const r=$('#rng');a[st.key]=+r.value;r.oninput=()=>{a[st.key]=+r.value;$('#sv').textContent=r.value;save()};nx.onclick=next;
+  }
+  if(st.type==='commit')setupHold();
+}
+
+function setupHold(){
+  const el=$('#hold'),hp=$('#hp'),hc=$('#hc'),L=502.6,DUR=3000;let t0=0,raf=0,done=false;
+  const step=t=>{const p=Math.min(1,(t-t0)/DUR);hp.style.strokeDashoffset=L*(1-p);
+    if(p>=1){done=true;el.classList.add('done');hc.textContent='約束しました ✓';try{navigator.vibrate&&navigator.vibrate([30,40,60])}catch(e){};later(next,900);return}
+    raf=requestAnimationFrame(step)};
+  const start=e=>{if(done)return;e.preventDefault();t0=performance.now();hc.textContent='そのまま…';raf=requestAnimationFrame(step)};
+  const stop=()=>{if(done)return;cancelAnimationFrame(raf);hp.style.strokeDashoffset=L;hc.textContent='長押しで約束'};
+  el.addEventListener('pointerdown',start);['pointerup','pointerleave','pointercancel'].forEach(ev=>el.addEventListener(ev,stop));
+  el.addEventListener('keydown',e=>{if(e.key===' '||e.key==='Enter')start(e)});el.addEventListener('keyup',stop);el.tabIndex=0;
+}
+
+function renderLoading(){
+  const tasks=['あなたの回答を読み込んでいます','願いが叶った未来を言語化しています','専用アファメーションを生成しています','音声ガイドの台本を書いています','21日間のプランを組み立てています'];
+  app.innerHTML=`<div class="ob fade" style="text-align:center"><h1 style="font-size:22px">${esc(nm())}さんだけのプランを<br>作成しています</h1>
+   <svg class="ring" viewBox="0 0 170 170"><circle cx="85" cy="85" r="76" stroke="rgba(255,255,255,.1)"/><circle id="rp" cx="85" cy="85" r="76" stroke="#f3cf7a" stroke-linecap="round" stroke-dasharray="477.5" stroke-dashoffset="477.5" transform="rotate(-90 85 85)"/>
+   <text id="rt" x="85" y="96" text-anchor="middle" fill="#f6f1ff" font-size="32" font-family="Shippori Mincho,serif">0%</text></svg>
+   <div class="tasks" style="text-align:left">${tasks.map((t,i)=>`<div class="task" id="t${i}"><span class="dot"></span>${t}</div>`).join('')}</div></div>`;
+  const DUR=7500,t0=performance.now();
+  every(()=>{const p=Math.min(1,(performance.now()-t0)/DUR);$('#rp').style.strokeDashoffset=477.5*(1-p);$('#rt').textContent=Math.round(p*100)+'%';
+    tasks.forEach((_,i)=>{const el=$('#t'+i),a=i/tasks.length,b=(i+1)/tasks.length;el.classList.toggle('on',p>=a);el.classList.toggle('done',p>=b);el.querySelector('.dot').textContent=p>=b?'✓':''});
+    if(p>=1){clearTimers();later(()=>go('plan'),500)}},80);
+}
+
+function renderPlan(){
+  const a=A(), areas=AREAS.filter(x=>(a.areas||[]).includes(x[0]));
+  const aff=affirmations()[0];
+  app.innerHTML=`<div class="ob fade" style="padding-top:12px">
+   <p class="small" style="letter-spacing:.15em;color:var(--gold)">YOUR PLAN</p>
+   <h1>${esc(nm())}さんのための<br>21日間 引き寄せプラン</h1>
+   <div style="margin-bottom:10px">${areas.map(x=>`<span class="pill">${x[1]} ${x[2]}</span>`).join('')}<span class="pill">⏱️ 1日${esc(a.mins||'10分')}</span></div>
+   <div class="quote" style="font-size:17px">${esc(a.wish)}</div>
+   <div class="card"><h3>今日のアファメーション（プレビュー）</h3><div class="aff" style="min-height:0;font-size:19px">${esc(aff)}</div></div>
+   <div class="week">
+     <div><b>1週目</b><span>叶った未来をくり返し体感し、願いを「当たり前」にする</span></div>
+     <div><b>2週目</b><span>「${esc(clip(a.belief,24))}」という口ぐせを書き換える</span></div>
+     <div><b>3週目</b><span>感謝と小さな行動で、現実を動かしはじめる</span></div>
+   </div>
+   <button class="btn" id="nx">プランを受け取る</button></div>`;
+  $('#nx').onclick=()=>go('paywall');
+}
+
+function renderPaywall(){
+  if(!S.deadline){S.deadline=Date.now()+10*60*1000;save()}
+  let sel='year';
+  app.innerHTML=`<button class="pw-close" id="pwx" aria-label="閉じる">✕</button><div class="ob fade" style="padding-top:20px">
+    <h1 style="text-align:center;font-size:23px">${esc(nm())}さんのプランは<br>準備ができています</h1>
+    <div class="timer">⏳ 初回限定オファー終了まで <b id="cd">10:00</b></div>
+    <div class="feat"><div>あなたの言葉から作る音声ガイドが聴き放題</div><div>毎日届くパーソナライズ・アファメーション</div><div>21日間プランと毎日の星のカード</div><div>感謝ジャーナルで変化を記録</div></div>
+    <button class="plan on" data-p="year"><span class="badge">50%OFF</span><span class="r"></span><span><b>年間プラン</b><br><span class="small">3日間無料、その後 ¥5,800/年</span></span><span class="p"><s>¥11,600</s><br><b>¥484</b><span class="small">/月</span></span></button>
+    <button class="plan" data-p="week"><span class="r"></span><span><b>週間プラン</b><br><span class="small">無料トライアルなし</span></span><span class="p"><b>¥980</b><span class="small">/週</span></span></button>
+    <div class="tl"><div><b>今日</b>：すべての機能が解放されます</div><div><b>2日目</b>：トライアル終了前にお知らせします</div><div><b>3日目</b>：課金開始。いつでもキャンセルできます</div></div>
+    <button class="btn" id="buy">3日間 無料で始める</button>
+    <p class="small" style="text-align:center;margin-top:12px">※ これはデモアプリです。実際の課金は一切発生しません。</p></div>`;
+  const cd=$('#cd'),tick=()=>{const r=Math.max(0,S.deadline-Date.now()),m=Math.floor(r/60000),s=Math.floor(r%60000/1000);cd.textContent=r?`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`:'まもなく終了'};
+  tick();every(tick,1000);
+  later(()=>$('#pwx').classList.add('show'),4000);
+  app.querySelectorAll('.plan').forEach(b=>b.onclick=()=>{sel=b.dataset.p;app.querySelectorAll('.plan').forEach(x=>x.classList.toggle('on',x===b));$('#buy').textContent=sel==='year'?'3日間 無料で始める':'週間プランで始める'});
+  $('#buy').onclick=()=>{S.premium=true;save();go('home');toast('✨ すべての機能が解放されました（デモ）')};
+  $('#pwx').onclick=()=>go('home');
+}
+
+/* ---------- personalized content ---------- */
+function affirmations(){
+  const a=A(),L=[];
+  if(a.wish)L.push(`「${clip(a.wish,60)}」——それはもう、私に向かって動き出している。`);
+  if(a.feeling)L.push(`私は毎日「${clip(a.feeling,30)}」を感じながら生きている。`);
+  if(a.belief)L.push(`「${clip(a.belief,30)}」は古い口ぐせ。私には、できる。`);
+  if(a.why)L.push(`私が願うのは「${clip(a.why,50)}」から。その理由が、私を前へ進める。`);
+  if(a.money)L.push(`お金は軽やかに私のもとへ流れてくる。「${clip(a.money,40)}」は、私の自然な現実になる。`);
+  if(a.career)L.push(`私は「${clip(a.career,40)}」にふさわしい人間だ。`);
+  if(a.partner)L.push(a.rel==='シングル'?`私は「${clip(a.partner,40)}」——そんな愛を受け取る準備ができている。`:`「${clip(a.partner,40)}」。私たちの関係は日ごとに温かく深まっていく。`);
+  if(a.health)L.push(`私のからだは毎日「${clip(a.health,30)}」へと近づいている。`);
+  if(a.gratitude)L.push(`私はすでに「${clip(a.gratitude,40)}」を持っている。ありがとう。`);
+  if(a.words)L.push(`${clip(a.words,50)}`);
+  if(a.obstacle)L.push(`「${clip(a.obstacle,30)}」は、私を止められない。小さな一歩で道は開く。`);
+  L.push('私は、望むものを受け取るのにふさわしい。','今日の私は、昨日の私よりも少しだけ未来に近い。','すべては、私にとって最善のタイミングで起きている。');
+  return L;
+}
+const CARDS=[
+ ['✶','北極星','迷わなくていい。進む方向は、もうあなたの中で決まっている。'],
+ ['🌕','満月','満ちるとき。今日は「受け取ること」を自分に許して。'],
+ ['🌑','新月','種をまく日。小さな意図をひとつ、紙に書き出そう。'],
+ ['☄️','流れ星','予想外のうれしい知らせが近づいている。サインを見逃さないで。'],
+ ['🌌','銀河','あなたは一人じゃない。助けを求めることが、次の扉を開く。'],
+ ['🌅','朝焼け','新しいはじまり。昨日の自分と比べなくていい。'],
+ ['🗼','灯台','あなたの存在が、誰かの光になっている。'],
+ ['✧','星座','点と点が、つながりはじめている。もう少しで全体が見える。'],
+ ['💫','彗星','大胆な一歩を。迷いは、行動でしか消えない。'],
+ ['⛵','月の舟','力を抜いて流れにまかせて。ゆるめるほど、前へ進む。'],
+ ['🌱','星の種','今日の小さな習慣が、未来のあなたをつくっている。'],
+ ['💗','金星','愛と美しさの日。自分をていねいに扱ってあげて。'],
+];
+function personalReading(c){
+  const a=A(),w=clip(a.wish,36);
+  return `${c[2]}<br><span class="small">「${esc(w)}」について、今日はこのメッセージを胸に過ごしてみてください。</span>`;
+}
+
+/* ---------- session scripts ---------- */
+function intro(){const n=nm();return [`${n}さん、ようこそ。`,1500,'楽な姿勢で座るか、横になってください。',2200,'目を閉じて、ゆっくりと鼻から息を吸って……',4500,'口から、ふーっと吐き出します。',4000,'もう一度。吸って……',4500,'吐いて。',3000,'からだの力が、少しずつ抜けていきます。',3000]}
+function outro(sleep){const n=nm();return sleep?['このまま、ゆっくりと眠りに落ちていきましょう。',3000,`${n}さんの願いは、眠っている間も育ち続けています。`,3000,'おやすみなさい。']
+ :['ゆっくりと意識を、今いる場所に戻していきましょう。',2500,'手や足の指を、少し動かしてみてください。',2500,`${n}さん、あなたの願いは今日も確かに近づいています。`,2000,'さあ、目を開けて。いってらっしゃい。']}
+function affBlock(n){const L=affirmations().slice(0,n),o=['これから、あなたのためのアファメーションを唱えます。心の中で、くり返してください。',2500];L.forEach(x=>o.push(x,4500));return o}
+const SESSIONS=[
+ {id:'morning',ic:'🌅',bg:'linear-gradient(135deg,#f3cf7a,#e88a5b)',t:'朝の引き寄せ',d:'1日のはじまりに、願いと感情をチューニング',free:true,
+   build:()=>[...intro(),'今日という1日が、あなたの願いに向かう1日になると想像してください。',3000,`あなたの願いは……「${clip(A().wish)}」`,4000,`それが叶ったとき、あなたは「${clip(A().feeling,30)}」を感じています。`,4000,'その感覚を、胸のあたりで広げてみましょう。',5000,...affBlock(4),...outro()]},
+ {id:'vision',ic:'🔭',bg:'linear-gradient(135deg,#a98bff,#5b47c4)',t:'叶った1日を生きる',d:'あなたが書いた「未来の1日」を体験する',
+   build:()=>[...intro(),'今から、願いがすでに叶った未来へ行きます。',3000,'ゆっくりと目を覚ますところを想像してください。',3500,`そこでは……「${clip(A().day,90)}」`,6000,'まわりの音、光、においを感じてみてください。',5000,`あなたは今、「${clip(A().feeling,30)}」に包まれています。`,5000,`そして、未来のあなたが、今のあなたに言います。`,2000,`「${clip(A().letter,80)}」`,5000,'この未来は、もう始まっています。',3000,...outro()]},
+ {id:'release',ic:'🎈',bg:'linear-gradient(135deg,#7fe0b4,#3a8f9c)',t:'思い込みを手放す',d:'否定的な口ぐせを、やさしく書き換える',
+   build:()=>[...intro(),'あなたが、つい自分に言ってしまう言葉を思い出してください。',3000,`「${clip(A().belief,40)}」`,4000,'その言葉を、手のひらの上にそっと乗せます。',3500,'それは、色のついた小さな風船になりました。',3500,'息を吐くたびに、風船はふくらみ、軽くなっていきます。',5000,'そして、そっと手を離して……空へ。',5000,`「${clip(A().obstacle,40)}」も、一緒に連れていってもらいましょう。`,4000,'空いた場所に、新しい言葉を置きます。',2500,'私には、できる。',4000,'私は、望むものを受け取るのにふさわしい。',4500,...outro()]},
+ {id:'abundance',ic:'💰',bg:'linear-gradient(135deg,#f3cf7a,#9c7a2a)',t:'豊かさを受け取る',d:'お金と仕事の流れをひらく',
+   build:()=>{const a=A();return [...intro(),'あなたのまわりに、金色のやわらかな光をイメージしてください。',4000,a.money?`その光の中で、あなたは「${clip(a.money,60)}」という状態にいます。`:'その光の中で、あなたは満たされた豊かさの中にいます。',5000,a.career?`仕事では「${clip(a.career,60)}」。`:'あなたの仕事は、誰かの役に立ち、正当に報われています。',5000,`そして今、すでに持っているものに感謝します。「${clip(a.gratitude,60)}」`,5000,'お金は、感謝がある場所へ流れてきます。',3500,'私は、豊かさを受け取ることを自分に許します。',4500,...outro()]}},
+ {id:'love',ic:'💗',bg:'linear-gradient(135deg,#ff9cc0,#b0478a)',t:'愛を引き寄せる',d:'自分への愛と、パートナーとの関係',
+   build:()=>{const a=A();return [...intro(),'両手を、そっと胸の上に置いてください。',3500,'手のひらのぬくもりを感じます。',3000,'まず、あなた自身に言ってあげましょう。私は、愛される価値がある。',5000,a.partner?(a.rel==='シングル'?`あなたが望む関係は……「${clip(a.partner,70)}」`:`あなたとパートナーの関係は……「${clip(a.partner,70)}」`):'あなたが望む、あたたかな関係を思い描いてください。',5000,'その人と笑い合っている場面を、できるだけ鮮やかに想像してください。',6000,'愛は、すでにあなたの中にあります。',3500,'だから、同じ愛が、外からも引き寄せられてくるのです。',4000,...outro()]}},
+ {id:'sleep',ic:'🌙',bg:'linear-gradient(135deg,#3a3f8f,#151236)',t:'眠りのアファメーション',d:'眠る前に、願いを潜在意識へ',
+   build:()=>{const a=A();return [...intro(),'今日1日、よくがんばりました。',3500,`感謝していることを、思い出しましょう。「${clip(a.gratitude,60)}」`,5000,'ゆっくりと、からだが布団に沈んでいきます。',5000,...affBlock(5),...outro(true)]}},
+];
+
+/* ---------- ambient audio ---------- */
+const Amb={ctx:null,nodes:[],master:null,
+  start(kind){
+    if(!kind||kind==='なし')return;
+    try{this.ctx=this.ctx||new(window.AudioContext||window.webkitAudioContext)()}catch(e){return}
+    const c=this.ctx;c.resume&&c.resume();this.stop(true);
+    const m=c.createGain();m.gain.setValueAtTime(0,c.currentTime);m.gain.linearRampToValueAtTime(.16,c.currentTime+3);m.connect(c.destination);this.master=m;
+    if(kind==='宇宙のハミング'){
+      [110,164.81,220,329.63].forEach((f,i)=>{const o=c.createOscillator();o.type=i?'sine':'triangle';o.frequency.value=f;o.detune.value=i%2?7:-7;
+        const g=c.createGain();g.gain.value=.22/(i+1);const l=c.createOscillator();l.frequency.value=.04+i*.025;const lg=c.createGain();lg.gain.value=.12/(i+1);
+        l.connect(lg);lg.connect(g.gain);o.connect(g);g.connect(m);o.start();l.start();this.nodes.push(o,l)});
+    }else{
+      const len=c.sampleRate*3,buf=c.createBuffer(1,len,c.sampleRate),d=buf.getChannelData(0);let last=0;
+      for(let i=0;i<len;i++){const w=Math.random()*2-1;last=kind==='波の音'?(last+.02*w)/1.02:w;d[i]=kind==='波の音'?last*3.5:w}
+      const src=c.createBufferSource();src.buffer=buf;src.loop=true;
+      const f=c.createBiquadFilter();const g=c.createGain();
+      if(kind==='雨音'){f.type='bandpass';f.frequency.value=2500;f.Q.value=.6;g.gain.value=.55}
+      else{f.type='lowpass';f.frequency.value=700;g.gain.value=.5;const l=c.createOscillator();l.frequency.value=.09;const lg=c.createGain();lg.gain.value=.45;l.connect(lg);lg.connect(g.gain);l.start();this.nodes.push(l)}
+      src.connect(f);f.connect(g);g.connect(m);src.start();this.nodes.push(src);
+    }
+  },
+  stop(now){if(!this.ctx||!this.master)return;const c=this.ctx,m=this.master,ns=this.nodes,t=now?.05:1.2;
+    m.gain.cancelScheduledValues(c.currentTime);m.gain.setValueAtTime(m.gain.value,c.currentTime);m.gain.linearRampToValueAtTime(0,c.currentTime+t);
+    setTimeout(()=>{ns.forEach(n=>{try{n.stop()}catch(e){}});try{m.disconnect()}catch(e){}},t*1000+100);this.nodes=[];this.master=null}
+};
+
+/* ---------- speech ---------- */
+let jaVoice=null;
+function pickVoice(){try{const v=speechSynthesis.getVoices();jaVoice=v.find(x=>/ja/i.test(x.lang)&&/Kyoko|Nanami|Google|O-ren/i.test(x.name))||v.find(x=>/ja/i.test(x.lang))||null}catch(e){}}
+if('speechSynthesis' in window){pickVoice();speechSynthesis.onvoiceschanged=pickVoice}
+function voiceCfg(){const v=A().voice;return v==='力強い'?{rate:1,pitch:1}:v==='やさしい'?{rate:.9,pitch:1.15}:{rate:.85,pitch:.92}}
+function speak(text,onend){
+  if(!('speechSynthesis' in window)){const t=setTimeout(onend,Math.max(2000,text.length*140));return()=>clearTimeout(t)}
+  speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='ja-JP';if(jaVoice)u.voice=jaVoice;
+  const c=voiceCfg();u.rate=c.rate;u.pitch=c.pitch;let fired=false;const fin=()=>{if(!fired){fired=true;clearTimeout(guard);onend()}};
+  const guard=setTimeout(fin,text.length*400+6000);u.onend=fin;u.onerror=fin;speechSynthesis.speak(u);
+  return()=>{fired=true;clearTimeout(guard);speechSynthesis.cancel()};
+}
+
+/* ---------- player ---------- */
+const P={items:[],i:0,playing:false,cancel:null,sess:null,
+  open(sess){this.sess=sess;this.items=sess.build().filter(x=>x!==''&&x!=null);this.i=0;$('#pTitle').textContent=sess.t;$('#player').classList.add('show');document.body.style.overflow='hidden';
+    $('#line').textContent='';Amb.start(A().bg||'宇宙のハミング');this.play()},
+  lines(){return this.items.filter(x=>typeof x==='string').length},
+  progress(){const done=this.items.slice(0,this.i).filter(x=>typeof x==='string').length;$('#pbar i').style.width=(done/this.lines()*100)+'%'},
+  run(){if(!this.playing)return;this.progress();
+    if(this.i>=this.items.length){this.finish();return}
+    const it=this.items[this.i];
+    if(typeof it==='number'){const t=setTimeout(()=>{this.i++;this.run()},it);this.cancel=()=>clearTimeout(t);return}
+    const ln=$('#line');ln.style.opacity=0;setTimeout(()=>{ln.textContent=it;ln.style.opacity=1},250);
+    this.cancel=speak(it,()=>{this.i++;this.run()})},
+  play(){this.playing=true;$('#player').classList.remove('paused');$('#pPlay').textContent='❚❚';this.run()},
+  pause(){this.playing=false;this.cancel&&this.cancel();$('#player').classList.add('paused');$('#pPlay').textContent='▶'},
+  seek(d){const was=this.playing;this.pause();const idx=[];this.items.forEach((x,j)=>{if(typeof x==='string')idx.push(j)});
+    const cur=idx.filter(j=>j<=this.i).pop();let pos=(cur==null?-1:idx.indexOf(cur))+d;if(pos<0)pos=0;
+    this.i=pos>=idx.length?this.items.length-1:idx[pos];if(was)this.play();else this.progress()},
+  finish(){this.playing=false;this.cancel=null;$('#pbar i').style.width='100%';$('#line').innerHTML='セッション完了 ✨<br><span class="small">今日も、未来の自分に1歩近づきました。</span>';$('#pPlay').textContent='↺';
+    Amb.stop();markDone(this.sess.id)},
+  close(){this.pause();Amb.stop();$('#player').classList.remove('show');document.body.style.overflow='';render()}
+};
+$('#pPlay').onclick=()=>{if(P.i>=P.items.length){P.i=0;Amb.start(A().bg);P.play()}else P.playing?P.pause():P.play()};
+$('#pClose').onclick=()=>P.close();$('#pPrev').onclick=()=>P.seek(-1);$('#pNext').onclick=()=>P.seek(1);
+
+function markDone(id){
+  const d=today();S.done[d]=S.done[d]||[];if(!S.done[d].includes(id))S.done[d].push(id);
+  if(S.lastDay!==d){const y=new Date();y.setDate(y.getDate()-1);const yd=y.getFullYear()+'-'+(y.getMonth()+1)+'-'+y.getDate();S.streak=S.lastDay===yd?S.streak+1:1;S.lastDay=d}
+  save();
+}
+
+/* ---------- home ---------- */
+function renderHome(){
+  const tab=S.tab||'today';
+  const tabs=[['today','☀️','今日'],['listen','🎧','ガイド'],['journal','📔','ジャーナル'],['me','👤','わたし']];
+  let html='';
+  if(tab==='today')html=homeToday();else if(tab==='listen')html=homeListen();else if(tab==='journal')html=homeJournal();else html=homeMe();
+  app.innerHTML=`<div class="home fade">${html}</div><nav class="tabs">${tabs.map(t=>`<button data-t="${t[0]}" class="${tab===t[0]?'on':''}"><span>${t[1]}</span>${t[2]}</button>`).join('')}</nav>`;
+  app.querySelectorAll('nav.tabs button').forEach(b=>b.onclick=()=>{S.tab=b.dataset.t;save();render()});
+  if(tab==='today')bindToday();if(tab==='listen')bindListen();if(tab==='journal')bindJournal();if(tab==='me')bindMe();
+}
+function greet(){const h=new Date().getHours();return h<5?'こんばんは':h<11?'おはよう':h<18?'こんにちは':'こんばんは'}
+function homeToday(){
+  const L=affirmations(),idx=(dayNum()+S.affIdx)%L.length,aff=L[idx],fav=S.favs.includes(aff);
+  const c=S.card&&S.card.day===today()?S.card:null;
+  const rec=S.premium?(new Date().getHours()>=20?SESSIONS[5]:SESSIONS[dayNum()%SESSIONS.length]):SESSIONS[0];
+  return `<div class="hello"><h2>${greet()}、${esc(nm())}さん</h2><div class="streak">🔥 ${S.lastDay?S.streak:0}日</div></div>
+  <div class="card"><h3>✦ 今日のアファメーション</h3><div class="aff" id="aff">${esc(aff)}</div>
+   <div class="row"><button class="chip" id="say">🔊 聴く</button><button class="chip ${fav?'on':''}" id="fav">${fav?'♥':'♡'} 保存</button><button class="chip" id="nextAff">↻ 次へ</button></div></div>
+  <div class="card"><h3>✦ 今日の星のカード</h3>
+   ${c?`<div class="deck"><div class="tcard flip"><div class="b"></div><div class="f"><div class="sym">${CARDS[c.i][0]}</div><div class="nm">${CARDS[c.i][1]}</div></div></div></div><div class="reading"><b>${CARDS[c.i][1]}</b>${personalReading(CARDS[c.i])}</div>`
+     :`<p class="sectsub" style="text-align:center;margin-bottom:12px">直感で1枚えらんでください。<br>あなたが選んだカードが、今日受け取るべきメッセージです。</p><div class="deck">${[0,1,2].map(i=>`<button class="tcard" data-k="${i}" aria-label="カード${i+1}"><div class="b"></div><div class="f"></div></button>`).join('')}</div><div class="reading" id="reading"></div>`}
+  </div>
+  <div class="small" style="margin:4px 4px 10px;letter-spacing:.1em;color:var(--gold)">✦ 今日のおすすめガイド</div>
+  ${sessBtn(rec)}`;
+}
+function sessBtn(s){
+  const locked=!s.free&&!S.premium, done=(S.done[today()]||[]).includes(s.id);
+  return `<button class="sess ${done?'done':''}" data-s="${s.id}"><span class="ic" style="background:${s.bg}">${s.ic}</span><span><div class="t">${s.t}</div><div class="d">${s.d}</div></span><span class="lk">${locked?'🔒':done?'✓':'▶'}</span></button>`;
+}
+function bindSess(){app.querySelectorAll('.sess').forEach(b=>b.onclick=()=>{const s=SESSIONS.find(x=>x.id===b.dataset.s);if(!s.free&&!S.premium){go('paywall');return}P.open(s)})}
+function bindToday(){
+  const L=affirmations(),cur=()=>L[(dayNum()+S.affIdx)%L.length];
+  let stopSay=null;
+  $('#say').onclick=()=>{if(stopSay){stopSay();stopSay=null;$('#say').textContent='🔊 聴く';return}$('#say').textContent='■ 停止';stopSay=speak(cur(),()=>{stopSay=null;const b=$('#say');if(b)b.textContent='🔊 聴く'})};
+  $('#fav').onclick=()=>{const a=cur(),i=S.favs.indexOf(a);if(i<0){S.favs.push(a);toast('ジャーナルに保存しました')}else S.favs.splice(i,1);save();render()};
+  $('#nextAff').onclick=()=>{if(stopSay)stopSay();S.affIdx++;save();const el=$('#aff');el.style.opacity=0;setTimeout(()=>{el.textContent=cur();el.style.transition='opacity .4s';el.style.opacity=1;const f=cur(),on=S.favs.includes(f);$('#fav').className='chip'+(on?' on':'');$('#fav').textContent=(on?'♥':'♡')+' 保存'},200)};
+  app.querySelectorAll('.tcard[data-k]').forEach(b=>b.onclick=()=>{
+    const i=Math.floor(Math.random()*CARDS.length),c=CARDS[i];S.card={day:today(),i};save();
+    b.querySelector('.f').innerHTML=`<div class="sym">${c[0]}</div><div class="nm">${c[1]}</div>`;b.classList.add('flip');
+    app.querySelectorAll('.tcard[data-k]').forEach(x=>{x.onclick=null;if(x!==b)x.classList.add('dim')});
+    later(()=>{$('#reading').innerHTML=`<b>${c[1]}</b>${personalReading(c)}`;$('#reading').classList.add('fade')},850)});
+  bindSess();
+}
+function homeListen(){
+  return `<div class="sect">あなた専用の音声ガイド</div><p class="sectsub">すべて、オンボーディングで書いたあなたの言葉から作られています。イヤホンでの視聴がおすすめです。</p>
+   ${SESSIONS.map(sessBtn).join('')}
+   ${S.premium?'':'<button class="btn" id="unlock" style="margin-top:8px">🔓 すべてのガイドを解放する</button>'}`;
+}
+function bindListen(){bindSess();if($('#unlock'))$('#unlock').onclick=()=>go('paywall')}
+function homeJournal(){
+  const j=S.journal.slice().reverse();
+  return `<div class="sect">感謝ジャーナル</div><p class="sectsub">今日、ありがたかったことを1つ。小さなことで大丈夫です。</p>
+   <textarea class="answer" id="jt" style="min-height:110px" placeholder="例：電車で席をゆずってもらえた"></textarea>
+   <button class="btn" id="jsave" style="margin:12px 0 22px" disabled>記録する</button>
+   ${S.favs.length?`<div class="card"><h3>♥ 保存したアファメーション</h3>${S.favs.map(f=>`<div class="jentry serif">${esc(f)}</div>`).join('')}</div>`:''}
+   <div class="card"><h3>✦ これまでの記録</h3>${j.length?j.map(e=>`<div class="jentry"><small>${esc(e.d)}</small>${esc(e.t)}</div>`).join(''):'<p class="small">まだ記録はありません。</p>'}</div>`;
+}
+function bindJournal(){const t=$('#jt'),b=$('#jsave');t.oninput=()=>b.disabled=!t.value.trim();
+  b.onclick=()=>{const d=new Date();S.journal.push({d:`${d.getMonth()+1}月${d.getDate()}日`,t:t.value.trim()});save();toast('記録しました 🌱');render()}}
+function homeMe(){
+  const a=A(),rows=[['wish','叶えたい願い'],['day','叶った1日'],['feeling','感じている気持ち'],['why','叶えたい理由'],['belief','手放す口ぐせ'],['partner','パートナー'],['money','理想のお金'],['career','理想の仕事'],['gratitude','感謝していること'],['letter','未来の自分から'],['words','好きな言葉']];
+  const seg=(key,opts)=>`<div class="seg" data-key="${key}">${opts.map(o=>`<button class="${a[key]===o?'on':''}">${o}</button>`).join('')}</div>`;
+  const total=Object.values(S.done).reduce((n,x)=>n+x.length,0);
+  return `<div class="sect">${esc(nm())}さん</div><p class="sectsub">${S.premium?'✨ プレミアム（デモ）':'無料プラン'} ・ 完了したセッション ${total}回 ・ 🔥 ${S.lastDay?S.streak:0}日連続</p>
+   <div class="card"><h3>✦ ガイドの声</h3>${seg('voice',['おだやか','力強い','やさしい'])}<h3 style="margin-top:16px">✦ 背景サウンド</h3>${seg('bg',['宇宙のハミング','雨音','波の音','なし'])}</div>
+   <div class="card"><h3>✦ あなたの言葉 <span class="small">（タップして編集）</span></h3>${rows.filter(r=>a[r[0]]).map(r=>`<div class="kv" data-k="${r[0]}"><small>${r[1]}</small><p>${esc(a[r[0]])}</p></div>`).join('')}</div>
+   ${S.premium?'':'<button class="btn" id="unlock" style="margin-bottom:12px">プレミアムを試す</button>'}
+   <button class="btn ghost" id="reset">最初からやり直す</button>`;
+}
+function bindMe(){
+  app.querySelectorAll('.seg').forEach(s=>s.querySelectorAll('button').forEach(b=>b.onclick=()=>{A()[s.dataset.key]=b.textContent;save();render();
+    if(s.dataset.key==='bg'){Amb.start(b.textContent);setTimeout(()=>Amb.stop(),3000)}if(s.dataset.key==='voice')speak(`${nm()}さん、この声でガイドします。`,()=>{})}));
+  app.querySelectorAll('.kv').forEach(k=>k.onclick=()=>{if(k.querySelector('textarea'))return;const key=k.dataset.k;
+    k.querySelector('p').outerHTML=`<textarea class="answer" style="min-height:90px">${esc(A()[key])}</textarea><div class="row"><button class="chip on">保存</button></div>`;
+    const ta=k.querySelector('textarea');ta.focus();k.querySelector('.chip').onclick=e=>{e.stopPropagation();if(ta.value.trim()){A()[key]=ta.value.trim();save()}render();toast('更新しました。ガイドにも反映されます')}});
+  if($('#unlock'))$('#unlock').onclick=()=>go('paywall');
+  $('#reset').onclick=()=>{if(confirm('回答と記録をすべて消して、最初からやり直しますか？')){store.clear();S=Object.assign({},DEFAULT,{answers:{},done:{},journal:[],favs:[]});render()}};
+}
+
+/* ---------- star field ---------- */
+(function(){const cv=$('#stars'),cx=cv.getContext('2d');let W,H,st=[];const rm=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function rs(){W=cv.width=innerWidth*devicePixelRatio;H=cv.height=innerHeight*devicePixelRatio;cv.style.width=innerWidth+'px';cv.style.height=innerHeight+'px';
+    st=Array.from({length:Math.round(innerWidth*innerHeight/5000)},()=>({x:Math.random()*W,y:Math.random()*H,r:(Math.random()*1.3+.3)*devicePixelRatio,p:Math.random()*6,s:.5+Math.random()*1.5}))}
+  function dr(t){cx.clearRect(0,0,W,H);for(const s of st){const a=rm?.6:.35+.65*Math.abs(Math.sin(s.p+t/1000*s.s*.6));cx.globalAlpha=a;cx.fillStyle='#fff';cx.beginPath();cx.arc(s.x,s.y,s.r,0,6.283);cx.fill()}
+    if(!rm)requestAnimationFrame(dr)}
+  addEventListener('resize',()=>{rs();if(rm)dr(0)});rs();requestAnimationFrame(dr)})();
+
+render();
+</script>
+</body>
+</html>
