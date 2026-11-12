@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0e9f8e">
+<title>3分英会話アプリ</title>
+<link rel="stylesheet" href="../engine/app.css">
+</head>
+<body>
+<div class="app" id="app"></div>
+<script>
+window.APP = {
+  id: '3min',
+  name: '3分英会話',
+  short: '3',
+  tagline: '公式アプリ化のご提案デモ',
+  accent: '#0e9f8e',
+  accentSoft: 'rgba(14,159,142,.13)',
+  mode: 'threemin',
+  perLesson: 3,
+  dropHour: 8,
+  heroEyebrow: '毎朝 8:00 に新しいレッスン',
+  onboardNote: '投稿と同じ「毎朝8時・3分」を、あなたのレベルに合わせて',
+  learnLabel: 'フレーズ',
+  orderLabel: '英語にしてみよう',
+  praise: 'ナイス！3分以内にいけそう',
+  doneTitle: '今日の3分、完了！',
+  shareText: '3分英会話 今日もクリア ⏱ 🔥{streak}日連続\n#3分英会話',
+  premium: {
+    price: '¥1,200',
+    headline: '3分を、あなた専用に。',
+    items: [
+      ['🤖', 'AIパーソナル3分', 'レベルと目的で毎朝生成'],
+      ['📚', '過去レッスン全アーカイブ', '投稿の全フレーズを復習'],
+      ['🗣️', 'AI会話3分チャレンジ', '覚えたフレーズで実際に話す']
+    ],
+    features: [
+      ['🤖', '毎朝8時、あなたのレベル・目的で作るAIレッスン'],
+      ['📚', '過去レッスンを全部復習（苦手だけ出題）'],
+      ['🗣️', '覚えたフレーズでAIと3分会話'],
+      ['🎧', '講師ボイスのシャドーイング音声'],
+      ['🏆', '週間ランキング・バッジ']
+    ]
+  },
+  footNote: 'これは提案用のデモです。アカウント運営者とは現時点で関係ありません。',
+  phrases: [
+    { lv: 1, en: "What's up?", ja: '元気？／最近どう？', tip: '答えは Not much. でOK。How are you? よりカジュアル。' },
+    { lv: 1, en: 'Sounds good!', ja: 'いいね！', tip: '誘われたときの返事はこれ1つで乗り切れる。' },
+    { lv: 1, en: 'No worries.', ja: '気にしないで。', tip: 'ありがとう／ごめんね、どちらへの返事にも使える。' },
+    { lv: 1, en: "I'll take this one.", ja: 'これにします。', tip: 'お店で指さしながら。this one で「これ」。' },
+    { lv: 2, en: "I'm on my way.", ja: 'いま向かってる。', tip: '待ち合わせの定番。on my way をひとかたまりで。' },
+    { lv: 2, en: 'Let me check my schedule.', ja: '予定を確認させて。', tip: '即答しなくていいときの便利フレーズ。' },
+    { lv: 2, en: 'It depends on the weather.', ja: '天気しだいかな。', tip: 'depends on は「ディペンゾン」とつなげる。' },
+    { lv: 2, en: 'Do you have any recommendations?', ja: 'おすすめはありますか？', tip: 'レストランでも旅行先でも。recommendations は「レコメンデイションズ」。' },
+    { lv: 3, en: "I couldn't agree more.", ja: '本当にそう思う。', tip: '「これ以上同意できない」＝大賛成。否定形なのに意味は強いYES。' },
+    { lv: 3, en: "Let's play it by ear.", ja: 'その場の流れで決めよう。', tip: '楽譜なしで弾く→臨機応変に。ネイティブ感が一気に出る。' },
+    { lv: 3, en: "It's not a big deal.", ja: '大したことないよ。', tip: 'deal を強めに。慰めるときにも使える。' },
+    { lv: 3, en: 'I was about to call you.', ja: 'ちょうど電話しようとしてた。', tip: 'be about to で「まさに〜するところ」。' }
+  ]
+};
+</script>
+<script src="../engine/app.js"></script>
+</body>
+</html>

@@ -149,7 +149,7 @@ class Game {
     
     // Return to games button
     document.getElementById('reloadBtn').addEventListener('click', () => {
-      window.location.href = 'index.html';
+      window.location.href = 'asobi-9f3k.html';
     });
   }
   
