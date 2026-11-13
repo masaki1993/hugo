@@ -100,7 +100,8 @@ body{margin:0;background:var(--night);color:var(--paper);font-family:var(--body)
       <h2>どの トレインロボで いく？</h2>
       <div class="cards" id="cards"></div>
       <div class="seg" role="group" aria-label="むずかしさ">
-        <button type="button" id="easyBtn" aria-pressed="true">かんたん（おちる ばしょが みえる）</button>
+        <button type="button" id="boxBtn" aria-pressed="true">はこ 20こ（ぜんぶ はいる）</button>
+        <button type="button" id="easyBtn" aria-pressed="false">かんたん（おちる ばしょが みえる）</button>
         <button type="button" id="hardBtn" aria-pressed="false">むずかしい（みえない）</button>
       </div>
       <button class="btn" id="goBtn" type="button">このロボで しゅっぱつ！</button>
@@ -130,7 +131,8 @@ body{margin:0;background:var(--night);color:var(--paper);font-family:var(--body)
 (()=>{
 const $=s=>document.querySelector(s);
 const stage=$('#stage'), cv=$('#cv'), ctx=cv.getContext('2d');
-const W=800,H=600,TAU=Math.PI*2,FLOOR=556,GRAV=950,TOTAL=20;
+const W=800,H=600,TAU=Math.PI*2,FLOOR=556,GRAV=950;
+let TOTAL=20;
 const FD='"Dela Gothic One","Hiragino Sans",sans-serif';
 const CHARS=[
   {name:'ハヤテ',  body:'#2f7de1',sub:'#eef3ff',stripe:'#ffc93c',visor:'#7ff3ff',type:'あおい かぜの<br>スピードがた',cry:'かぜより はやく！'},
@@ -139,7 +141,12 @@ const CHARS=[
   {name:'イカヅチ',body:'#f2c200',sub:'#2a2e48',stripe:'#39d98a',visor:'#ffffff',type:'きいろい かみなりの<br>ジャンプがた',cry:'ビリビリ いくぞ！'},
 ];
 const BAR={y:160,x1:70,x2:690};
-const BUCKETS=[{x:250,w:104,top:492},{x:490,w:104,top:492}];
+const BUCKETS_2=[{x:250,w:104,top:492},{x:490,w:104,top:492}];
+// "はこ" mode: 20 square boxes side by side across the whole floor, so every magnet lands in one
+const NBOX=20,BOX_L=8,BOX_R=792,BOX_W=(BOX_R-BOX_L)/NBOX;
+const BOXES=Array.from({length:NBOX},(_,i)=>({x:BOX_L+BOX_W*(i+.5),w:BOX_W,top:506,box:true}));
+const BOX_MAGNETS=10;
+let BUCKETS=BUCKETS_2;
 const TOWER={x:730,top:330};
 const RS=1.15; // robot scale in game
 
@@ -274,13 +281,14 @@ function drawGround(){
 }
 
 /* ---------- state ---------- */
-const S={mode:'title',t:0,ch:CHARS[0],easy:true,introI:0,ride:{scroll:0,speed:0,t:0,dist:0},tf:0,tfTalked:false,walk:0,cd:0,parts:[],pops:[]};
+const S={mode:'title',t:0,ch:CHARS[0],easy:true,boxes:true,introI:0,ride:{scroll:0,speed:0,t:0,dist:0},tf:0,tfTalked:false,walk:0,cd:0,parts:[],pops:[]};
 let game=null;
 function newGame(){
+  BUCKETS=S.boxes?BOXES:BUCKETS_2;TOTAL=S.boxes?BOX_MAGNETS:20;
   game={t:0,phase:0,omega:2*Math.PI/1.9,amp:44,offset:0,vel:0,shakeFx:0,
-    magnets:Array.from({length:TOTAL},(_,i)=>({i,x0:100+i*(530/(TOTAL-1)),state:'hang',color:i%2})),
-    falling:[],holes:[],piles:[[],[]],caught:0,lost:0,readyIdx:-1,readyT:0,cooldown:1.1,done:false,endT:0,hintT:6};
-  addHole();
+    magnets:Array.from({length:TOTAL},(_,i)=>({i,x0:(S.boxes?160:100)+i*((S.boxes?410:530)/(TOTAL-1)),state:'hang',color:i%2})),
+    falling:[],holes:[],piles:BUCKETS.map(()=>[]),caught:0,lost:0,readyIdx:-1,readyT:0,cooldown:1.1,done:false,endT:0,hintT:6};
+  if(!S.boxes)addHole();
 }
 function addHole(){
   const g=game;
@@ -294,7 +302,7 @@ function addHole(){
   }
   const h=g.holes[Math.floor(Math.random()*g.holes.length)];h.r=Math.min(40,h.r+3);h.born=g.t-.2;
 }
-function nearestHole(x){let best=null,bd=1e9;for(const h of game.holes){const d=Math.abs(h.x-x);if(d<bd){bd=d;best=h}}return best}
+function nearestHole(x){if(!game.holes.length)addHole();let best=null,bd=1e9;for(const h of game.holes){const d=Math.abs(h.x-x);if(d<bd){bd=d;best=h}}return best}
 const readyMax=()=>S.easy?5:4;
 
 function physStep(p,dt){
@@ -307,6 +315,7 @@ function physStep(p,dt){
 function bucketCheck(p,py){
   for(let i=0;i<BUCKETS.length;i++){const b=BUCKETS[i];
     if(py<b.top&&p.y>=b.top){const dx=p.x-b.x,half=b.w/2;
+      if(b.box){if(Math.abs(dx)<=half+.01)return{kind:'in',i};continue}
       if(Math.abs(dx)<half-5)return{kind:'in',i};
       if(Math.abs(dx)<half+7){p.vx=Math.sign(dx||1)*140;p.vy=-Math.abs(p.vy)*.3;p.y=b.top-1;return{kind:'rim'}}}}
   return null;
@@ -356,7 +365,8 @@ function updateGame(dt){
       if(r&&r.kind==='rim')sfx.clink();
       if(r&&r.kind==='in'){
         const b=BUCKETS[r.i],pile=g.piles[r.i];
-        pile.push({x:clamp(p.x,b.x-b.w/2+16,b.x+b.w/2-16),y:p.y,vy:p.vy,ty:b.top+22-Math.min(pile.length,12)*2.3,rot:rand(-.5,.5),color:p.m.color});
+        pile.push(b.box?{x:b.x,y:p.y,vy:p.vy,ty:b.top+30-Math.min(pile.length,6)*7,rot:rand(-.3,.3),color:p.m.color,s:.75}
+          :{x:clamp(p.x,b.x-b.w/2+16,b.x+b.w/2-16),y:p.y,vy:p.vy,ty:b.top+22-Math.min(pile.length,12)*2.3,rot:rand(-.5,.5),color:p.m.color});
         g.falling.splice(g.falling.indexOf(p),1);g.caught++;sfx.catch();burst(p.x,b.top,'#ffd84a',20);
         pop(b.x,b.top-40,['ナイス！','やったね！','ナイスキャッチ！','すごい！'][Math.floor(Math.random()*4)],'#ffe08a');
         resolved();continue;
@@ -403,7 +413,22 @@ function drawHole(h){
   for(let i=0;i<3;i++){ctx.strokeStyle=`rgba(${200-i*30},${150-i*30},255,.85)`;ctx.beginPath();
     ctx.ellipse(h.x,FLOOR,r*1.3*(1-i*.24),r*.44*(1-i*.24),0,-t*3-i*2,-t*3-i*2+2.3);ctx.stroke()}
 }
+function drawBox(b,i){
+  const half=b.w/2,pile=game.piles[i],x0=b.x-half,y0=b.top,h=FLOOR-b.top;
+  // inside (back wall) + magnets that landed
+  ctx.fillStyle='#5a3a1c';ctx.fillRect(x0,y0-8,b.w,10);
+  for(const m of pile)drawMagnet(ctx,m.x,m.y,m.rot,m.color,0,m.s||.75);
+  // front panel: sturdy wooden crate
+  const g=ctx.createLinearGradient(0,y0,0,FLOOR);g.addColorStop(0,'#e0a35a');g.addColorStop(1,'#b8762f');
+  ctx.fillStyle=g;ctx.fillRect(x0,y0,b.w,h);
+  ctx.fillStyle='rgba(90,50,15,.35)';ctx.fillRect(x0,y0+h*.48,b.w,3);
+  ctx.strokeStyle='#6b4119';ctx.lineWidth=3;ctx.strokeRect(x0+1.5,y0+1.5,b.w-3,h-3);
+  ctx.fillStyle='#f6d49a';ctx.fillRect(x0,y0-3,b.w,5);
+  ctx.fillStyle='#3b230c';ctx.font=`15px ${FD}`;ctx.textAlign='center';ctx.textBaseline='middle';
+  if(pile.length)ctx.fillText(pile.length,b.x,y0+h*.72);
+}
 function drawBucket(b,i){
+  if(b.box)return drawBox(b,i);
   const half=b.w/2,pile=game.piles[i];
   ctx.fillStyle='#10142e';ctx.beginPath();ctx.ellipse(b.x,b.top,half,9,0,0,TAU);ctx.fill();
   for(const m of pile)drawMagnet(ctx,m.x,m.y,m.rot,m.color,0,.9);
@@ -461,8 +486,8 @@ function drawHUD(){
     ctx.fillStyle=col;ctx.beginPath();ctx.arc(x+20,31,8,0,TAU);ctx.fill();
     ctx.fillStyle='#f6f3ff';ctx.textAlign='left';ctx.textBaseline='middle';ctx.font=`15px ${FD}`;ctx.fillText(label,x+36,32);
     ctx.textAlign='right';ctx.font=`20px ${FD}`;ctx.fillText(val,x+w-14,32)};
-  pill(14,150,'バケツ',g.caught,'#ffc93c');
-  pill(172,214,'ブラックホール',g.holes.length,'#9b5cff');
+  pill(14,150,S.boxes?'はこ':'バケツ',g.caught,'#ffc93c');
+  if(!S.boxes)pill(172,214,'ブラックホール',g.holes.length,'#9b5cff');
   pill(640,146,'のこり',TOTAL-g.caught-g.lost,'#ff4646');
 }
 function drawGameScene(){
@@ -481,7 +506,7 @@ function drawGameScene(){
   if(S.mode==='play'&&game.hintT>0&&game.caught+game.lost===0){
     ctx.globalAlpha=Math.min(1,game.hintT);ctx.fillStyle='rgba(8,12,34,.8)';rr(ctx,170,232,420,40,20);ctx.fill();
     ctx.fillStyle='#ffe08a';ctx.font=`16px ${FD}`;ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText(S.easy?'みどりの マークが バケツに きたら「ゆらす」！':'ひかった じしゃくを みて「ゆらす」！',380,253);ctx.globalAlpha=1}
+    ctx.fillText(S.boxes?'ひかった じしゃくを「ゆらす」で はこへ！':S.easy?'みどりの マークが バケツに きたら「ゆらす」！':'ひかった じしゃくを みて「ゆらす」！',380,253);ctx.globalAlpha=1}
 }
 
 /* ---------- ride & transform scenes ---------- */
@@ -549,17 +574,19 @@ function startStory(){
 function goTransform(){S.mode='transform';S.tf=0;S.tfTalked=false;hideTalk();sfx.henshin()}
 function goWalk(){S.mode='walk';S.walk=0;hideTalk()}
 function goReady(){S.mode='ready';
-  talk(S.ch.name,'てつぼうの みぎがわに ついたぞ！ ひかった じしゃくを よく みて、ちょうどいい タイミングで「ゆらす」！'+(S.easy?'（みどりの マークが バケツに かさなったら チャンス）':''),true,S.ch.body)}
+  talk(S.ch.name,'てつぼうの みぎがわに ついたぞ！ ひかった じしゃくを よく みて、ちょうどいい タイミングで「ゆらす」！'+(S.boxes?'（したには はこが 20こ ならんでいるから、ぜんぶ はいるよ）':S.easy?'（みどりの マークが バケツに かさなったら チャンス）':''),true,S.ch.body)}
 function goCountdown(){S.mode='countdown';S.cd=3;hideTalk();$('#result').hidden=true;sfx.tick()}
 function startPlay(){S.mode='play';$('#shake').hidden=false;sfx.go();pop(400,300,'スタート！','#ffc93c',56)}
 function showResult(){
   S.mode='result';$('#shake').hidden=true;const g=game;
-  const lose=g.caught===0, stars=lose?0:g.caught>=15?3:g.caught>=8?2:1;
+  const lose=g.caught===0, k=g.caught/TOTAL, stars=lose?0:k>=.75?3:k>=.4?2:1;
   $('#resTitle').textContent=lose?'まけ……':g.caught===TOTAL?'パーフェクト！':'クリア！';
   $('#resStars').innerHTML='★'.repeat(stars)+'<i>'+'★'.repeat(3-stars)+'</i>';
   $('#resMsg').textContent=lose?`ぜんぶ ブラックホールに すいこまれちゃった。ブラックホールは ${g.holes.length}こに ふえたよ。`
+    :S.boxes?`${S.ch.name}は じしゃくを ${g.caught}こ ぜんぶ はこに いれた！`
     :`${S.ch.name}は じしゃくを ${g.caught}こ バケツに いれた！ ブラックホールは ${g.holes.length}こ。`;
-  let best=0;try{best=+localStorage.getItem('mc-best')||0;if(g.caught>best){localStorage.setItem('mc-best',g.caught)}}catch(e){}
+  const bk=S.boxes?'mc-best-box':'mc-best';
+  let best=0;try{best=+localStorage.getItem(bk)||0;if(g.caught>best){localStorage.setItem(bk,g.caught)}}catch(e){}
   $('#resBest').textContent=g.caught>best?'さいこう きろく こうしん！':`さいこう きろく：${best}こ`;
   $('#result').hidden=false;lose?sfx.lose():sfx.win();
 }
@@ -590,8 +617,9 @@ function renderCards(){
     box.appendChild(b);
   });
 }
-function setEasy(v){S.easy=v;$('#easyBtn').setAttribute('aria-pressed',v);$('#hardBtn').setAttribute('aria-pressed',!v)}
-$('#easyBtn').onclick=()=>setEasy(true);$('#hardBtn').onclick=()=>setEasy(false);
+function setLevel(l){S.boxes=l==='box';S.easy=l!=='hard';
+  $('#boxBtn').setAttribute('aria-pressed',l==='box');$('#easyBtn').setAttribute('aria-pressed',l==='easy');$('#hardBtn').setAttribute('aria-pressed',l==='hard')}
+$('#boxBtn').onclick=()=>setLevel('box');$('#easyBtn').onclick=()=>setLevel('easy');$('#hardBtn').onclick=()=>setLevel('hard');
 $('#goBtn').onclick=()=>{ac();sfx.go();startStory()};
 $('#startBtn').onclick=()=>{ac();sfx.tick();goIntro()};
 $('#againBtn').onclick=()=>{newGame();goCountdown()};
