@@ -91,11 +91,18 @@
   #title .box { width: min(100%, 900px); text-align: center; }
   #title h1 { font-size: clamp(26px, 5vw, 46px); color: #0d4fb0; letter-spacing: 2px; }
   .pick { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin: 10px 0; }
-  .rk { width: min(46%, 380px); min-width: 250px; border-radius: 18px; border: 4px solid #cfe0ff; background: #0b1630; color: #fff; cursor: pointer; padding: 8px; font-family: inherit; text-align: center; }
+  .rk { width: min(31%, 300px); min-width: 200px; border-radius: 18px; border: 4px solid #cfe0ff; background: #0b1630; color: #fff; cursor: pointer; padding: 8px; font-family: inherit; text-align: center; }
   .rk.sel { border-color: #ffd23f; box-shadow: 0 0 0 4px rgba(255,210,63,.5); }
   .rk canvas { width: 100%; height: auto; display: block; border-radius: 12px; }
   @media (max-height: 520px) { .rk canvas { height: 84px; object-fit: cover; } .rk p { display: none; } #title .ov, #title { padding-top: 44px; } #title h1 { font-size: 22px; } }
   .rk h3 { font-size: 22px; margin-top: 4px; } .rk .best { font-size: 13px; color: #ffd23f; } .rk p { font-size: 13px; font-weight: 700; opacity: .9; line-height: 1.6; }
+  @media (max-width: 640px) { .pick { gap: 6px; flex-wrap: nowrap; } .rk { min-width: 0; width: 33%; padding: 4px; border-width: 3px; } .rk p { display: none; } .rk h3 { font-size: 14px; } .rk h3 small { display: block; font-size: 10px; } #bpLabel { flex-basis: 100%; text-align: center; } }
+  #boostPick { display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; margin: 2px 0 12px; font-weight: 900; font-size: 18px; color: #0d4fb0; }
+  #boostPick button { width: 44px; height: 44px; border-radius: 50%; border: 3px solid #fff; background: linear-gradient(#4aa3ff, #1a5fd0); color: #fff; font: 900 26px inherit; font-family: inherit; cursor: pointer; box-shadow: 0 4px 0 rgba(0,0,0,.3); touch-action: manipulation; }
+  #boostPick button:disabled { opacity: .35; cursor: default; }
+  #boostPick b { min-width: 72px; font-size: 24px; color: #d03a10; }
+  #boostPick small { flex-basis: 100%; font-size: 13px; color: #456; }
+  @media (max-height: 520px) { #boostPick { margin: 0 0 6px; font-size: 14px; } #boostPick button { width: 34px; height: 34px; font-size: 20px; } #boostPick small { display: none; } }
   .modes { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
   .modes button { min-width: 200px; padding: 10px 16px; border-radius: 16px; border: 3px solid #fff; color: #fff; font-family: inherit; font-weight: 900; font-size: 22px; cursor: pointer; box-shadow: 0 6px 0 rgba(0,0,0,.35); }
   .modes button small { display: block; font-size: 12px; font-weight: 700; }
@@ -165,7 +172,9 @@
     <div class="pick">
       <button class="rk sel" data-r="star" type="button"><canvas width="380" height="230" id="pk1"></canvas><h3>スターシップ <small class="best" id="best_star"></small></h3><p>せかい さいだいの ロケット。ブースターを タワーの「おはし」で キャッチ！</p></button>
       <button class="rk" data-r="h3" type="button"><canvas width="380" height="230" id="pk2"></canvas><h3>H3（エイチスリー） <small class="best" id="best_h3"></small></h3><p>にっぽんの ロケット。SRB-3 と フェアリングを きりはなして えいせいを うちゅうへ！</p></button>
+      <button class="rk" data-r="ariane" type="button"><canvas width="380" height="230" id="pk3"></canvas><h3>アリアン6 <small class="best" id="best_ariane"></small></h3><p>ヨーロッパの ロケット。みなみアメリカの クールーから、P120C ブースターで うちゅうへ！</p></button>
     </div>
+    <div id="boostPick"><span id="bpLabel">ブースターの かず</span><button type="button" id="bpMinus" aria-label="へらす">−</button><b id="bpNum">2ほん</b><button type="button" id="bpPlus" aria-label="ふやす">＋</button><small id="bpNote"></small></div>
     <div class="modes">
       <button class="m-ruka" data-m="ruka" type="button">ルカ モード<small>かんたん ・ ボタンが ひかって おしえる</small></button>
       <button class="m-normal" data-m="normal" type="button">ふつう モード<small>タイミングを じぶんで みきわめる</small></button>
@@ -212,7 +221,26 @@ window.addEventListener('resize', resize); resize();
 const SH = 71, SS = 52, SD = 9;          // Super Heavy length, Ship length, diameter
 const OLM = 22, TOWER_X = -27, TOWER_H = 146, ARM_H = 105, FIT = 61;  // pad / tower / catch geometry
 const H_REST = ARM_H - FIT;              // booster base height when hanging on the arms
-const H1 = 37, H2L = 10, HF = 10, HD = 5.2, SRB_L = 15, SRB_D = 2.5, ML_TOP = 16;
+const ML_TOP = 16;
+// per-rocket dimensions (H3 / Ariane 6 core + upper + fairing + side boosters). Starship only uses SRB_* for its add-on boosters.
+const DIMS = {
+  h3:     { H1: 37, H2L: 10, HF: 10, HD: 5.2, SRB_L: 15, SRB_D: 2.5 },
+  ariane: { H1: 30, H2L: 12, HF: 14, HD: 5.4, SRB_L: 13.5, SRB_D: 3.4 },
+  star:   { H1: 37, H2L: 10, HF: 10, HD: 5.2, SRB_L: 34, SRB_D: 4.4 },
+};
+let H1, H2L, HF, HD, SRB_L, SRB_D;
+function useDims(r) { ({ H1, H2L, HF, HD, SRB_L, SRB_D } = DIMS[r]); }
+useDims('h3');
+// side boosters: how many the player picked for each rocket, and the allowed range
+const BOOST = { star: { min: 0, max: 8, def: 0 }, h3: { min: 2, max: 8, def: 2 }, ariane: { min: 2, max: 8, def: 2 } };
+const nBoost = { star: 0, h3: 2, ariane: 2 };
+try { for (const r in nBoost) { const v = +localStorage.getItem('rocketBoost_' + r); if (v >= BOOST[r].min && v <= BOOST[r].max && v % 2 === 0) nBoost[r] = v; } } catch (e) {}
+// where each booster sits around the core, seen from the side: x offset (m) and depth (>0 = in front of the core)
+function boosterRing(n, coreR) {
+  const R0 = coreR + SRB_D / 2, off = n <= 2 ? 0 : Math.PI / (2 * n), out = [];
+  for (let i = 0; i < n; i++) { const th = Math.PI / 2 + i * 2 * Math.PI / n + off; out.push({ x: R0 * Math.sin(th), d: Math.cos(th) }); }
+  return out.sort((a, b) => a.d - b.d);
+}
 
 // ================================================================= colors / sky
 const hex = c => [parseInt(c.slice(1, 3), 16), parseInt(c.slice(3, 5), 16), parseInt(c.slice(5, 7), 16)];
@@ -252,7 +280,7 @@ function drawBackground(v, site) {
   const ecx = v.x + v.w / 2, ecy = hz + Rpx;
   g.save(); g.beginPath(); g.rect(v.x, v.y, v.w, v.h); g.clip();
   const eg = g.createLinearGradient(0, hz, 0, hz + v.h * 0.6);
-  if (site === 'h3') { eg.addColorStop(0, '#8fbfe0'); eg.addColorStop(0.15, '#2c6fa8'); eg.addColorStop(1, '#13406e'); }
+  if (site === 'h3' || site === 'ariane') { eg.addColorStop(0, '#8fbfe0'); eg.addColorStop(0.15, '#2c6fa8'); eg.addColorStop(1, '#13406e'); }
   else if (site === 'ocean') { eg.addColorStop(0, '#9cc8e8'); eg.addColorStop(0.15, '#2a73b0'); eg.addColorStop(1, '#0d3a6a'); }
   else { eg.addColorStop(0, '#b9d2e6'); eg.addColorStop(0.15, '#3f7fb6'); eg.addColorStop(1, '#1c4e80'); }
   g.fillStyle = eg; g.beginPath(); g.arc(ecx, ecy, Rpx, 0, Math.PI * 2); g.fill();
@@ -260,9 +288,9 @@ function drawBackground(v, site) {
   const hiA = clamp((h - 30000) / 60000, 0, 1);
   if (hiA > 0) {
     g.globalAlpha = hiA * 0.55;
-    g.fillStyle = site === 'h3' ? '#4f7f45' : '#8d8a5a';
+    g.fillStyle = site === 'h3' ? '#4f7f45' : site === 'ariane' ? '#2f6f35' : '#8d8a5a';
     for (let i = 0; i < 4; i++) {
-      const ang = -Math.PI / 2 + ((i - 1.5) * 0.22 * v.w + (site === 'h3' ? 0.05 : -0.08) * v.w) / Rpx;
+      const ang = -Math.PI / 2 + ((i - 1.5) * 0.22 * v.w + (site === 'h3' ? 0.05 : site === 'ariane' ? 0.12 : -0.08) * v.w) / Rpx;
       g.beginPath(); g.ellipse(ecx + Math.cos(ang) * (Rpx - v.h * 0.03), ecy + Math.sin(ang) * (Rpx - v.h * 0.03), v.w * 0.07, v.h * 0.018, ang + Math.PI / 2, 0, Math.PI * 2); g.fill();
     }
     g.globalAlpha = hiA;
@@ -289,8 +317,8 @@ function drawBackground(v, site) {
       const cx2 = clamp(sx(v, 260), v.x, v.x + v.w);
       const ag = g.createLinearGradient(0, hz, 0, gy); ag.addColorStop(0, '#d9cfae'); ag.addColorStop(1, '#bda874');
       g.fillStyle = ag; g.beginPath(); g.moveTo(v.x, hz); g.lineTo(cx2 - Math.min(gy - hz, 60) * 0.8, hz); g.lineTo(cx2, gy); g.lineTo(v.x, gy); g.fill();
-    } else if (site === 'h3') {
-      g.fillStyle = '#3f8a3f';
+    } else if (site === 'h3' || site === 'ariane') {
+      g.fillStyle = site === 'ariane' ? '#2e7a36' : '#3f8a3f';
       g.beginPath(); g.moveTo(v.x, gy); g.lineTo(v.x, hz + 6);
       const cx2 = clamp(sx(v, 170), v.x, v.x + v.w), ww = cx2 - v.x;
       for (let i = 0; i <= 10; i++) g.lineTo(v.x + ww * i / 10, hz + 2 - Math.sin(i * 1.3) * 8 - 10 * Math.sin(i / 10 * Math.PI));
@@ -330,12 +358,12 @@ function drawGround(v, site) {
   }
   // ground & sea
   const seaX = site === 'star' ? 260 : 170;
-  g.fillStyle = site === 'star' ? '#cbb889' : '#4f8d45';
+  g.fillStyle = site === 'star' ? '#cbb889' : site === 'ariane' ? '#3d7f3a' : '#4f8d45';
   g.fillRect(v.x, gy, v.w, v.y + v.h - gy);
   const sxx = sx(v, seaX);
   if (sxx < v.x + v.w) { g.fillStyle = '#2c6fa8'; g.fillRect(Math.max(v.x, sxx), gy, v.w, v.y + v.h - gy); g.fillStyle = '#e8d9a8'; g.fillRect(sxx - 8 * v.z, gy, 8 * v.z, 3 * v.z); }
   g.fillStyle = '#8b8f94'; g.fillRect(sx(v, -70), gy, 140 * v.z, 2.5 * v.z); // pad concrete
-  if (site === 'star') drawStarbase(v); else drawYoshinobu(v);
+  if (site === 'star') drawStarbase(v); else if (site === 'ariane') drawKourou(v); else drawYoshinobu(v);
   g.restore();
 }
 
@@ -406,6 +434,27 @@ function drawYoshinobu(v) {
   g.fillStyle = '#555'; g.fillRect(X(-14), Y(0.3), 28 * z, 1.4 * z);
   // rails for the mobile launcher
   g.fillStyle = '#6b6f75'; g.fillRect(X(-330), Y(0.4), 340 * z, 0.4 * z);
+}
+// Guiana Space Centre, ELA-4 (Ariane 6): lightning masts, water tower, rails for the mobile gantry
+function drawKourou(v) {
+  const z = v.z, X = x => sx(v, x), Y = h => sy(v, h);
+  for (const lx of [-48, 48]) lattice(X(lx - 1.5), Y(110), 3 * z, 110 * z, 6 * z, '#b9bec4', Math.max(1, 0.4 * z));
+  // water tower (deluge)
+  g.fillStyle = '#9aa1a8'; g.fillRect(X(70), Y(55), 2 * z, 55 * z); g.fillRect(X(80), Y(55), 2 * z, 55 * z);
+  g.fillStyle = '#d9dde2'; g.fillRect(X(66), Y(70), 20 * z, 15 * z);
+  // gantry rails + flame trench
+  g.fillStyle = '#6b6f75'; g.fillRect(X(-150), Y(0.4), 165 * z, 0.4 * z);
+  g.fillStyle = '#555'; g.fillRect(X(-14), Y(0.3), 28 * z, 1.4 * z);
+}
+// the mobile gantry (90 m) that hides the rocket until it rolls back
+function drawGantry(v, gx) {
+  const z = v.z, X = x => sx(v, gx + x), Y = h => sy(v, h), w = 34, hh = 90;
+  g.fillStyle = '#cfd4da'; g.fillRect(X(-w / 2), Y(hh), w * z, hh * z);
+  g.fillStyle = '#b3bac2'; for (let y = 8; y < hh; y += 8) g.fillRect(X(-w / 2), Y(y), w * z, 0.5 * z);
+  g.fillStyle = '#1d4f9c'; g.fillRect(X(-w / 2), Y(hh), w * z, 4 * z);
+  g.fillStyle = '#8e969e'; g.fillRect(X(-2), Y(hh - 6), 4 * z, (hh - 10) * z);           // door seam
+  g.fillStyle = '#e0b020'; g.fillRect(X(-w / 2 - 1), Y(2.5), 6 * z, 2.5 * z); g.fillRect(X(w / 2 - 5), Y(2.5), 6 * z, 2.5 * z);
+  g.fillStyle = '#123'; g.font = `900 ${4 * z}px sans-serif`; g.textAlign = 'center'; g.fillText('ELA-4', X(0), Y(hh - 12));
 }
 function drawML(v, mx) {
   const z = v.z, X = x => sx(v, mx + x), Y = h => sy(v, h);
@@ -556,21 +605,41 @@ function drawShip(s) {
 
 // H3 first stage (+ optional SRBs attached)
 function drawH3Core(c) {
-  const r = HD / 2;
-  nozzle(-1.25, -0.6, 3.6, 0.9, 1.9, '#3a3d42'); nozzle(1.25, -0.6, 3.6, 0.9, 1.9, '#3a3d42');
+  const r = HD / 2, ar = S && S.rocket === 'ariane';
+  if (ar) nozzle(0, -0.6, 4.2, 1.1, 2.5, '#3a3d42');           // Vulcain 2.1 (1 engine)
+  else { nozzle(-1.25, -0.6, 3.6, 0.9, 1.9, '#3a3d42'); nozzle(1.25, -0.6, 3.6, 0.9, 1.9, '#3a3d42'); }
   g.fillStyle = white(r); g.fillRect(-r, -H1, HD, H1);
   g.fillStyle = '#6d747b'; g.fillRect(-r, -3, HD, 3);        // engine section
   g.fillStyle = '#4a5056'; g.fillRect(-r, -H1, HD, 1.5);      // interstage ring
+  const tl = H1 - 5;                                          // tank section length
   if (S && S.xray) {
-    tank(-r + 0.5, -H1 + 3, HD - 1, 9, c.lox, 'rgba(70,140,255,.85)', 0, 'さんそ');
-    tank(-r + 0.5, -H1 + 13, HD - 1, 19, c.lh2, 'rgba(160,230,255,.85)', 0, 'すいそ');
-    g.fillStyle = '#fff'; g.font = '900 1.3px sans-serif'; g.textAlign = 'center'; g.fillText('LE-9', 0, -1.3);
+    tank(-r + 0.5, -H1 + 3, HD - 1, tl * 0.3, c.lox, 'rgba(70,140,255,.85)', 0, 'さんそ');
+    tank(-r + 0.5, -H1 + 3.5 + tl * 0.3, HD - 1, tl * 0.65, c.lh2, 'rgba(160,230,255,.85)', 0, 'すいそ');
+    g.fillStyle = '#fff'; g.font = '900 1.3px sans-serif'; g.textAlign = 'center'; g.fillText(ar ? 'Vulcain' : 'LE-9', 0, -1.3);
   } else {
-    frostBand(r, -4, -4 - 19 * c.lh2, S ? S.frost : 0);
-    // markings
-    g.fillStyle = '#c8102e'; g.beginPath(); g.arc(0, -H1 + 9, 0.9, 0, Math.PI * 2); g.fill();
-    g.fillStyle = '#1a3d8f'; g.font = '900 2.4px sans-serif'; g.textAlign = 'center';
-    g.save(); g.translate(0.2, -H1 + 22); g.rotate(-Math.PI / 2); g.fillText('H3', 0, 0); g.restore();
+    frostBand(r, -4, -4 - tl * 0.6 * c.lh2, S ? S.frost : 0);
+    if (ar) {
+      // ESA-style blue band + name
+      g.fillStyle = '#003e7e'; g.fillRect(-r, -H1 + 5, HD, 1.2);
+      g.fillStyle = '#003e7e'; g.font = '900 2.2px sans-serif'; g.textAlign = 'center';
+      g.save(); g.translate(0.2, -H1 + 17); g.rotate(-Math.PI / 2); g.fillText('ARIANE 6', 0, 0); g.restore();
+    } else {
+      g.fillStyle = '#c8102e'; g.beginPath(); g.arc(0, -H1 + 9, 0.9, 0, Math.PI * 2); g.fill();
+      g.fillStyle = '#1a3d8f'; g.font = '900 2.4px sans-serif'; g.textAlign = 'center';
+      g.save(); g.translate(0.2, -H1 + 22); g.rotate(-Math.PI / 2); g.fillText('H3', 0, 0); g.restore();
+    }
+  }
+}
+// all side boosters of a core of radius coreR. pass 'back' or 'front' to draw only that layer.
+function drawBoosters(n, coreR, layer, thr, prop, alt, plumes) {
+  for (const b of boosterRing(n, coreR)) {
+    if ((layer === 'back') !== (b.d < -0.01)) continue;
+    g.save(); g.translate(b.x, -1);
+    const sd = Math.sign(b.x) * Math.min(1, Math.abs(b.x) / (coreR + SRB_D / 2));
+    if (plumes && thr > 0) plume(sd * 0.3, 2.2, SRB_D * 0.65, (22 + 45 * thr) * SRB_D / 2.5, 'srb', alt, thr);
+    drawSRB({ prop }, sd);
+    if (b.d < -0.01) { g.fillStyle = `rgba(10,20,40,${0.3 * -b.d})`; g.fillRect(-SRB_D / 2, -SRB_L - 3.6, SRB_D, SRB_L + 3.6); }
+    g.restore();
   }
 }
 function drawSRB(sb, side) {
@@ -807,6 +876,8 @@ const ring = (n, rr, size, off = 0) => Array.from({ length: n }, (_, i) => [Math
 const L_SH = [...ring(3, 0.14, 0.085, 0.5), ...ring(10, 0.43, 0.085), ...ring(20, 0.8, 0.075, 0.15)];
 const L_SS = [...ring(3, 0.24, 0.13, 0.5), ...ring(3, 0.62, 0.22, 1.55)];
 const L_H1 = [[-0.3, 0, 0.22], [0.3, 0, 0.22], [-0.78, 0, 0.14], [0.78, 0, 0.14]];
+// core engines in the middle + side boosters around them (seen from below)
+const lvRing = (ne, nb) => [...(ne === 1 ? [[0, 0, 0.3]] : [[-0.3, 0, 0.22], [0.3, 0, 0.22]]), ...ring(nb, 0.78, nb > 4 ? 0.12 : 0.14, nb <= 2 ? 0 : Math.PI / nb)];
 const L_H2 = [[0, 0, 0.3]];
 
 // ================================================================= mission state
@@ -819,12 +890,14 @@ function newStar() {
     bst: { x: 0, h: OLM, ang: 0, vx: 0, vh: 0, v: 0, eng: Array(33).fill(0), lox: 0, ch4: 0, ring: true, vent: 0, fit: false, fin: 0, heat: 0, thr: 1 },
     ship: { x: 0, h: OLM + SH, ang: 0, vx: 0, vh: 0, v: 0, eng: Array(6).fill(0), lox: 0, ch4: 0, plasma: 0, flap: 0, free: false, thr: 1 },
     cam: { x: 0, h: 80 }, zoom: 0, view2: 'ship',
+    nb: nBoost.star, sbAtt: true, sbThr: 0, sbProp: 1,   // optional strap-on boosters (not on the real Starship!)
   };
 }
-function newH3() {
+function newH3(r = 'h3') {
+  const cfg = LV[r], mx = r === 'ariane' ? 0 : -295;
   return {
-    rocket: 'h3', T: -600, srbBurn: 116 + rnd(-4, 4), ts: 1, pi: 0, results: [], retries: 0, xray: false, frost: 0, lifted: false, site: 'h3', mlx: -295,
-    core: { x: -295, h: ML_TOP, ang: 0, vx: 0, vh: 0, v: 0, lox: 0, lh2: 0, eng: [0, 0], srbOn: false, srbThr: 0, attachedSrb: true, upper: true },
+    rocket: r, T: -600, srbBurn: cfg.burn + rnd(-4, 4), ts: 1, pi: 0, results: [], retries: 0, xray: false, frost: 0, lifted: false, site: r, mlx: mx, gx: 0, nb: nBoost[r],
+    core: { x: mx, h: ML_TOP, ang: 0, vx: 0, vh: 0, v: 0, lox: 0, lh2: 0, eng: Array(cfg.nEng).fill(0), srbOn: false, srbThr: 0, attachedSrb: true, upper: true },
     up: { x: 0, h: 0, ang: 0, v: 0, lox: 0, lh2: 0, eng: 0, fairing: true, free: false, satGone: false },
     srbs: [], fair: [], sat: null,
     cam: { x: 0, h: 60 }, zoom: 0,
@@ -861,8 +934,15 @@ const FACTS = {
   h3seco: 'まめちしき：じそく 27,400km だと、ちきゅう 1しゅう やく 1じかん 35ふん！',
   pay: 'まめちしき：えいせいは うちゅうから ちきゅうの しゃしんを とったり、てんきを しらべたり する',
 };
+const FACTS_AR = {
+  le9: 'まめちしき：ヴァルカン 2.1 は 1こ だけで、ジャンボジェット やく 10だいぶんの ちからを だす',
+  srb: 'まめちしき：P120C は イタリアの ロケット「ヴェガC」の 1だんめ にも つかわれて いる',
+  srbsep: 'まめちしき：「アリアン62」は ブースター 2ほん、「アリアン64」は 4ほん。おもい えいせいの ときは 4ほん！',
+  stage2: 'まめちしき：ヴィンチ は うちゅうで なんども {火|ひ}を つけなおせる。えいせいを ちがう ばしょに くばれる',
+  h3seco: 'まめちしき：クールーは せきどうの ちかく。ちきゅうの じてんで さいしょから じそく 1,600km ぐらい もらえる！',
+};
 let factT = 0;
-function showFact(key) { const t = FACTS[key]; if (!t) return; const el = $('fact'); el.innerHTML = '💡 ' + R(t); el.style.opacity = 1; factT = 4.5; }
+function showFact(key) { const t = (S && S.rocket === 'ariane' && FACTS_AR[key]) || FACTS[key]; if (!t) return; const el = $('fact'); el.innerHTML = '💡 ' + R(t); el.style.opacity = 1; factT = 4.5; }
 function result(key, name, score, note, quiet) {
   score = Math.round(clamp(score, 0, 100));
   S.results = S.results.filter(r => r.key !== key);
@@ -888,7 +968,7 @@ function quiz(key, q, choices, ok, why) {
   showCard('🧠 クイズ！', q, null, order.map((i, pos) => [choices[i], () => {
     const good = i === ok;
     S.results = S.results.filter(r => r.key !== key);
-    S.results.push({ key, quiz: true, name: 'クイズ：' + ({ q1: 'エンジンの かず', q2: 'ねんりょう', q3: 'SRB-3', q4: 'つかいすて', q5: 'たいねつ タイル', q6: 'たいよう でんち' }[key] || ''), score: good ? 100 : 0, note: good ? 'せいかい ⭕' : 'ざんねん' });
+    S.results.push({ key, quiz: true, name: 'クイズ：' + ({ q1: 'エンジンの かず', q2: 'ねんりょう', q3: 'こたい ブースター', q4: 'つかいすて', q5: 'たいねつ タイル', q6: 'たいよう でんち' }[key] || ''), score: good ? 100 : 0, note: good ? 'せいかい ⭕' : 'ざんねん' });
     (good ? sfx.ok : sfx.bad)();
     flash(good ? 'せいかい！ ⭕' : 'おしい！ こたえを みてね', good ? '#7fffb0' : '#ffd27a', 1.6);
     const el = $('fact'); el.innerHTML = '💡 ' + R(why); el.style.opacity = 1; factT = 5;
@@ -939,7 +1019,12 @@ function drawDiagram(cd, kind) {
   const xr = S.xray; S.xray = true;
   if (kind === 'star') {
     const z = 3.6, bx = 330, by = h - 40;
-    c.save(); c.translate(bx, by); c.scale(z, z); drawBooster({ ...S.bst, lox: 1, ch4: 1 }); c.translate(0, -SH); drawShip({ ...S.ship, lox: 1, ch4: 1 }); c.restore();
+    c.save(); c.translate(bx, by); c.scale(z, z);
+    if (S.nb) drawBoosters(S.nb, SD / 2, 'back', 0, 1, 0, false);
+    drawBooster({ ...S.bst, lox: 1, ch4: 1 });
+    if (S.nb) drawBoosters(S.nb, SD / 2, 'front', 0, 1, 0, false);
+    c.translate(0, -SH); drawShip({ ...S.ship, lox: 1, ch4: 1 }); c.restore();
+    if (S.nb) { c.textAlign = 'left'; c.font = '900 22px sans-serif'; c.fillStyle = '#ffd27a'; c.fillText(`＋ おまけ ブースター ${S.nb}ほん（ほんものには ないよ！）`, 24, 66); }
     lab(bx + 18, by - (SH + 40) * z, 560, 70, 'シップ 52m（エンジン 6こ）');
     lab(bx + 18, by - (SH + 8) * z, 560, 150, 'ホットステージ リング');
     lab(bx + 28, by - (SH - 6) * z, 560, 220, 'グリッドフィン（かじ）');
@@ -986,20 +1071,24 @@ function drawDiagram(cd, kind) {
     c.font = '800 24px sans-serif'; c.fillStyle = '#ccc'; c.fillText('ひらいた うで', 300, h - 40);
     c.fillStyle = '#ffd23f'; c.fillText('とじた うで（キャッチ！）', 700, h - 40);
     c.fillStyle = '#fff'; c.fillText('ブースター', cx, cy + 4.5 * k + 34); c.fillText('タワー', piv[0] - 10, cy - 70);
-  } else if (kind === 'h3') {
-    const z = 7.9, bx = 300, by = h - 34;
+  } else if (kind === 'h3' || kind === 'ariane') {
+    const tot = H1 + H2L + HF + 1, z = Math.min(7.9, (h - 60) / tot), bx = 300, by = h - 34, n = nB();
     c.save(); c.translate(bx, by); c.scale(z, z);
-    for (const sd of [-1, 1]) { c.save(); c.translate(sd * (HD / 2 + SRB_D / 2), -1); drawSRB({ prop: 1 }, sd); c.restore(); }
-    drawH3Core({ ...S.core, lox: 1, lh2: 1 }); c.translate(0, -H1); drawH3Upper({ ...S.up, lox: 1, lh2: 1 }); c.restore();
+    drawBoosters(n, HD / 2, 'back', 0, 1, 0, false);
+    drawH3Core({ ...S.core, lox: 1, lh2: 1 });
+    drawBoosters(n, HD / 2, 'front', 0, 1, 0, false);
+    c.translate(0, -H1); drawH3Upper({ ...S.up, lox: 1, lh2: 1 }); c.restore();
+    const edge = Math.max(...boosterRing(n, HD / 2).map(b => b.x), HD / 2) + SRB_D / 2;
     lab(bx + 14, by - (H1 + H2L + HF - 3) * z, 560, 60, 'フェアリング（えいせいの カバー）');
-    lab(bx + 14, by - (H1 + 5) * z, 560, 150, 'だい2だん（LE-5B-3 エンジン）');
-    lab(bx + 14, by - 25 * z, 560, 250, 'だい1だん（すいそ と さんそ）');
-    lab(bx + 32, by - 9 * z, 560, 350, 'SRB-3（こたい ロケット）');
-    lab(bx + 6, by - 2, 560, 450, 'LE-9 エンジン 2こ');
-    c.textAlign = 'left'; c.font = '900 24px sans-serif'; c.fillStyle = '#9fd0ff'; c.fillText('たかさ やく 57m ・ ふとさ 5.2m', 24, 34);
+    lab(bx + 14, by - (H1 + 5) * z, 560, 150, `だい2だん（${C.eng2} エンジン）`);
+    lab(bx + 14, by - H1 * 0.7 * z, 560, 250, 'だい1だん（すいそ と さんそ）');
+    lab(bx + edge * z, by - SRB_L * 0.6 * z, 560, 350, `${C.srb}（こたい ロケット）× ${n}`);
+    lab(bx + 6, by - 2, 560, 450, `${C.eng1} エンジン ${C.nEng}こ`);
+    c.textAlign = 'left'; c.font = '900 24px sans-serif'; c.fillStyle = '#9fd0ff';
+    c.fillText(kind === 'ariane' ? 'たかさ やく 56m ・ ふとさ 5.4m' : 'たかさ やく 57m ・ ふとさ 5.2m', 24, 34);
   } else if (kind === 'h3seq') {
     c.fillStyle = '#fff'; c.font = '900 30px sans-serif'; c.textAlign = 'center';
-    const steps = ['①LE-9 てんか', '②SRB-3 てんか', '③SRB-3 ぶんり', '④フェアリング', '⑤だん ぶんり', '⑥えいせい ぶんり'];
+    const steps = [`①${C.eng1} てんか`, `②${C.srb} てんか`, `③${C.srb} ぶんり`, '④フェアリング', '⑤だん ぶんり', '⑥えいせい ぶんり'];
     steps.forEach((t, i) => { const x = 90 + (i % 3) * 300, y = 120 + Math.floor(i / 3) * 240; c.fillStyle = '#2f6bff'; c.fillRect(x - 90, y - 50, 240, 100); c.fillStyle = '#fff'; c.fillText(t, x + 30, y + 10); });
   }
   S.xray = xr;
@@ -1092,7 +1181,7 @@ const PH_STAR = [
         const e = S.T - S.ignT;
         for (let i = 0; i < 33; i++) b.eng[i] = e > (i < 3 ? 0 : i < 13 ? 0.35 : 0.75) ? 1 : 0;
         b.thr = clamp(e / 1.3, 0.2, 1);
-        if (e > 1.3 && S.T >= 0) { S.lifted = true; S.qd = false; S.T = 0; say('リフトオフ！'); flash('リフトオフ！ 🚀', '#ffffff', 1.6); nextPhase(); }
+        if (e > 1.3 && S.T >= 0) { S.lifted = true; S.qd = false; S.T = 0; if (S.nb) S.sbThr = 1; say('リフトオフ！'); flash(S.nb ? `リフトオフ！ 🚀 ブースター ${S.nb}ほん！` : 'リフトオフ！ 🚀', '#ffffff', 1.6); nextPhase(); }
         if (e > 1.3 && S.T < 0) S.T = Math.min(S.T + dt * 3, 0);
       }
       follow(b, 66, 92);
@@ -1114,6 +1203,14 @@ const PH_STAR = [
       const v = n.v(t), p = n.p(t);
       b.h = OLM + n.h(t); b.x += v * Math.sin(p) * dts; b.ang = p + S.st.e * 0.32; b.v = v; b.vx = v * Math.sin(p); b.vh = v * Math.cos(p);
       b.thr = S.thrDown ? 0.72 : 1; b.lox = b.ch4 = clamp(1 - 0.92 * t / 158, 0.06, 1);
+      if (S.nb && S.sbAtt) {
+        S.sbThr = t < 95 ? 1 : Math.max(0, 1 - (t - 95) / 15); S.sbProp = clamp(1 - t / 110, 0, 1);
+        if (t >= 118) {
+          S.sbAtt = false;
+          for (const r of boosterRing(S.nb, SD / 2)) { const p = along(b, 1), k = r.x / (SD / 2 + SRB_D / 2); S.deb.push({ kind: 'srb', side: Math.sign(r.x) || 1, d: r.d, x: p.x + Math.cos(b.ang) * r.x, h: p.h - Math.sin(b.ang) * r.x, vx: b.vx + k * 8, vh: b.vh - 5, ang: b.ang, va: k * 0.3, prop: 0 }); }
+          bang(0.5); say('ブースター ぶんり'); flash(`ブースター ${S.nb}ほん ぶんり！`, '#cde', 1.6);
+        }
+      }
       const qn = this.q();
       if (qn > 0.85) { S.mq.tw += dts; if (S.thrDown) S.mq.tdw += dts; }
       else if (S.thrDown && (t < QSTAR[1] - 22 || t > QSTAR[1] + 28)) S.mq.tbad += dts;
@@ -1467,7 +1564,19 @@ const PH_STAR = [
   },
 ];
 
-// ================================================================= phases: H3
+// ================================================================= phases: H3 / Ariane 6 (same flight steps, different names)
+const LV = {
+  h3: { name: 'H3', clk: 'X', ign: -6, nEng: 2, srb: 'SRB-3', eng1: 'LE-9', eng2: 'LE-5B-3', burn: 116, srbSay: 'エスアールビー',
+    intro: 'H3は にっぽんの あたらしい ロケット（JAXA と {三菱重工|みつびしじゅうこう}）。かごしまけんの たねがしま うちゅう センターから とぶよ。1だんめの エンジンは「LE-9」、2だんめは「LE-5B-3」。よこの しろい つつは「SRB-3（こたい ロケット ブースター）」。ねんりょうは「えきたい すいそ（マイナス253℃！）」と「えきたい さんそ」。<br><b>「はっしゃだいへ いどう」を おして、うごく はっしゃだい で ロケットを はこぼう。</b>',
+    stageStory: '2023ねんの 1ごうきは、でんきの トラブルで だい2だんに {火|ひ}が つかず しっぱい した。2024ねんの 2ごうきで せいこう！ だいじな しゅんかん だよ。',
+    failStory: '1ごうき（2023ねん）は でんきの トラブルで だい2だんに {火|ひ}が つかず しっぱい した。' },
+  ariane: { name: 'アリアン6', clk: 'T', ign: -7, nEng: 1, srb: 'P120C', eng1: 'ヴァルカン', eng2: 'ヴィンチ', burn: 124, srbSay: 'ブースター',
+    intro: 'アリアン6は ヨーロッパの ロケット（ESA ＝ ヨーロッパ うちゅう きかん。フランス・ドイツ・イタリア・ベルギー など たくさんの くにで つくる）。みなみアメリカの フランスりょう ギアナ「クールー」から とぶよ。せきどうに ちかいので、ちきゅうの じてんの いきおいを もらえるんだ。1だんめの エンジンは「ヴァルカン 2.1」1こ、2だんめは「ヴィンチ」。よこの つつは「P120C（こたい ロケット ブースター）」。<br><b>「タワーを うごかす」を おして、ロケットを かくしている おおきな たてもの（90m！）を どかそう。</b>',
+    stageStory: '2024ねん 7がつ、アリアン6の はじめての うちあげで、だい2だん「ヴィンチ」は うちゅうで なんども {火|ひ}を つけなおす ことが できたよ。',
+    failStory: 'だい2だんに {火|ひ}が つかないと、えいせいは うちゅうへ いけない。' },
+};
+let C = LV.h3;
+const nB = () => (S && S.nb) || 0;
 function h3Fly(dts) {
   const c = S.core, u = S.up, t = S.T, n = NOM.h3;
   if (!S.staged) {
@@ -1488,61 +1597,68 @@ function h3Fly(dts) {
 }
 const PH_H3 = [
   { id: 'roll', name: 'いどう・ほきゅう',
-    card: ['H3ロケットを はっしゃ しよう！', 'H3は にっぽんの あたらしい ロケット（JAXA と {三菱重工|みつびしじゅうこう}）。かごしまけんの たねがしま うちゅう センターから とぶよ。1だんめの エンジンは「LE-9」、2だんめは「LE-5B-3」。よこの しろい つつは「SRB-3（こたい ロケット ブースター）」。ねんりょうは「えきたい すいそ（マイナス253℃！）」と「えきたい さんそ」。<br><b>「はっしゃだいへ いどう」を おして、うごく はっしゃだい で ロケットを はこぼう。</b>', 'h3'],
-    init() { S.T = -12 * 3600; S.mlx = -295; S.moving = false; S.fill = 0; S.z = S.zT = zPad(); S.cam = { x: -295, h: 50 };
-      setDock([{ id: 'go', label: '🚚 はっしゃだいへ いどう', sub: 'Space', key: 'Space' }]); },
+    card: () => [C.name + 'ロケットを はっしゃ しよう！', C.intro + (nB() !== 2 ? `<br>🚀 こんかいは ブースターを <b>${nB()}ほん</b> つけたよ！` : ''), S.rocket],
+    init() { S.T = -12 * 3600; S.mlx = S.rocket === 'ariane' ? 0 : -295; S.gx = 0; S.moving = false; S.fill = 0; S.z = S.zT = zPad(); S.cam = { x: S.mlx, h: 50 };
+      setDock([{ id: 'go', label: S.rocket === 'ariane' ? '🏗 タワーを うごかす' : '🚚 はっしゃだいへ いどう', sub: 'Space', key: 'Space' }]); },
     press(id, d) { if (d && id === 'go' && !S.moving) { S.moving = true; sfx.ok(); } },
     update(dt) {
-      const c = S.core;
-      if (S.moving && S.mlx < 0) S.mlx = Math.min(0, S.mlx + 55 * dt);
-      if (S.mlx >= 0) { S.fill = Math.min(100, S.fill + 22 * dt); S.xray = S.fill < 100; if (S.fill >= 100 && !S.nextIn) S.nextIn = 1.4; }
-      S.T = -12 * 3600 + (S.mlx + 295) / 295 * 4 * 3600 + S.fill / 100 * 7.5 * 3600;
+      const c = S.core, ar = S.rocket === 'ariane';
+      // H3: the mobile launcher drives to the pad. Ariane 6: the gantry rolls back off the rocket.
+      if (ar) { if (S.moving && S.gx > -110) S.gx = Math.max(-110, S.gx - 40 * dt); }
+      else if (S.moving && S.mlx < 0) S.mlx = Math.min(0, S.mlx + 55 * dt);
+      const ready = ar ? S.gx <= -110 : S.mlx >= 0, prog = ar ? -S.gx / 110 : (S.mlx + 295) / 295;
+      if (ready) { S.fill = Math.min(100, S.fill + 22 * dt); S.xray = S.fill < 100; if (S.fill >= 100 && !S.nextIn) S.nextIn = 1.4; }
+      S.T = -12 * 3600 + prog * 4 * 3600 + S.fill / 100 * 7.5 * 3600;
       c.x = S.mlx; c.h = ML_TOP; const f = S.fill / 100; c.lox = c.lh2 = S.up.lox = S.up.lh2 = f; S.frost = f;
-      if (S.mlx >= 0 && S.fill < 100 && Math.random() < 0.4) puff(rnd(-3, 3), ML_TOP + rnd(10, 40), rnd(3, 8), rnd(-1, 1), 1.5, 2, '#f4f7fb');
-      S.cam.x = c.x; S.cam.h = 52;
-      gauge('gA', S.mlx < 0 ? null : { label: 'ねんりょう ほきゅう（じどう）', min: 0, max: 100, value: S.fill, fill: true, text: Math.round(S.fill) + '%' });
+      if (ready && S.fill < 100 && Math.random() < 0.4) puff(rnd(-3, 3), ML_TOP + rnd(10, 40), rnd(3, 8), rnd(-1, 1), 1.5, 2, '#f4f7fb');
+      S.cam.x = ar ? lerp(0, -30, clamp(-S.gx / 60, 0, 1) * (1 - clamp((-S.gx - 60) / 50, 0, 1))) : c.x; S.cam.h = 52;
+      gauge('gA', !ready ? null : { label: 'ねんりょう ほきゅう（じどう）', min: 0, max: 100, value: S.fill, fill: true, text: Math.round(S.fill) + '%' });
     },
     glow() { return S.moving ? null : 'go'; },
-    tip() { return !S.moving ? '「はっしゃだいへ いどう」を おそう' : S.mlx < 0 ? 'うごく はっしゃだい（ML）で はこんでいる…' : 'ねんりょうを いれているよ（すいそは マイナス253℃）'; },
+    tip() {
+      if (S.rocket === 'ariane') return !S.moving ? '「タワーを うごかす」を おそう' : S.gx > -110 ? 'おおきな タワーが レールの うえを うごいて いく…' : 'ねんりょうを いれているよ（すいそは マイナス253℃）';
+      return !S.moving ? '「はっしゃだいへ いどう」を おそう' : S.mlx < 0 ? 'うごく はっしゃだい（ML）で はこんでいる…' : 'ねんりょうを いれているよ（すいそは マイナス253℃）';
+    },
   },
   { id: 'h3count', name: 'カウントダウン',
-    card: ['{点火|てんか}の じゅんばん', '<b>① さきに「LE-9」（えきたいの エンジン）に {点火|てんか}（X-6びょう ごろ）。</b>ちゃんと うごいて いるか しらべて から…<br><b>② X-0 で「SRB-3」に {点火|てんか} → リフトオフ！</b><br>SRB-3は こたい ねんりょう なので、いちど もえたら とめられない。だから さいごに つけるんだ。（H3の カウントダウンは「X」で よむよ）'],
+    card: () => ['{点火|てんか}の じゅんばん', `<b>① さきに「${C.eng1}」（えきたいの エンジン）に {点火|てんか}（${C.clk}${C.ign}びょう ごろ）。</b>ちゃんと うごいて いるか しらべて から…<br><b>② ${C.clk}-0 で「${C.srb}」${nB()}ほんに {点火|てんか} → リフトオフ！</b><br>${C.srb}は こたい ねんりょう なので、いちど もえたら とめられない。だから さいごに つけるんだ。` + (S.rocket === 'h3' ? '（H3の カウントダウンは「X」で よむよ）' : '')],
     init() { S.T = -15; S.xray = false; S.le9T = null; S.srbT = null; S.wrong = 0; S.beep = null; gauge('gA', null);
-      setDock([{ id: 'le9', label: '① LE-9 {点火|てんか}', sub: 'えきたい エンジン (1)', key: 'Digit1' }, { id: 'srb', label: '② SRB-3 {点火|てんか}', sub: 'リフトオフ (2)', key: 'Digit2', cls: 'c2' }]); },
+      setDock([{ id: 'le9', label: `① ${C.eng1} {点火|てんか}`, sub: 'えきたい エンジン (1)', key: 'Digit1' }, { id: 'srb', label: `② ${C.srb} {点火|てんか}`, sub: `${nB()}ほん ・ リフトオフ (2)`, key: 'Digit2', cls: 'c2' }]); },
     press(id, d) {
       if (!d) return;
       const c = S.core;
       if (id === 'le9' && S.le9T === null) {
-        if (S.T < (ruka() ? -11 : -9)) { S.wrong++; sfx.bad(); flash('はやすぎ！ X-6 ごろ', '#ff9a7a', 1.2); return; }
-        S.le9T = S.T; c.eng = [1, 1];
-        result('le9', 'LE-9 {点火|てんか}', 100 - Math.max(0, Math.abs(S.T + 6) - (ruka() ? 1.6 : 0.6)) * (ruka() ? 12 : 25), 'X' + S.T.toFixed(1));
+        if (S.T < C.ign - (ruka() ? 5 : 3)) { S.wrong++; sfx.bad(); flash(`はやすぎ！ ${C.clk}${C.ign} ごろ`, '#ff9a7a', 1.2); return; }
+        S.le9T = S.T; c.eng = Array(C.nEng).fill(1);
+        result('le9', C.eng1 + ' {点火|てんか}', 100 - Math.max(0, Math.abs(S.T - C.ign) - (ruka() ? 1.6 : 0.6)) * (ruka() ? 12 : 25), C.clk + S.T.toFixed(1));
       }
       if (id === 'srb' && S.srbT === null) {
-        if (S.le9T === null) { S.wrong++; sfx.bad(); flash('さきに ① LE-9！ SRBは とめられないよ', '#ff9a7a', 1.6); return; }
-        if (S.T < -2.5) { S.wrong++; sfx.bad(); flash('まだ はやい！ X-0 で', '#ff9a7a', 1.2); return; }
+        if (S.le9T === null) { S.wrong++; sfx.bad(); flash(`さきに ① ${C.eng1}！ ${C.srb}は とめられないよ`, '#ff9a7a', 1.6); return; }
+        if (S.T < -2.5) { S.wrong++; sfx.bad(); flash(`まだ はやい！ ${C.clk}-0 で`, '#ff9a7a', 1.2); return; }
         this.lift();
       }
     },
     lift() {
       const c = S.core; S.srbT = S.T; c.srbOn = true; c.srbThr = 1;
-      result('srb', 'SRB-3 {点火|てんか}', 100 - Math.max(0, Math.abs(S.T) - (ruka() ? 1.2 : 0.4)) * (ruka() ? 18 : 40) - S.wrong * 15, 'X' + S.T.toFixed(1));
-      S.lifted = true; S.T = 0; say('リフトオフ！'); flash('リフトオフ！ 🚀', '#fff', 1.6); bang(0.6); nextPhase();
+      result('srb', C.srb + ' {点火|てんか}', 100 - Math.max(0, Math.abs(S.T) - (ruka() ? 1.2 : 0.4)) * (ruka() ? 18 : 40) - S.wrong * 15, C.clk + S.T.toFixed(1));
+      S.lifted = true; S.T = 0; say('リフトオフ！'); flash(nB() > 2 ? `リフトオフ！ 🚀 ブースター ${nB()}ほん！` : 'リフトオフ！ 🚀', '#fff', 1.6); bang(0.6); nextPhase();
     },
     update(dt) {
       S.T += dt;
       const sec = Math.ceil(-S.T);
       if (S.T < 0 && sec <= 10 && sec !== S.beep) { S.beep = sec; sfx.beep(); say(['ゼロ', 'いち', 'に', 'さん', 'よん', 'ご', 'ろく', 'なな', 'はち', 'きゅう', 'じゅう'][sec]); }
-      if (S.le9T === null && S.T > -1.5) { S.le9T = S.T; S.core.eng = [1, 1]; result('le9', 'LE-9 {点火|てんか}', 30, 'おそかった'); }
+      if (S.le9T === null && S.T > -1.5) { S.le9T = S.T; S.core.eng = Array(C.nEng).fill(1); result('le9', C.eng1 + ' {点火|てんか}', 30, 'おそかった'); }
       if (S.srbT === null && S.T > 2.5) { S.wrong += 2; this.lift(); return; }
       if (S.le9T !== null && Math.random() < 0.9) puff(rnd(-6, 6), rnd(1, 6), rnd(-30, 30), rnd(2, 10), rnd(3, 6), rnd(2, 4), '#f2f5f8');
       follow(S.core, 30, 52);
-      gauge('gA', { label: 'カウントダウン（X）', min: -15, max: 0, green: S.le9T === null ? [-6 - (ruka() ? 1.6 : 0.6), -6 + (ruka() ? 1.6 : 0.6)] : [-(ruka() ? 1.2 : 0.4), 0], value: S.T, text: 'X' + S.T.toFixed(1) });
+      const w = ruka() ? 1.6 : 0.6;
+      gauge('gA', { label: `カウントダウン（${C.clk}）`, min: -15, max: 0, green: S.le9T === null ? [C.ign - w, C.ign + w] : [-(ruka() ? 1.2 : 0.4), 0], value: S.T, text: C.clk + S.T.toFixed(1) });
     },
-    glow() { if (S.le9T === null) return Math.abs(S.T + 6) < 1.5 ? 'le9' : null; return S.T > -1.2 ? 'srb' : null; },
-    tip() { return S.le9T === null ? 'X-6 ごろに ①LE-9 {点火|てんか}' : S.T < -1.2 ? 'LE-9 OK！ X-0 まで まって…' : 'いまだ！ ② SRB-3 {点火|てんか}！'; },
+    glow() { if (S.le9T === null) return Math.abs(S.T - C.ign) < 1.5 ? 'le9' : null; return S.T > -1.2 ? 'srb' : null; },
+    tip() { return S.le9T === null ? `${C.clk}${C.ign} ごろに ①${C.eng1} {点火|てんか}` : S.T < -1.2 ? `${C.eng1} OK！ ${C.clk}-0 まで まって…` : `いまだ！ ② ${C.srb} {点火|てんか}！`; },
   },
   { id: 'h3asc', name: 'うちあげ',
-    card: ['コースを まもろう', 'H3は SRB-3 の しろい けむりを ひいて ぐんぐん のぼる。LE-9 の すいその ほのおは すきとおって ほとんど みえないよ。<b>◀ ▶ で コース メーターの はりを みどりに</b> あわせよう。とちゅうで くうきの ちからが いちばん つよい「MAX Q」を とおるよ。'],
+    card: () => ['コースを まもろう', `${C.name}は ${C.srb} の しろい けむりを ひいて ぐんぐん のぼる。${C.eng1} の すいその ほのおは すきとおって ほとんど みえないよ。<b>◀ ▶ で コース メーターの はりを みどりに</b> あわせよう。とちゅうで くうきの ちからが いちばん つよい「MAX Q」を とおるよ。` + (nB() > 2 ? `<br>ブースターが ${nB()}ほん あると、おもい えいせいも はこべるんだ！` : '')],
     init() { S.ts = 4.2; S.st = steerNew(); showSteer(true); setDock([]); S.zT = zPad() * 0.8; },
     update(dt) {
       const dts = dt * S.ts; S.T += dts; const c = S.core;
@@ -1554,9 +1670,9 @@ const PH_H3 = [
     },
     glow() { return null; }, tip() { return '◀ ▶ で コース メーターを みどりに'; },
   },
-  { id: 'srbsep', name: 'SRB-3 ぶんり',
-    card: ['SRB-3 ぶんり', 'SRB-3 は やく 2ふんで もえつきる。<b>ちからが 0 に なった あとで「SRB-3 ぶんり」！</b> もえて いる あいだに はずすと あぶない。はずした SRB-3 は うみに おちる（つかいすて）。'],
-    init() { S.ts = 1.1; S.early = 0; showSteer(true); setDock([{ id: 'sep', label: '✂ SRB-3 ぶんり', sub: 'Space', key: 'Space' }]); },
+  { id: 'srbsep', name: 'ブースター ぶんり',
+    card: () => [C.srb + ' ぶんり', `${C.srb} は やく 2ふんで もえつきる。<b>ちからが 0 に なった あとで「${C.srb} ぶんり」！</b> もえて いる あいだに はずすと あぶない。はずした ${nB()}ほんの ${C.srb} は うみに おちる（つかいすて）。`],
+    init() { S.ts = 1.1; S.early = 0; showSteer(true); setDock([{ id: 'sep', label: `✂ ${C.srb} ぶんり`, sub: `${nB()}ほん (Space)`, key: 'Space' }]); },
     press(id, d) {
       if (!d || id !== 'sep' || !S.core.attachedSrb) return;
       if (S.core.srbThr > 0.02) { S.early++; sfx.bad(); flash('まだ もえてる！ ちからが 0 に なってから', '#ff9a7a', 1.4); return; }
@@ -1564,25 +1680,25 @@ const PH_H3 = [
     },
     sep(auto) {
       const c = S.core; c.attachedSrb = false;
-      for (const side of [-1, 1]) {
-        const p = along(c, 1), off = HD / 2 + SRB_D / 2;
-        S.deb.push({ kind: 'srb', side, x: p.x + Math.cos(c.ang) * side * off, h: p.h - Math.sin(c.ang) * side * off, vx: c.vx + side * 6, vh: c.vh - 4, ang: c.ang, va: side * 0.35, prop: 0 });
+      for (const b of boosterRing(nB(), HD / 2)) {
+        const p = along(c, 1), side = Math.sign(b.x) || 1, k = b.x / (HD / 2 + SRB_D / 2);
+        S.deb.push({ kind: 'srb', side, d: b.d, x: p.x + Math.cos(c.ang) * b.x, h: p.h - Math.sin(c.ang) * b.x, vx: c.vx + k * 6, vh: c.vh - 4 - Math.abs(b.d) * 2, ang: c.ang, va: k * 0.35, prop: 0 });
       }
-      bang(0.5); say('エスアールビー ぶんり');
-      const late = Math.max(0, S.T - (S.srbBurn || 116) - (ruka() ? 8 : 3));
-      result('srbsep', 'SRB-3 ぶんり', auto ? 40 : 100 - late * 6 - S.early * 20, 'X+' + S.T.toFixed(0) + 's');
+      bang(0.5); say(C.srbSay + ' ぶんり');
+      const late = Math.max(0, S.T - (S.srbBurn || C.burn) - (ruka() ? 8 : 3));
+      result('srbsep', C.srb + ' ぶんり', auto ? 40 : 100 - late * 6 - S.early * 20, C.clk + '+' + S.T.toFixed(0) + 's');
       S.nextIn = 2.5;
     },
     update(dt) {
       const dts = dt * S.ts; S.T += dts; const c = S.core;
       steerStep(S.st, dt, 0.5, 1.5); h3Fly(dts);
-      if (c.attachedSrb && S.T > 140) this.sep(true);
-      gauge('gA', { label: 'SRB-3 の ちから（0に なったら ぶんり）', min: 0, max: 100, green: [0, 2], value: c.srbThr * 100, fill: true, text: Math.round(c.srbThr * 100) + '%' });
+      if (c.attachedSrb && S.T > (S.srbBurn || C.burn) + 24) this.sep(true);
+      gauge('gA', { label: `${C.srb} の ちから（0に なったら ぶんり）`, min: 0, max: 100, green: [0, 2], value: c.srbThr * 100, fill: true, text: Math.round(c.srbThr * 100) + '%' });
       steerGauge(S.st);
       follow(c, 25);
     },
     glow() { return S.core.attachedSrb && S.core.srbThr <= 0.02 ? 'sep' : null; },
-    tip() { return !S.core.attachedSrb ? 'SRB-3 は うみへ おちていく…' : S.core.srbThr > 0.02 ? 'もえつきるまで まって…' : 'いまだ！ SRB-3 ぶんり！'; },
+    tip() { return !S.core.attachedSrb ? `${C.srb} は うみへ おちていく…` : S.core.srbThr > 0.02 ? 'もえつきるまで まって…' : `いまだ！ ${C.srb} ぶんり！`; },
   },
   { id: 'fair', name: 'フェアリング',
     card: ['フェアリング ぶんり', 'いちばん うえの カバー「<b>フェアリング</b>」は、えいせいを くうきの ちからと ねつから まもる。くうきが ほとんど なくなったら（<b>たかさ やく 120〜150km</b>）2つに わって すてるよ。かるく なって とおくまで いける！'],
@@ -1603,7 +1719,7 @@ const PH_H3 = [
     },
     update(dt) {
       const c = S.core; S.ts = c.h > 95000 ? 2 : 4;
-      if (!S.q3 && S.T > 135) { S.q3 = true; quiz('q3', 'SRB-3（こたい ロケット）は いちど もえはじめたら…？', ['とちゅうで とめられる', 'さいごまで とめられない'], 1, 'だから SRB-3 は いちばん さいごに {点火|てんか} するんだね'); }
+      if (!S.q3 && S.T > 135) { S.q3 = true; quiz('q3', C.srb + '（こたい ロケット）は いちど もえはじめたら…？', ['とちゅうで とめられる', 'さいごまで とめられない'], 1, `だから ${C.srb} は いちばん さいごに {点火|てんか} するんだね`); }
       const dts = dt * S.ts; S.T += dts; h3Fly(dts);
       if (S.up.fairing && S.T > 285) this.sep(true);
       gauge('gA', { label: 'たかさ（120km いじょうで ぶんり）', min: 40, max: 240, green: [120, 165], value: c.h / 1000, marks: [[100, 'うちゅう']], text: (c.h / 1000).toFixed(0) + ' km' });
@@ -1613,9 +1729,9 @@ const PH_H3 = [
     tip() { return !S.up.fairing ? 'えいせいが みえた！' : S.core.h < 120000 ? 'くうきが うすく なるまで まって…' : 'いまだ！ フェアリング ぶんり！'; },
   },
   { id: 'meco', name: 'だん ぶんり',
-    card: ['だい1だん → だい2だん', 'だい1だんの ねんりょうが なくなる まえに<br><b>① エンジン ていし（MECO）→ ② だん ぶんり → ③ だい2だん エンジン「LE-5B-3」{点火|てんか}！</b><br>2023ねんの 1ごうきは、でんきの トラブルで だい2だんに {火|ひ}が つかず しっぱい した。2024ねんの 2ごうきで せいこう！ だいじな しゅんかん だよ。', 'h3seq'],
+    card: () => ['だい1だん → だい2だん', `だい1だんの ねんりょうが なくなる まえに<br><b>① エンジン ていし（MECO）→ ② だん ぶんり → ③ だい2だん エンジン「${C.eng2}」{点火|てんか}！</b><br>` + C.stageStory, 'h3seq'],
     init() { S.ts = 3; S.mst = 0; S.wrong = 0; S.mecoT = null; S.sepT = null; showSteer(false);
-      setDock([{ id: 'meco', label: '① MECO', sub: 'メインエンジン ストップ (1)', key: 'Digit1' }, { id: 'sep', label: '② だん ぶんり', sub: '(2)', key: 'Digit2', cls: 'c2' }, { id: 'seig', label: '③ だい2だん {点火|てんか}', sub: 'LE-5B-3 (3)', key: 'Digit3', cls: 'c3' }]); },
+      setDock([{ id: 'meco', label: '① MECO', sub: 'メインエンジン ストップ (1)', key: 'Digit1' }, { id: 'sep', label: '② だん ぶんり', sub: '(2)', key: 'Digit2', cls: 'c2' }, { id: 'seig', label: '③ だい2だん {点火|てんか}', sub: C.eng2 + ' (3)', key: 'Digit3', cls: 'c3' }]); },
     prop() { return clamp(1 - S.T / 300, 0, 1) * 100; },
     press(id, d) {
       if (!d) return;
@@ -1627,7 +1743,7 @@ const PH_H3 = [
     },
     act(id, auto) {
       const c = S.core, u = S.up;
-      if (id === 'meco') { S.mecoT = S.T; c.eng = [0, 0]; say('メコ'); result('meco', 'MECO', auto ? 65 : 100 - S.wrong * 15, auto ? 'ねんりょう ぎれ' : Math.round(this.prop()) + '%'); }
+      if (id === 'meco') { S.mecoT = S.T; c.eng = c.eng.map(() => 0); say('メコ'); result('meco', 'MECO', auto ? 65 : 100 - S.wrong * 15, auto ? 'ねんりょう ぎれ' : Math.round(this.prop()) + '%'); }
       if (id === 'sep') {
         S.sepT = S.T; S.staged = true; u.free = true;
         S.deb.push({ kind: 'stage1', x: c.x, h: c.h, vx: c.vx * 0.98, vh: c.vh - 3, ang: c.ang, va: 0.05, keep: false });
@@ -1650,7 +1766,7 @@ const PH_H3 = [
       else { const c = S.core, u = S.up; if (!S.staged) { c.x += c.vx * dts; c.h += c.vh * dts; const top = along(c, H1); u.x = top.x; u.h = top.h; u.v = c.v; u.vx = c.vx; u.vh = c.vh; } else h3Fly(dts); }
       if (S.mst === 2 && S.T - S.sepT > (ruka() ? 40 : 30) && !this.failed) {
         this.failed = true; sfx.bad();
-        showCard('だい2だんに {火|ひ}が つかなかった…', '1ごうき（2023ねん）は でんきの トラブルで だい2だんに {火|ひ}が つかず しっぱい した。こんどは ぶんり したら すぐ（15びょう いない）に {点火|てんか} しよう！', null,
+        showCard('だい2だんに {火|ひ}が つかなかった…', C.failStory + 'こんどは ぶんり したら すぐ（15びょう いない）に {点火|てんか} しよう！', null,
           [['🔁 もういちど（この ステップ）', retryPhase], ['▶ じどうで {点火|てんか}', () => { this.failed = false; S.wrong += 3; this.act('seig', true); }, 'blue']]);
       }
       const o = S.staged ? S.up : S.core;
@@ -1675,7 +1791,7 @@ const PH_H3 = [
     },
     update(dt) {
       const u = S.up;
-      if (!S.q4 && !S.done2 && kmh(u.v) > 19000) { S.q4 = true; quiz('q4', 'H3の だい1だんは この あと どうなる？', ['タワーで キャッチ', 'うみに おちる（つかいすて）'], 1, 'H3の だんは つかいすて。スターシップの ブースターは キャッチして また つかう！'); }
+      if (!S.q4 && !S.done2 && kmh(u.v) > 19000) { S.q4 = true; quiz('q4', C.name + 'の だい1だんは この あと どうなる？', ['タワーで キャッチ', 'うみに おちる（つかいすて）'], 1, C.name + 'の だんは つかいすて。スターシップの ブースターは キャッチして また つかう！'); }
       if (!S.done2) { const want = Math.abs(kmh(u.v) - 27400) > 900 ? 1100 : (ruka() ? 110 : 160); S.ts = clamp(want / 14.76, 1, 80); if (u.v >= 7720) this.stop(true); } else S.ts = 3;
       const dts = dt * S.ts; S.T += dts; h3Fly(dts);
       const sp = kmh(u.v), tol = ruka() ? 700 : 280;
@@ -1724,7 +1840,8 @@ function gotoPhase(i, skipCard) {
   P.init();
   buildSteps();
   $('pName').innerHTML = R(P.name); $('clock').textContent = fmtT(S.T);
-  if (P.card && !skipCard) showCard(P.card[0], P.card[1], P.card[2]);
+  const cd = typeof P.card === 'function' ? P.card() : P.card;
+  if (cd && !skipCard) showCard(cd[0], cd[1], cd[2]);
   void keep;
 }
 function nextPhase() { gotoPhase(S.pi + 1); }
@@ -1742,13 +1859,13 @@ function buildSteps() {
 }
 
 function startMission(r) {
-  rocket = r; PH = r === 'star' ? PH_STAR : PH_H3;
-  S = r === 'star' ? newStar() : newH3();
+  rocket = r; PH = r === 'star' ? PH_STAR : PH_H3; useDims(r); C = LV[r] || LV.h3;
+  S = r === 'star' ? newStar() : newH3(r);
   S.deb = []; S.pip = null; S.siteNow = null; S.cardOpen = false; S.done = false;
   parts = [];
   $('title').classList.add('hidden'); $('result').classList.add('hidden');
-  $('mName').textContent = r === 'star' ? 'スターシップ' : 'H3';
-  $('n1').textContent = r === 'star' ? 'SUPER HEAVY' : 'H3 だい1だん';
+  $('mName').textContent = (r === 'star' ? 'スターシップ' : C.name) + (S.nb ? ` ・ ブースター×${S.nb}` : '');
+  $('n1').textContent = r === 'star' ? 'SUPER HEAVY' : C.name + ' だい1だん';
   $('n2').textContent = r === 'star' ? 'STARSHIP' : 'だい2だん';
   $('tele1').style.display = '';
   $('bX').classList.remove('on');
@@ -1761,7 +1878,7 @@ function finish() {
   try { const k = 'rocketBest_' + S.rocket, prev = +(localStorage.getItem(k) || 0); if (tot > prev) { localStorage.setItem(k, tot); if (prev) setTimeout(() => flash('🏅 ベスト きろく こうしん！', '#ffd23f', 2.5), 600); } } catch (e) {}
   showBest();
   const rank = tot >= 95 ? 'スーパー フライトディレクター' : tot >= 85 ? 'ベテラン かんせいかん' : tot >= 70 ? 'うちゅう ひこうし' : 'みならい ひこうし';
-  $('rT').textContent = S.rocket === 'star' ? 'スターシップ ミッション かんりょう！' : 'H3 ミッション かんりょう！';
+  $('rT').textContent = (S.rocket === 'star' ? 'スターシップ' : C.name) + ' ミッション かんりょう！' + (S.nb && (S.rocket === 'star' || S.nb !== 2) ? `（ブースター×${S.nb}）` : '');
   $('resTotal').innerHTML = `${tot}てん <span style="font-size:.45em;color:#0d4fb0">${rank}</span>`;
   $('resList').innerHTML = rs.map(r => `<li><span>${R(r.name)}${r.note ? ` <small style="color:#678">(${R(r.note)})</small>` : ''}</span><span>${'★'.repeat(r.score >= 95 ? 3 : r.score >= 75 ? 2 : r.score >= 40 ? 1 : 0)}${'☆'.repeat(3 - (r.score >= 95 ? 3 : r.score >= 75 ? 2 : r.score >= 40 ? 1 : 0))} ${r.score}</span></li>`).join('');
   const learn = S.rocket === 'star' ? [
@@ -1771,6 +1888,12 @@ function finish() {
     'ブーストバック → グリッドフィン → ランディングバーン で はっしゃばに もどる。',
     'タワーの うで（チョップスティック）で キャッチ。あしが いらないので かるく なる。',
     'シップは くろい たいねつ タイルで あつい さいとつにゅうに たえる。',
+  ] : S.rocket === 'ariane' ? [
+    'アリアン6は ヨーロッパ（ESA）の ロケット。みなみアメリカの フランスりょう ギアナ・クールー から はっしゃ。',
+    'さきに ヴァルカン（えきたい）、さいごに P120C（こたい）に {点火|てんか}。こたいは とめられない から。',
+    'ブースター 2ほんが アリアン62、4ほんが アリアン64。ブースターを ふやすと おもい えいせいを はこべる。',
+    'MECO → だん ぶんり → ヴィンチ {点火|てんか}。ヴィンチは うちゅうで なんども つけなおせる。',
+    'H3 と アリアン6 は にている！ どちらも すいそ エンジン ＋ こたい ブースター。',
   ] : [
     'H3は JAXA と {三菱重工|みつびしじゅうこう}が つくった にっぽんの ロケット。たねがしま から はっしゃ。',
     'さきに LE-9（えきたい）、さいごに SRB-3（こたい）に {点火|てんか}。こたいは とめられない から。',
@@ -1786,7 +1909,7 @@ function finish() {
   if (S.retries) $('resList').insertAdjacentHTML('beforeend', `<li><span>やりなおし</span><span>${S.retries}かい</span></li>`);
 }
 $('rAgain').onclick = () => { audioInit(); startMission(rocket); };
-$('rOther').onclick = () => { audioInit(); $('result').classList.add('hidden'); S = null; P = null; $('title').classList.remove('hidden'); pickRocket(rocket === 'star' ? 'h3' : 'star'); };
+$('rOther').onclick = () => { audioInit(); $('result').classList.add('hidden'); S = null; P = null; $('title').classList.remove('hidden'); pickRocket({ star: 'h3', h3: 'ariane', ariane: 'star' }[rocket]); };
 
 // ================================================================= rendering
 function drawStarVehicles(v, site) {
@@ -1794,7 +1917,9 @@ function drawStarVehicles(v, site) {
   if (site !== 'ocean') drawAt(v, b, () => {
     const n = b.eng.reduce((a, e) => a + e, 0);
     if (n > 0) plume(0, 2.4, n >= 30 ? 9.5 : n >= 13 ? 6 : 3, n >= 30 ? 115 : n >= 13 ? 60 : 32, 'raptor', b.h, b.thr);
+    if (S.nb && S.sbAtt) drawBoosters(S.nb, SD / 2, 'back', S.sbThr, S.sbProp, b.h, true);
     drawBooster(b);
+    if (S.nb && S.sbAtt) drawBoosters(S.nb, SD / 2, 'front', S.sbThr, S.sbProp, b.h, true);
     if (b.vent > 0 && S.attached && s.eng.some(e => e)) {
       for (const sg of [-1, 1]) {
         const gr = g.createLinearGradient(0, 0, sg * 22, 0); gr.addColorStop(0, `rgba(255,210,110,${b.vent})`); gr.addColorStop(1, 'rgba(255,120,40,0)');
@@ -1820,19 +1945,16 @@ function drawStarVehicles(v, site) {
 function drawH3Vehicles(v) {
   const c = S.core, u = S.up;
   for (const d of S.deb) {
-    if (d.kind === 'srb') drawAt(v, d, () => drawSRB(d, d.side));
+    if (d.kind === 'srb') drawAt(v, d, () => { drawSRB(d, d.side); if (d.d < -0.01) { g.fillStyle = `rgba(10,20,40,${0.3 * -d.d})`; g.fillRect(-SRB_D / 2, -SRB_L - 3.6, SRB_D, SRB_L + 3.6); } });
     if (d.kind === 'fair') drawAt(v, d, () => drawFairingHalf(d));
-    if (d.kind === 'stage1') drawAt(v, d, () => drawH3Core({ ...c, eng: [0, 0] }));
+    if (d.kind === 'stage1') drawAt(v, d, () => drawH3Core({ ...c, eng: [] }));
   }
   if (c.alive !== false) {
     drawAt(v, c, () => {
-      if (c.eng[0]) { plume(-1.25, 3, 1.9, 36, 'hydro', c.h, 1); plume(1.25, 3, 1.9, 36, 'hydro', c.h, 1); }
-      if (c.attachedSrb) for (const sd of [-1, 1]) {
-        g.save(); g.translate(sd * (HD / 2 + SRB_D / 2), -1);
-        if (c.srbThr > 0) plume(sd * 0.3, 2.2, 1.6, 22 + 45 * c.srbThr, 'srb', c.h, c.srbThr);
-        drawSRB({ prop: c.srbProp ?? 1 }, sd); g.restore();
-      }
+      if (c.eng[0]) { if (c.eng.length === 1) plume(0, 3.6, 2.5, 44, 'hydro', c.h, 1); else { plume(-1.25, 3, 1.9, 36, 'hydro', c.h, 1); plume(1.25, 3, 1.9, 36, 'hydro', c.h, 1); } }
+      if (c.attachedSrb) drawBoosters(nB(), HD / 2, 'back', c.srbThr, c.srbProp ?? 1, c.h, true);
       drawH3Core(c);
+      if (c.attachedSrb) drawBoosters(nB(), HD / 2, 'front', c.srbThr, c.srbProp ?? 1, c.h, true);
       if (!S.staged) { g.translate(0, -H1); drawH3Upper(u); }
     });
   }
@@ -1849,11 +1971,18 @@ function renderScene(v) {
   drawBackground(v, site);
   if (S.rocket === 'star' && site !== 'ocean') { drawGround(v, site); drawArms(v, 'carriage'); drawArms(v, 'back'); }
   else drawGround(v, site);
-  if (S.rocket === 'h3') drawML(v, S.mlx ?? 0);
+  if (S.rocket === 'h3' || S.rocket === 'ariane') drawML(v, S.mlx ?? 0);
   drawParts(v);
-  if (S.rocket === 'star') { for (const d of S.deb) if (d.kind === 'ring') drawAt(v, d, () => { g.fillStyle = '#3b3f44'; g.fillRect(-4.5, -2.2, 9, 2.4); }); drawStarVehicles(v, site); }
+  if (S.rocket === 'star') {
+    for (const d of S.deb) {
+      if (d.kind === 'ring') drawAt(v, d, () => { g.fillStyle = '#3b3f44'; g.fillRect(-4.5, -2.2, 9, 2.4); });
+      if (d.kind === 'srb') drawAt(v, d, () => drawSRB(d, d.side));
+    }
+    drawStarVehicles(v, site);
+  }
   else drawH3Vehicles(v);
   if (S.rocket === 'star' && site !== 'ocean') drawArms(v, 'front');
+  if (S.rocket === 'ariane' && (S.gx ?? 0) > -109 && !S.lifted) drawGantry(v, S.gx || 0);
 }
 function render() {
   g.setTransform(DPR, 0, 0, DPR, 0, 0);
@@ -1887,16 +2016,21 @@ function emit(dt) {
     const b = S.bst;
     if (S.deluge && !S.lifted && Math.random() < 0.9) for (let i = 0; i < 2; i++) puff(rnd(-11, 11), 2, rnd(-4, 4), rnd(20, 35), 1.2, 1.2, '#dff3ff', 1);
     const n = b.eng.reduce((a, e) => a + e, 0);
-    if (n >= 13 && b.h < OLM + 220) for (let i = 0; i < 4; i++) puff(rnd(-8, 8), rnd(1, 6), rnd(-60, 60), rnd(1, 14), rnd(5, 10), rnd(3, 6), '#eceff2');
+    if (n >= 13 && b.h < OLM + 220) for (let i = 0; i < 4 + S.nb; i++) puff(rnd(-8, 8), rnd(1, 6), rnd(-60, 60), rnd(1, 14), rnd(5, 10), rnd(3, 6), '#eceff2');
+    if (S.nb && S.sbAtt && S.sbThr > 0 && b.h < 48000 && S.lifted) {
+      const p = nozW(b, 6);
+      for (const r of boosterRing(S.nb, SD / 2)) if (Math.random() < 0.7) puff(p.x + Math.cos(b.ang) * r.x, p.h - Math.sin(b.ang) * r.x, rnd(-3, 3), rnd(-3, 3), 6, 7, '#f4f4f4', 1.5);
+    }
   } else {
     const c = S.core;
     if (c.attachedSrb && c.srbThr > 0 && c.h < 48000 && S.lifted) {
-      const p = nozW(c, 4), lp = S.lastNoz || p, dist = Math.hypot(p.x - lp.x, p.h - lp.h), r0 = c.h < 3000 ? 5.5 : 4.2;
-      const n = Math.min(14, Math.max(1, Math.ceil(dist / (r0 * 0.9))));
+      const ring = boosterRing(nB(), HD / 2), big = Math.sqrt(nB() / 2) * SRB_D / 2.5;
+      const p = nozW(c, 4), lp = S.lastNoz || p, dist = Math.hypot(p.x - lp.x, p.h - lp.h), r0 = (c.h < 3000 ? 5.5 : 4.2) * Math.max(1, big * 0.8);
+      const n = Math.min(Math.ceil(28 / ring.length), Math.max(1, Math.ceil(dist / (r0 * 0.9))));
       for (let k = 1; k <= n; k++) { const t = k / n, x = lerp(lp.x, p.x, t), hh = lerp(lp.h, p.h, t);
-        for (const sd of [-1, 1]) { const off = HD / 2 + SRB_D / 2; puff(x + Math.cos(c.ang) * sd * off, hh - Math.sin(c.ang) * sd * off, rnd(-3, 3), rnd(-3, 3), r0, c.h < 3000 ? 9 : 7, '#f4f4f4', 1.5); } }
+        for (const b of ring) puff(x + Math.cos(c.ang) * b.x, hh - Math.sin(c.ang) * b.x, rnd(-3, 3), rnd(-3, 3), r0, c.h < 3000 ? 9 : 7, '#f4f4f4', 1.5); }
       S.lastNoz = p;
-      if (c.h < ML_TOP + 150) for (let i = 0; i < 4; i++) puff(rnd(-8, 8), rnd(1, 6), rnd(-50, 50), rnd(1, 10), rnd(5, 9), rnd(3, 6), '#eeeeee');
+      if (c.h < ML_TOP + 150) for (let i = 0; i < 2 + nB(); i++) puff(rnd(-8, 8), rnd(1, 6), rnd(-50, 50), rnd(1, 10), rnd(5, 9), rnd(3, 6), '#eeeeee');
     }
   }
 }
@@ -1919,7 +2053,8 @@ function hud(dt) {
       const c = S.core, u = S.up;
       if (S.staged) { $('v1').textContent = '—'; $('h1').textContent = '—'; $('tele1').style.display = 'none'; } else { $('v1').textContent = kmh(c.v || 0).toLocaleString(); $('h1').textContent = Math.max(0, (S.lifted ? c.h - ML_TOP : 0) / 1000).toFixed(1); }
       $('v2').textContent = kmh(u.v || 0).toLocaleString(); $('h2').textContent = Math.max(0, (!S.lifted ? 0 : S.staged ? u.h : u.h - ML_TOP - H1) / 1000).toFixed(1);
-      drawEngineRing($('e1'), L_H1, [c.eng[0], c.eng[1], c.attachedSrb && c.srbThr > 0, c.attachedSrb && c.srbThr > 0]);
+      const on = c.attachedSrb && c.srbThr > 0;
+      drawEngineRing($('e1'), lvRing(c.eng.length, nB()), [...c.eng, ...Array(nB()).fill(on)]);
       drawEngineRing($('e2'), L_H2, [u.eng]);
     }
   }
@@ -1930,8 +2065,8 @@ function hud(dt) {
   if (factT > 0) { factT -= dt; if (factT <= 0) $('fact').style.opacity = 0; }
   if (rumbleG) {
     let k = 0, alt = 0;
-    if (S.rocket === 'star') { const b = S.bst; k = b.eng.reduce((a, e) => a + e, 0) / 33 * b.thr + S.ship.eng.reduce((a, e) => a + e, 0) / 12; alt = Math.min(b.h, S.ship.h); if (P && ['seco', 'reent', 'splash'].includes(P.id)) { k = S.ship.eng.reduce((a, e) => a + e, 0) / 8 + S.ship.plasma * 0.5; alt = S.ship.h; } }
-    else { const c = S.core; k = (c.eng[0] ? 0.4 : 0) + (c.attachedSrb ? c.srbThr * 0.6 : 0) + (S.up.eng ? 0.15 : 0); alt = c.h; }
+    if (S.rocket === 'star') { const b = S.bst; k = b.eng.reduce((a, e) => a + e, 0) / 33 * b.thr + S.ship.eng.reduce((a, e) => a + e, 0) / 12 + (S.sbAtt ? S.sbThr * 0.15 * Math.sqrt(S.nb) : 0); alt = Math.min(b.h, S.ship.h); if (P && ['seco', 'reent', 'splash'].includes(P.id)) { k = S.ship.eng.reduce((a, e) => a + e, 0) / 8 + S.ship.plasma * 0.5; alt = S.ship.h; } }
+    else { const c = S.core; k = (c.eng[0] ? 0.4 : 0) + (c.attachedSrb ? c.srbThr * 0.6 * Math.sqrt(nB() / 2) : 0) + (S.up.eng ? 0.15 : 0); alt = c.h; }
     rumbleG.gain.value = clamp(k, 0, 1.2) * 0.5 * (1 - clamp(alt / 90000, 0, 0.85));
   }
 }
@@ -1964,19 +2099,39 @@ function step(dt) {
 requestAnimationFrame(loop);
 
 // ================================================================= title
-function pickRocket(r) { rocket = r; document.querySelectorAll('.rk').forEach(b => b.classList.toggle('sel', b.dataset.r === r)); }
+function pickRocket(r) { rocket = r; document.querySelectorAll('.rk').forEach(b => b.classList.toggle('sel', b.dataset.r === r)); showBoostPick(); }
+const BP_NOTE = {
+  star: n => n ? 'ほんものの スターシップには ブースターは ないけど… ゆめの パワーアップ！' : 'ほんものの スターシップは ブースター なし（0ほん）',
+  h3: n => n === 2 ? 'H3-22 は 2ほん、H3-24 は 4ほん' : n === 4 ? 'H3-24 と おなじ 4ほん！' : 'ほんものより おおい！ パワー アップ！',
+  ariane: n => n === 2 ? 'アリアン62 は 2ほん、アリアン64 は 4ほん' : n === 4 ? 'アリアン64 と おなじ 4ほん！' : 'ほんものより おおい！ パワー アップ！',
+};
+function showBoostPick() {
+  const n = nBoost[rocket], lim = BOOST[rocket];
+  $('bpNum').textContent = n + 'ほん'; $('bpMinus').disabled = n <= lim.min; $('bpPlus').disabled = n >= lim.max;
+  $('bpLabel').textContent = rocket === 'star' ? 'おまけ ブースターの かず' : 'ブースターの かず';
+  $('bpNote').textContent = BP_NOTE[rocket](n);
+}
+function changeBoost(d) {
+  const lim = BOOST[rocket]; nBoost[rocket] = clamp(nBoost[rocket] + d, lim.min, lim.max);
+  try { localStorage.setItem('rocketBoost_' + rocket, nBoost[rocket]); } catch (e) {}
+  showBoostPick(); drawPreviews();
+}
+$('bpMinus').onclick = () => changeBoost(-2); $('bpPlus').onclick = () => changeBoost(2);
 document.querySelectorAll('.rk').forEach(b => b.addEventListener('click', () => pickRocket(b.dataset.r)));
 document.querySelectorAll('.modes [data-m]').forEach(b => b.addEventListener('click', () => { audioInit(); mode = b.dataset.m; startMission(rocket); }));
 function drawPreview(cvs, r) {
   const c = cvs.getContext('2d'), prevG = g, prevS = S;
-  g = c; S = r === 'star' ? newStar() : newH3(); S.deb = []; S.mlx = 0; if (r === 'h3') S.core.x = 0;
+  useDims(r);
+  g = c; S = r === 'star' ? newStar() : newH3(r); S.deb = []; S.mlx = 0; S.gx = -110; S.core && (S.core.x = 0);
   if (r === 'star') { S.bst.lox = S.bst.ch4 = S.ship.lox = S.ship.ch4 = 1; syncStack(); } else { S.core.lox = S.core.lh2 = 1; }
   const v = { x: 0, y: 0, w: cvs.width, h: cvs.height, cx: r === 'star' ? -6 : 0, ch: r === 'star' ? 82 : 46, z: r === 'star' ? cvs.height * 0.86 / 190 : cvs.height * 0.86 / 105 };
+  c.clearRect(0, 0, cvs.width, cvs.height);
   renderScene(v);
-  g = prevG; S = prevS;
+  g = prevG; S = prevS; useDims(S ? S.rocket : 'h3');
 }
-drawPreview($('pk1'), 'star'); drawPreview($('pk2'), 'h3');
-function showBest() { for (const r of ['star', 'h3']) { let b = 0; try { b = +(localStorage.getItem('rocketBest_' + r) || 0); } catch (e) {} $('best_' + r).textContent = b ? '🏅 ベスト ' + b + 'てん' : ''; } }
+function drawPreviews() { drawPreview($('pk1'), 'star'); drawPreview($('pk2'), 'h3'); drawPreview($('pk3'), 'ariane'); }
+drawPreviews(); showBoostPick();
+function showBest() { for (const r of ['star', 'h3', 'ariane']) { let b = 0; try { b = +(localStorage.getItem('rocketBest_' + r) || 0); } catch (e) {} $('best_' + r).textContent = b ? '🏅 ベスト ' + b + 'てん' : ''; } }
 showBest();
 
 // test hook
