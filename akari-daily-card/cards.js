@@ -54,7 +54,7 @@
       actions: {
         kataomoi: '相手のSNSを見る時間を少しだけ減らして、自分の気持ちをノートに三行書いてみましょう',
         kosai: 'すぐに答えなくてもいい話題は、一晩あたためてから伝えてみましょう',
-        fukuen: '連絡するか迷ったら、今日は決めずに、気持ちを書き留めるだけにしてみましょう',
+        fukuen: '連絡するか迷ったら、すぐには決めずに、気持ちを書き留めるだけにしてみましょう',
         konkatsu: '会った人の条件ではなく、一緒にいて呼吸が楽だったかを思い出してみましょう',
         kaizen: '言い返したくなったら、ひと呼吸おいて、本当に伝えたいことを確かめてみましょう'
       },
@@ -68,7 +68,7 @@
       meaning: '豊かさ、愛情、育むこと、満ちていく感覚。',
       love: '愛情や豊かさが、ゆっくり育っていくことを表すカードです。誰かに満たしてもらう前に、まずあなた自身を大切に扱うことで、恋のぬくもりも深まっていきます。',
       actions: {
-        kataomoi: '好きな香りや飲みものを選んで、自分をもてなす時間を十分だけつくってみましょう',
+        kataomoi: '好きな香りや飲みものを選んで、自分をもてなす時間を10分だけつくってみましょう',
         kosai: '相手にしてもらってうれしかったことを、一つ言葉にして伝えてみましょう',
         fukuen: 'あの人のためではなく、自分のためのごほうびを一つ用意してみましょう',
         konkatsu: '次に会う日の服や小物を、自分が心地よいと感じるもので選んでみましょう',
@@ -101,7 +101,7 @@
       love: '誠実さと、信頼で結ばれるつながりを表すカードです。駆け引きよりも、約束を守る、丁寧に言葉を返すといった小さな誠実さが、心の距離を縮めていきます。',
       actions: {
         kataomoi: '相手からの話に、丁寧なひと言を添えて返してみましょう',
-        kosai: '小さな約束を一つ決めて、今日のうちに守ってみましょう',
+        kosai: '小さな約束を一つ決めて、守ってみましょう',
         fukuen: '信頼できる友人に、今の気持ちを少しだけ話してみましょう',
         konkatsu: '知人の紹介など、信頼できるつながりからの出会いにも目を向けてみましょう',
         kaizen: '「ありがとう」を、理由も添えて一度伝えてみましょう'
@@ -133,8 +133,8 @@
       love: '迷いを抱えたままでも、前に進む力を表すカードです。気持ちが揺れるのは自然なこと。全部を整えてからではなく、今日できる一歩を決めることで流れが動き出します。',
       actions: {
         kataomoi: '会話のきっかけを一つ、自分からつくってみましょう',
-        kosai: '先延ばしにしていた二人の予定を、今日一つ決めてみましょう',
-        fukuen: '気持ちが揺れても、今日は自分の生活リズムを守ることを選んでみましょう',
+        kosai: '先延ばしにしていた二人の予定を、一つ決めてみましょう',
+        fukuen: '気持ちが揺れても、自分の生活リズムを守ることを選んでみましょう',
         konkatsu: '気になっていた出会いの機会について、一つだけ調べてみましょう',
         kaizen: '話し合いたいことを一つにしぼって、伝える時間を決めてみましょう'
       },
@@ -164,7 +164,7 @@
       meaning: '内省、ひとりの時間、探求、静かな導き。',
       love: 'ひとりの時間に灯りをともし、自分を見つめ直すことを表すカードです。相手の反応から少し離れて、あなたにとって心地よい恋の形を思い出す、静かな充電の日です。',
       actions: {
-        kataomoi: '寝る前の十分間だけスマホを置いて、好きな音楽を聴いてみましょう',
+        kataomoi: '寝る前の10分間だけスマホを置いて、好きな音楽を聴いてみましょう',
         kosai: '一人で過ごす時間も楽しんで、そこで感じたことをあとで話してみましょう',
         fukuen: '思い出から少し離れて、一人で落ち着ける場所で過ごしてみましょう',
         konkatsu: '活動を一日お休みして、自分が本当に望む関係をゆっくり考えてみましょう',
@@ -214,7 +214,7 @@
       actions: {
         kataomoi: '返事を待つ時間の中に、自分がほっとできる予定も一つ置いてみましょう',
         kosai: '相手の行動を、相手の立場から一度だけ想像してみましょう',
-        fukuen: '答えを出そうとするのを今日はお休みして、ただ自分をいたわってみましょう',
+        fukuen: '答えを出そうとするのを少しお休みして、ただ自分をいたわってみましょう',
         konkatsu: 'うまくいかなかった出会いから、学べたことを一つだけ見つけてみましょう',
         kaizen: '正しさを決めるのを一度やめて、相手の話を最後まで聞いてみましょう'
       },
@@ -230,7 +230,7 @@
       actions: {
         kataomoi: '繰り返し考えてしまう思い込みを一つ紙に書いて、そっと手放してみましょう',
         kosai: '二人の間でなんとなく続いている習慣を、一つ新しくしてみましょう',
-        fukuen: 'あの頃の写真ややりとりを見返す時間を、今日は少しだけ減らしてみましょう',
+        fukuen: 'あの頃の写真ややりとりを見返す時間を、少しだけ減らしてみましょう',
         konkatsu: 'もう合わないと感じている探し方を、一つお休みしてみましょう',
         kaizen: '繰り返しているすれ違いのパターンを、一つ言葉にしてみましょう'
       },
@@ -262,7 +262,7 @@
       actions: {
         kataomoi: '相手のSNSを開きたくなったら、一度だけ別のことをしてから決めてみましょう',
         kosai: '不安から確かめたくなったことは、責める形ではなく気持ちとして伝えてみましょう',
-        fukuen: '「あの人でなければ」という思いを、今日は少しだけ横に置いてみましょう',
+        fukuen: '「あの人でなければ」という思いを、少しだけ横に置いてみましょう',
         konkatsu: '「こうでなければ」という条件を、一つだけゆるめてみましょう',
         kaizen: '我慢し続けていることを一つ、自分の中で認めてあげましょう'
       },
@@ -278,7 +278,7 @@
       actions: {
         kataomoi: '気持ちが揺れたら、すぐに動かず、まずは深呼吸を三回してみましょう',
         kosai: '驚くことがあっても結論を急がず、一晩置いてから話してみましょう',
-        fukuen: '今日は大きな決断をせず、自分が安心できることを一つしてみましょう',
+        fukuen: '大きな決断は急がず、自分が安心できることを一つしてみましょう',
         konkatsu: '思い通りにいかなかったことは、方向を見直すサインとして受けとめてみましょう',
         kaizen: '感情が高ぶったときは、話し合いを短く区切ってみましょう'
       },
@@ -340,7 +340,7 @@
       meaning: '再生、目覚め、呼びかけに応えること、過去を受け入れて進むこと。',
       love: '心が目覚め、もう一度向き合う力を表すカードです。過去の出来事にとらわれすぎず、今のあなたが感じていることに耳を傾けると、新しい答えが見えてきます。',
       actions: {
-        kataomoi: '前から気になっていた一歩を、今日の自分にできる大きさで考えてみましょう',
+        kataomoi: '前から気になっていた一歩を、今の自分にできる大きさで考えてみましょう',
         kosai: '最近言えずにいたことを、一つだけやわらかく伝えてみましょう',
         fukuen: '過去の自分に「よく頑張ったね」と声をかけてみましょう',
         konkatsu: 'これまでの出会いを振り返って、次に大切にしたいことを一つ決めてみましょう',
@@ -492,7 +492,7 @@
         C(120, 254, 3, 0, 'none', GOLD);
     },
     hermit() {
-      const sixStar = `<polygon points="120,166 129,182 111,182" fill="none" stroke="${GOLD}" stroke-width="1.6"/><polygon points="120,188 129,172 111,172" fill="none" stroke="${GOLD}" stroke-width="1.6"/>`;
+      const sixStar = `<polygon points="${starPts(120, 177, 12, 4.6, 8)}" fill="${GOLD}"/>`;
       return L('M120,112 L120,136', 1.6) + C(120, 110, 4, 1.6) +
         `<path d="M104,148 L112,136 L128,136 L136,148Z" fill="${SOFT}" stroke="${INK}" stroke-width="1.8" stroke-linejoin="round"/>` +
         `<rect x="102" y="148" width="36" height="58" rx="3" fill="${PALE}" stroke="${INK}" stroke-width="1.8"/>` + sixStar +
@@ -548,8 +548,8 @@
         L('M60,262 C80,256 100,268 120,262 C140,256 160,268 180,262', 1.2, GOLD);
     },
     devil() {
-      return `<ellipse cx="100" cy="196" rx="24" ry="14" transform="rotate(-30 100 196)" fill="none" stroke="${INK}" stroke-width="3"/>` +
-        `<path d="M132,206 A24,14 -30 1 1 150,170" transform="rotate(0)" fill="none" stroke="${INK}" stroke-width="3" stroke-linecap="round"/>` +
+      return `<ellipse cx="102" cy="200" rx="24" ry="13" transform="rotate(-28 102 200)" fill="none" stroke="${INK}" stroke-width="3"/>` +
+        `<ellipse cx="134" cy="182" rx="24" ry="13" transform="rotate(-28 134 182)" fill="none" stroke="${INK}" stroke-width="3" pathLength="100" stroke-dasharray="80 20" stroke-dashoffset="-6" stroke-linecap="round"/>` +
         heart(150, 142, 12, SOFT) + sparkle(170, 124, 4) + sparkle(132, 120, 3) + sparkle(176, 152, 3) +
         L('M82,246 L82,226', 2) + `<path d="M82,226 C76,216 82,208 82,204 C86,210 90,216 82,226Z" fill="${GOLD}"/>`;
     },
@@ -625,11 +625,11 @@
       <rect x="14" y="14" width="212" height="372" rx="8" fill="none" stroke="${GOLD}" stroke-width="0.7"/>
       ${sparkle(26, 26, 4)}${sparkle(214, 26, 4)}${sparkle(26, 374, 4)}${sparkle(214, 374, 4)}
       <text x="120" y="50" text-anchor="middle" font-family="'Shippori Mincho','Hiragino Mincho ProN','Yu Mincho',serif" font-size="17" letter-spacing="3" fill="${INK}">${card.roman}</text>
-      <path d="M84,45 L100,45 M140,45 L156,45" stroke="${GOLD}" stroke-width="1"/>
+      ${(() => { const h = card.roman.length * 6.2 + 9; return `<path d="M${120 - h - 16},44.5 L${120 - h},44.5 M${120 + h},44.5 L${120 + h + 16},44.5" stroke="${GOLD}" stroke-width="1"/>`; })()}
       <circle cx="120" cy="190" r="80" fill="url(#${id}halo)" stroke="#DCCDEC" stroke-width="1.2"/>
       <circle cx="120" cy="190" r="86" fill="none" stroke="${GOLD}" stroke-width="0.6" stroke-dasharray="1 5"/>
       <g>${MOTIFS[card.id]()}</g>
-      ${sprig(96, 334, -1, 40)}${sprig(144, 334, 1, 40)}
+      ${(() => { const half = Math.min(66, 12 + card.name.length * (card.name.length > 4 ? 9.5 : 11)); return sprig(120 - half, 334, -1, card.name.length > 4 ? 30 : 40) + sprig(120 + half, 334, 1, card.name.length > 4 ? 30 : 40); })()}
       <text x="120" y="330" text-anchor="middle" font-family="'Shippori Mincho','Hiragino Mincho ProN','Yu Mincho',serif" font-size="${card.name.length > 4 ? 18 : 22}" font-weight="600" letter-spacing="2" fill="${INK}">${card.name}</text>
       <text x="120" y="356" text-anchor="middle" font-family="'Cormorant Garamond','Times New Roman',serif" font-size="9.5" letter-spacing="2.4" fill="${GOLD}">${card.en}</text>
     </svg>`;

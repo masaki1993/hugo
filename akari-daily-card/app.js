@@ -10,6 +10,13 @@
   const VOICE = window.AKARI_VOICE;
 
   const STORE_KEY = 'akari-daily-card:v1';
+  let errorShown = false;
+  window.addEventListener('error', () => {
+    if (errorShown) return;
+    errorShown = true;
+    const t = document.getElementById('toast');
+    if (t) { t.textContent = 'うまく表示できませんでした。再読み込みすると続きから再開できます'; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 5000); }
+  });
   const LOCK_PREFIX = 'akari-daily-card:lock:';
   const $ = (sel, root) => (root || document).querySelector(sel);
   const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
@@ -52,6 +59,7 @@
       sent: { onboardingCompleted: false, audioCompleted: {}, paywallPlanTapped: false },
       events: [],
       outbox: [],
+      supervision: {},   // 打ち合わせで聞いた朱里さんの言葉（カードごと）
       debug: { dayOffset: 0, forceTtsFail: false }
     };
   }
@@ -62,6 +70,11 @@
     writeStore(S);
     if (params.get('reset') === '1') history.replaceState(null, '', location.pathname + location.hash);
   }
+  // 後から増えた項目の補完（古い保存データでも動くように）
+  S.supervision = S.supervision || {};
+  S.debug = S.debug || { dayOffset: 0, forceTtsFail: false };
+  S.sent = S.sent || { onboardingCompleted: false, audioCompleted: {}, paywallPlanTapped: false };
+  S.sent.audioCompleted = S.sent.audioCompleted || {};
   function save() { writeStore(S); }
 
   /* =========================================================
@@ -681,7 +694,7 @@
     const fan = bind('fan');
     fan.classList.add('is-picking');
     btn.classList.add('is-picked');
-    btn.style.transform = 'translateY(-46px) scale(1.42)';
+    btn.style.transform = 'translateY(-22px) scale(1.36)';
     setText('drawSub', 'カードをめくっています…');
     const day = await gen;
     const card = CARDS.byId(day.cardId);
@@ -750,6 +763,13 @@
     item(!c.avoidPhraseHits.length, c.avoidPhraseHits.length ? `避けたい言い回しを検出：${c.avoidPhraseHits.join('、')}` : '避けたい言い回し：検出なし');
     item(true, `音声の長さ（推定）：朝 ${fmtTime(day.estimatedSeconds.morning * 1000)}／夜 ${fmtTime(day.estimatedSeconds.night * 1000)}`);
 
+    renderAkariWord(card);
+    setText('svCardName', card.name);
+    const sv = S.supervision[card.id] || {};
+    $('#svReading').value = sv.reading || '';
+    $('#svMessage').value = sv.message || '';
+    $('#svSaved').textContent = sv.updatedAt ? '保存済み' : '';
+
     // カードと文章を先に出し、音声はその場で準備
     renderAudioStatus();
     if (!day.audio || day.audio.status !== 'ready' || !audioReadyThisSession) {
@@ -757,6 +777,53 @@
     }
   }
   let audioReadyThisSession = false;
+
+  function renderAkariWord(card) {
+    const msg = ((S.supervision[card.id] || {}).message || '').trim();
+    const box = bind('akariWord');
+    box.classList.toggle('placeholder', !msg);
+    setText('akariWordText', msg || 'ここに、朱里さんご本人のひと言が入ります（監修後）。');
+    bind('akariWordSign').hidden = !msg;
+  }
+
+  let svTimer = null;
+  function saveSupervision() {
+    const day = S.days[todayJst()];
+    if (!day) return;
+    const card = CARDS.byId(day.cardId);
+    S.supervision[card.id] = {
+      reading: $('#svReading').value.trim(),
+      message: $('#svMessage').value.trim(),
+      updatedAt: new Date().toISOString()
+    };
+    save();
+    renderAkariWord(card);
+    $('#svSaved').textContent = '保存しました。結果画面と音声の最後に反映されます';
+  }
+  ['#svReading', '#svMessage'].forEach((sel) => $(sel).addEventListener('input', () => {
+    clearTimeout(svTimer);
+    svTimer = setTimeout(saveSupervision, 400);
+  }));
+  $('#svExport').addEventListener('click', () => {
+    const ids = Object.keys(S.supervision).filter((id) => S.supervision[id].reading || S.supervision[id].message);
+    if (!ids.length) { toast('まだ記録がありません'); return; }
+    const lines = ['# 朱里さんの読み方（打ち合わせメモ）', ''];
+    ids.forEach((id) => {
+      const c = CARDS.byId(id);
+      const sv = S.supervision[id];
+      const day = Object.values(S.days).find((d) => d.cardId === id);
+      lines.push(`## ${c.name}（${c.en}）`, '');
+      if (day) lines.push(`- 恋愛状況：${relLabel(day.reflected.relationship)}`, `- デモの解釈文：${day.interpretation.morning}`, `- デモの行動：${day.action}`);
+      if (sv.reading) lines.push(`- **朱里さんの読み方**：${sv.reading}`);
+      if (sv.message) lines.push(`- **フォロワーへの一言**：${sv.message}`);
+      lines.push('');
+    });
+    const md = lines.join('\n');
+    (navigator.clipboard ? navigator.clipboard.writeText(md) : Promise.reject()).then(
+      () => toast('Markdown をコピーしました'),
+      () => { window.prompt('コピーしてください', md); }
+    );
+  });
 
   function renderAudioStatus() {
     const day = S.days[todayJst()];
@@ -831,7 +898,7 @@
     $$('.mode-switch button').forEach((b) => { b.disabled = false; });
 
     player = VOICE.create({
-      segments: day.scripts[audioMode],
+      segments: withAkariWord(day.scripts[audioMode], day),
       tone: day.tone,
       mode: canTts ? 'tts' : 'captions',
       targetSeconds: CFG.audio.targetSeconds,
@@ -848,6 +915,8 @@
       },
       onProgress: ({ elapsedMs, totalMs, ratio }) => {
         $('#progressBar').style.width = `${(ratio * 100).toFixed(1)}%`;
+        $('#progressWrap').setAttribute('aria-valuenow', String(Math.round(ratio * 100)));
+        $('#progressWrap').setAttribute('aria-valuetext', `${fmtTime(elapsedMs)} 経過`);
         $('#timeNow').textContent = fmtTime(elapsedMs);
         $('#timeTotal').textContent = (player && player.state === 'ended' ? '' : '約') + fmtTime(totalMs);
       },
@@ -875,6 +944,17 @@
         }
       }
     });
+  }
+
+  function withAkariWord(segments, day) {
+    const msg = ((S.supervision[day.cardId] || {}).message || '').trim();
+    if (!msg) return segments;
+    const out = segments.slice(0, -1).concat(
+      { text: '朱里さんからの、ひと言です。', pause: 900, flex: false },
+      { text: /[。！？]$/.test(msg) ? msg : msg + '。', pause: 1800, flex: true },
+      segments[segments.length - 1]
+    );
+    return GEN.fitScript(out, day.tone, CFG.audio.targetSeconds);
   }
 
   function teardownPlayer() {
@@ -983,6 +1063,30 @@
         holder.appendChild(segGroup('いつ聴きたいですか？', CFG.onboarding.listenTimes, 'listenTime', ''));
         holder.appendChild(segGroup('声のトーン', CFG.onboarding.voiceTones, 'voiceTone', ''));
         holder.style.marginTop = '14px';
+        // 端末の日本語音声が複数あるときは、声そのものも選べるように
+        const voices = VOICE.supported ? VOICE.listJaVoices() : [];
+        if (voices.length > 1) {
+          const wrap = document.createElement('div');
+          wrap.className = 'seg-group';
+          wrap.innerHTML = '<label class="seg-label" for="sVoiceName">声の種類（この端末）</label>';
+          const sel = document.createElement('select');
+          sel.id = 'sVoiceName';
+          sel.className = 'field';
+          const auto = document.createElement('option');
+          auto.value = ''; auto.textContent = 'おまかせ';
+          sel.appendChild(auto);
+          voices.forEach((v) => { const o = document.createElement('option'); o.value = v.name; o.textContent = v.name; sel.appendChild(o); });
+          sel.value = p.voiceName || '';
+          const tryBtn = document.createElement('button');
+          tryBtn.type = 'button'; tryBtn.className = 'btn btn-soft sample-btn'; tryBtn.textContent = 'この声で試聴する';
+          sel.addEventListener('change', () => {
+            S.profile.voiceName = sel.value; save();
+            VOICE.setPreferred(sel.value);
+          });
+          tryBtn.addEventListener('click', () => { VOICE.setPreferred(sel.value); VOICE.sample(S.profile.voiceTone); });
+          wrap.append(sel, tryBtn);
+          holder.appendChild(wrap);
+        }
         holder.addEventListener('click', () => {
           setTimeout(() => {
             const changedTone = S.draft.voiceTone !== S.profile.voiceTone;
@@ -1069,7 +1173,9 @@
           <button data-dbg="ttsfail">${S.debug.forceTtsFail ? 'TTS失敗テスト：ON' : 'TTS失敗テスト：OFF'}</button>
           <button data-dbg="copy">イベントJSONをコピー</button>
           <button data-dbg="newuser">新規ユーザーでやり直す</button>
+          <button data-dbg="qr">打ち合わせ用QRを表示</button>
         </div>
+        <div id="qrBox" style="text-align:center"></div>
         <table><thead><tr><th>時刻(UTC)</th><th>イベント</th><th>属性</th></tr></thead><tbody>${rows || '<tr><td colspan="3">まだありません</td></tr>'}</tbody></table>
         <button class="btn btn-ghost" id="dbgClose">閉じる</button>
       </div>`, (root) => {
@@ -1085,6 +1191,7 @@
           (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(() => toast('コピーしました'), () => toast('コピーできませんでした'));
           return;
         }
+        if (a === 'qr') { showQr($('#qrBox', root)); return; }
         if (a === 'newuser') {
           teardownPlayer();
           S = freshState(); save();
@@ -1099,6 +1206,25 @@
       }));
     });
   }
+  // 朱里さんのスマホで読み取ってもらう共有URL（?debug などは外す）
+  function showQr(box) {
+    const url = location.origin + location.pathname;
+    const draw = () => {
+      const qr = window.qrcode(0, 'M');
+      qr.addData(url);
+      qr.make();
+      box.innerHTML = qr.createSvgTag({ cellSize: 5, margin: 2, scalable: true }) + `<div class="small muted" style="word-break:break-all">${escapeHtml(url)}</div>`;
+      const svg = box.querySelector('svg');
+      if (svg) { svg.style.width = '220px'; svg.style.height = '220px'; }
+    };
+    if (window.qrcode) { draw(); return; }
+    box.textContent = '読み込み中…';
+    const sc = document.createElement('script');
+    sc.src = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js';
+    sc.onload = draw;
+    sc.onerror = () => { box.textContent = 'QRを読み込めませんでした（オフライン）。URL：' + url; };
+    document.head.appendChild(sc);
+  }
   function escapeHtml(s) { return s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
 
   /* =========================================================
@@ -1110,6 +1236,26 @@
     const d = todayJst();
     if (d !== lastDate) { lastDate = d; if (current === 'home') route(); }
   }, 60000);
+
+  // ラジオグループ（恋愛状況・音声設定）を矢印キーでも選べるように
+  document.addEventListener('keydown', (e) => {
+    const group = e.target.closest && e.target.closest('[role="radiogroup"]');
+    if (!group || !['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight'].includes(e.key)) return;
+    const items = $$('[role="radio"]', group);
+    const i = items.indexOf(e.target);
+    if (i < 0) return;
+    e.preventDefault();
+    const next = items[(i + (e.key === 'ArrowDown' || e.key === 'ArrowRight' ? 1 : items.length - 1)) % items.length];
+    next.focus();
+    next.click();
+  });
+
+  // ホーム画面に追加したときにオフラインでも開けるように（https のときだけ）
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+    window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+  }
+
+  if (S.profile && S.profile.voiceName) VOICE.setPreferred(S.profile.voiceName);
 
   fillBacks(document);
   route();

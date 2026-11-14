@@ -11,7 +11,11 @@
   <title>今日のカード｜朱里（体験版）</title>
   <meta name="description" content="朱里 監修予定の、朝に恋愛のカードを1枚引く体験版デモです。">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500&family=Shippori+Mincho:wght@500;600&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
@@ -25,14 +29,15 @@
       --fuji-700: #6A4F8F;
       --ink: #3D3350;
       --ink-soft: #6F6584;
-      --ink-faint: #9A91AB;
+      --ink-faint: #746A88;
       --kinari: #FBF7EF;
       --kinari-2: #F4EDDF;
       --gold: #B7975A;
       --gold-soft: #E9DDC2;
+      --gold-text: #86682F; /* 文字に使う金（コントラスト 4.5:1 以上） */
       --shu: #D0563E;
-      --ok: #5E8C6A;
-      --warn: #B5654A;
+      --ok: #4B7A57;
+      --warn: #9E4F35;
       --radius: 20px;
       --radius-s: 12px;
       --shadow: 0 10px 30px -12px rgba(74, 52, 110, .28), 0 2px 6px -2px rgba(74, 52, 110, .10);
@@ -78,7 +83,12 @@
     }
 
     button { font: inherit; color: inherit; }
+    /* 見出しの1文字だけの折り返しを防ぐ（対応ブラウザのみ） */
+    h1, h2, h3, .tagline, .draw-title, .ob-q, .caption, .for-you { text-wrap: balance; }
+    p, li, .interp { text-wrap: pretty; line-break: strict; }
     a { color: var(--fuji-700); }
+    :focus-visible { outline: 3px solid rgba(132, 104, 174, .55); outline-offset: 3px; }
+    .field:focus-visible { outline: none; }
     .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
     /* ---------- レイアウト ---------- */
@@ -204,7 +214,7 @@
     .btn:disabled { opacity: .45; cursor: default; transform: none; }
     .btn-primary {
       color: #fff;
-      background: linear-gradient(135deg, #A387C6 0%, #7D61A6 100%);
+      background: linear-gradient(135deg, #8468AE 0%, #654A8E 100%);
       box-shadow: 0 10px 24px -10px rgba(106, 79, 143, .8), inset 0 1px 0 rgba(255, 255, 255, .25);
     }
     .btn-primary .spark { width: 16px; height: 16px; }
@@ -223,7 +233,7 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      color: var(--gold);
+      color: var(--gold-text);
       font-size: 12px;
       letter-spacing: .2em;
       margin: 28px 0 14px;
@@ -322,7 +332,7 @@
       color: var(--fuji-700); background: var(--fuji-100);
     }
     .chip-btn svg { width: 14px; height: 14px; }
-    .chip-btn.done { background: #EAF2EC; color: var(--ok); }
+    .chip-btn.done { background: #EAF2EC; color: #3E6849; }
 
     .tomorrow {
       display: grid; grid-template-columns: 64px 1fr; gap: 16px; align-items: center;
@@ -330,7 +340,7 @@
     }
     .tomorrow .mini-back { width: 64px; border-radius: 9px; overflow: hidden; opacity: .9; filter: saturate(.8); position: relative; }
     .tomorrow .lock {
-      position: absolute; inset: 0; display: grid; place-items: center;
+      position: absolute; top: 0; right: 0; bottom: 0; left: 0; display: grid; place-items: center;
       font-family: var(--serif); color: #fff; font-size: 22px; text-shadow: 0 1px 6px rgba(60, 40, 90, .4);
     }
     .tomorrow p { margin: 0; }
@@ -368,7 +378,14 @@
       appearance: none;
     }
     .field:focus { border-color: var(--fuji-500); box-shadow: 0 0 0 4px rgba(148, 120, 184, .15); }
-    .field::placeholder { color: #B3ABC0; }
+    .field::placeholder { color: #918AA2; }
+    select.field {
+      padding-right: 44px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4' fill='none' stroke='%236F6584' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 16px center;
+      background-size: 16px;
+    }
     textarea.field { min-height: 150px; resize: none; line-height: 1.75; }
     .field-meta { display: flex; justify-content: space-between; gap: 10px; margin-top: 8px; font-size: 12px; color: var(--ink-faint); }
     .field-meta .count { font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -433,12 +450,14 @@
       height: 300px;
       margin: 0 -20px 0;
       perspective: 1200px;
+      overflow: hidden; /* 端のカードが画面外にはみ出して横スクロールしないように */
     }
     .fan-card {
       position: absolute;
       left: 50%;
-      bottom: 30px;
+      bottom: 54px;
       width: 104px;
+      height: 173px; /* aspect-ratio 未対応の端末向け */
       aspect-ratio: 240 / 400;
       margin-left: -52px;
       border: 0;
@@ -453,14 +472,14 @@
     .fan-card:focus-visible { outline: 3px solid var(--fuji-500); outline-offset: 4px; }
     .fan.is-picking .fan-card:not(.is-picked) { opacity: 0; pointer-events: none; }
     .fan-card .flip { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform .9s var(--ease); }
-    .fan-card .side { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 12px; overflow: hidden; }
+    .fan-card .side { position: absolute; top: 0; right: 0; bottom: 0; left: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 12px; overflow: hidden; }
     .fan-card .front { transform: rotateY(180deg); }
     .fan-card.is-picked { z-index: 5; transform-origin: 50% 50%; }
     .fan-card.is-flipped .flip { transform: rotateY(180deg); }
     .draw-reveal { text-align: center; min-height: 96px; opacity: 0; transition: opacity .6s .2s; }
     .draw-reveal.show { opacity: 1; }
     .draw-reveal .nm { font-family: var(--serif); font-size: 26px; letter-spacing: .14em; margin: 0; }
-    .draw-reveal .en { font-family: var(--latin); color: var(--gold); letter-spacing: .24em; font-size: 12px; }
+    .draw-reveal .en { font-family: var(--latin); color: var(--gold-text); letter-spacing: .24em; font-size: 12px; }
 
     /* ---------- 結果 ---------- */
     .result-head { text-align: center; margin: 6px 0 14px; }
@@ -468,7 +487,7 @@
     .result-card { width: 62%; max-width: 230px; margin: 4px auto 0; border-radius: 16px; box-shadow: var(--shadow-card); animation: cardIn .9s var(--ease); }
     @keyframes cardIn { from { opacity: 0; transform: translateY(14px) scale(.96); } to { opacity: 1; transform: none; } }
     .result-name { text-align: center; margin: 18px 0 2px; font-family: var(--serif); font-weight: 600; font-size: 28px; letter-spacing: .16em; }
-    .result-en { text-align: center; font-family: var(--latin); color: var(--gold); letter-spacing: .26em; font-size: 12px; }
+    .result-en { text-align: center; font-family: var(--latin); color: var(--gold-text); letter-spacing: .26em; font-size: 12px; }
     .kw-chips { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
     .kw-chips span { font-size: 12px; padding: 2px 12px; border-radius: 999px; background: var(--fuji-100); color: var(--fuji-700); letter-spacing: .08em; }
     .for-you { font-family: var(--serif); font-size: 17px; letter-spacing: .08em; margin: 0 0 10px; }
@@ -480,7 +499,7 @@
       background: linear-gradient(135deg, #FFFDF8, var(--kinari-2));
       border: 1px solid var(--gold-soft);
     }
-    .action-box .eyebrow { color: var(--gold); display: flex; align-items: center; gap: 6px; }
+    .action-box .eyebrow { color: var(--gold-text); display: flex; align-items: center; gap: 6px; }
     .action-box p { margin: 4px 0 0; font-weight: 500; line-height: 1.85; }
     .affirm { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
     .affirm li {
@@ -538,13 +557,36 @@
     .check-list li::before { content: "✓"; color: var(--ok); font-weight: 700; }
     .check-list li.ng::before { content: "!"; color: var(--warn); }
 
+    .akari-word {
+      margin-top: 16px;
+      padding: 18px 18px 14px;
+      border-radius: 16px;
+      background: #fff;
+      border: 1px solid var(--fuji-200);
+      position: relative;
+    }
+    .akari-word::before {
+      content: "";
+      position: absolute; left: 18px; top: -5px;
+      width: 9px; height: 9px; border-radius: 50%;
+      background: var(--shu);
+    }
+    .akari-word .eyebrow { color: var(--fuji-700); }
+    .akari-word p { margin: 6px 0 0; font-family: var(--serif); font-size: 16px; line-height: 1.95; letter-spacing: .05em; }
+    .akari-word .sign { text-align: right; font-family: var(--serif); font-size: 13px; color: var(--ink-soft); margin-top: 6px; letter-spacing: .2em; }
+    .akari-word.placeholder p { font-family: var(--sans); font-size: 13px; color: var(--ink-soft); letter-spacing: .02em; }
+    .sv-field { margin-top: 10px; }
+    .sv-field label { display: block; font-size: 12.5px; color: var(--ink-soft); margin-bottom: 4px; }
+    .sv-field textarea { min-height: 90px; font-size: 16px; }
+    .sv-saved { font-size: 11.5px; color: var(--ok); min-height: 1.4em; margin-top: 4px; }
+
     /* ---------- 音声 ---------- */
     .audio-wrap { display: flex; flex-direction: column; flex: 1; }
     .audio-card { display: grid; grid-template-columns: 70px 1fr; gap: 14px; align-items: center; margin-top: 4px; }
     .audio-card .mini { width: 70px; border-radius: 10px; overflow: hidden; box-shadow: var(--shadow-card); }
     .audio-card h2 { margin: 0; font-family: var(--serif); font-size: 21px; letter-spacing: .1em; font-weight: 600; }
     .mode-switch { display: inline-grid; grid-auto-flow: column; gap: 4px; padding: 3px; border-radius: 999px; background: var(--fuji-100); margin-top: 8px; }
-    .mode-switch button { border: 0; background: transparent; padding: 4px 12px; border-radius: 999px; font-size: 12.5px; cursor: pointer; color: var(--ink-soft); }
+    .mode-switch button { border: 0; background: transparent; padding: 4px 12px; border-radius: 999px; font-size: 12.5px; cursor: pointer; color: #5C5372; }
     .mode-switch button[aria-pressed="true"] { background: #fff; color: var(--fuji-700); font-weight: 700; box-shadow: 0 1px 3px rgba(74, 52, 110, .15); }
     .mode-switch button:disabled { opacity: .5; }
 
@@ -588,7 +630,7 @@
     .controls { display: grid; grid-template-columns: 1fr 84px 1fr; align-items: center; margin: 18px 0 6px; }
     .play-btn {
       width: 84px; height: 84px; border-radius: 50%; border: 0; cursor: pointer;
-      background: linear-gradient(135deg, #A387C6, #7D61A6);
+      background: linear-gradient(135deg, #8468AE, #654A8E);
       color: #fff; display: grid; place-items: center;
       box-shadow: 0 14px 28px -12px rgba(106, 79, 143, .9);
       transition: transform .15s;
@@ -623,7 +665,7 @@
       border-radius: 16px; background: #fff; border: 1.5px solid var(--fuji-300);
       position: relative;
     }
-    .price .tag { position: absolute; top: -11px; left: 50%; transform: translateX(-50%); background: var(--fuji-500); color: #fff; font-size: 11px; letter-spacing: .12em; padding: 2px 12px; border-radius: 999px; white-space: nowrap; }
+    .price .tag { position: absolute; top: -11px; left: 50%; transform: translateX(-50%); background: var(--fuji-700); color: #fff; font-size: 11px; letter-spacing: .12em; padding: 2px 12px; border-radius: 999px; white-space: nowrap; }
     .price .main { font-weight: 700; font-size: 16px; letter-spacing: .04em; }
     .pw-thanks {
       display: none;
@@ -641,7 +683,7 @@
     .pw-fine { font-size: 11px; color: var(--ink-faint); text-align: center; margin-top: 12px; line-height: 1.7; }
 
     /* ---------- シート・トースト ---------- */
-    .sheet-backdrop { position: fixed; inset: 0; background: rgba(61, 51, 80, .35); z-index: 50; opacity: 0; pointer-events: none; transition: opacity .25s; }
+    .sheet-backdrop { position: fixed; top: 0; right: 0; bottom: 0; left: 0; background: rgba(61, 51, 80, .35); z-index: 50; opacity: 0; pointer-events: none; transition: opacity .25s; }
     .sheet-backdrop.show { opacity: 1; pointer-events: auto; }
     .sheet {
       position: fixed; left: 50%; bottom: 0; z-index: 51;
@@ -684,7 +726,10 @@
     @media (max-width: 350px) {
       .tagline { font-size: 22px; }
       .ob-q { font-size: 20px; }
-      .fan-card { width: 88px; margin-left: -44px; }
+      .draw-title { font-size: 16.5px; letter-spacing: .02em; }
+      .seg { font-size: 13.5px; letter-spacing: .02em; white-space: nowrap; padding: 8px 2px; }
+      .seg small { white-space: normal; }
+      .fan-card { width: 88px; height: 147px; margin-left: -44px; }
     }
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
@@ -692,6 +737,7 @@
   </style>
 </head>
 <body>
+  <noscript><p style="padding:24px;text-align:center">このページを表示するには JavaScript を有効にしてください。</p></noscript>
   <div class="app" id="app">
     <header class="topbar">
       <button class="icon-btn" id="backBtn" aria-label="戻る" hidden>
@@ -836,6 +882,11 @@
             </div>
             <p data-bind="action"></p>
           </div>
+          <div class="akari-word placeholder" data-bind="akariWord">
+            <div class="eyebrow">朱里からのひと言</div>
+            <p data-bind="akariWordText">ここに、朱里さんご本人のひと言が入ります（監修後）。</p>
+            <div class="sign" data-bind="akariWordSign" hidden>— 朱里</div>
+          </div>
         </div>
 
         <div class="divider">AFFIRMATION</div>
@@ -847,7 +898,7 @@
             <div class="orb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2"/></svg></div>
             <div>
               <h3>ガイド音声 <span class="small muted" data-bind="audioLen">約2分15秒</span></h3>
-              <div class="status" data-bind="audioStatus"><span class="spinner"></span>音声を準備中…</div>
+              <div class="status" data-bind="audioStatus" role="status" aria-live="polite"><span class="spinner"></span>音声を準備中…</div>
             </div>
           </div>
           <button class="btn btn-primary" id="toAudioBtn" style="margin-top:14px" disabled>
@@ -886,6 +937,18 @@
             <p style="margin:12px 0 6px">自動チェック</p>
             <ul class="check-list" data-bind="checkList"></ul>
             <p class="small muted" style="margin:10px 0 0">監修で最初に差し替えるのは、カードの読み方、避けたい言い回し、音声の最後の一言です。</p>
+            <p style="margin:16px 0 0"><b>朱里さんの言葉を記録する</b></p>
+            <p class="small muted" style="margin:2px 0 0">「ご自身なら、このカードをどう読み、フォロワーにどんな一言を添えますか？」への答えをその場で残します。一言は結果画面と音声の最後にすぐ反映され、メソッドプロンプトの具体例として書き出せます。</p>
+            <div class="sv-field">
+              <label for="svReading">このカードの読み方（<span data-bind="svCardName"></span>）</label>
+              <textarea class="field" id="svReading" maxlength="400" placeholder="例）このカードが出た朝は、答えを急がなくていいサイン。"></textarea>
+            </div>
+            <div class="sv-field">
+              <label for="svMessage">フォロワーに添える一言</label>
+              <textarea class="field" id="svMessage" maxlength="80" placeholder="例）焦らなくて大丈夫。あなたの優しさは、ちゃんと届いています。"></textarea>
+            </div>
+            <div class="sv-saved" id="svSaved" role="status"></div>
+            <button class="btn btn-soft" id="svExport" type="button">記録した内容をコピー（Markdown）</button>
           </div>
         </details>
 
@@ -916,7 +979,7 @@
             </div>
           </div>
 
-          <div class="progress" aria-hidden="true"><i id="progressBar"></i></div>
+          <div class="progress" id="progressWrap" role="progressbar" aria-label="再生位置" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="progressBar"></i></div>
           <div class="time-row"><span id="timeNow">0:00</span><span id="timeTotal">約2:15</span></div>
 
           <div class="controls">

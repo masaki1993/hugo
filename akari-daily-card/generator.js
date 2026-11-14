@@ -125,8 +125,8 @@
   const WISH_DEFAULT = {
     kataomoi: 'この想いを大切にしながら',
     kosai: '二人の時間を大切にしながら',
-    fukuen: 'あの人を想う気持ちも抱えたまま',
-    konkatsu: 'これからの出会いを信じながら',
+    fukuen: '今の自分を大切にしながら',
+    konkatsu: '自分らしいご縁を信じながら',
     kaizen: '二人の関係を思うあなただからこそ'
   };
 
@@ -162,7 +162,8 @@
     const empathy = worry.text.replace('{tw}', tw);
     const cardIntro = `今日のカードは「${card.name}」。`;
     const bridge = wish ? `${wish.phrase}を願う気持ちを大切にしながら、` : `${WISH_DEFAULT[rel]}、`;
-    const actionSentence = `今日は、${action}。`;
+    // 夜は「今日のカード」を受け取りつつ、行動は眠る前か明日の朝に置く
+    const actionSentence = mode === 'night' ? `眠る前のひとときか明日の朝に、${action}。` : `今日は、${action}。`;
     const fillers = [
       '小さな一歩で、十分です。',
       'できなかった日も、自分を責めなくて大丈夫。',
@@ -254,10 +255,13 @@
     // 5. 今日の小さな行動
     if (night) {
       add('今日、このカードのように過ごせた瞬間は、ありましたか。', 2600, true);
-      add(`もし、まだだったら。${interp.action}。眠る前の小さな時間でも、明日の朝でも、かまいません。`, 1800, true);
+      add('もし、まだだったら。', 900);
+      add(interp.bridge, 350);
+      sentences(interp.actionSentence).forEach((t, i, arr) => add(t, i === arr.length - 1 ? 1800 : 700, i === arr.length - 1));
     } else {
       add('今日の、小さな行動です。', 900);
-      add(interp.bridge + interp.actionSentence, 1600, true);
+      add(interp.bridge, 350);
+      sentences(interp.actionSentence).forEach((t, i, arr) => add(t, i === arr.length - 1 ? 1600 : 700, i === arr.length - 1));
       if (interp.extras.length) add(interp.extras[0], 1200);
       add(tone === 'strong' ? 'できたら、それで十分。自分にマルをつけてあげてください。' : 'できなくても、思い出せただけで十分です。', 1800, true);
     }

@@ -1,0 +1,18 @@
+{
+  "name": "今日のカード｜朱里（体験版）",
+  "short_name": "今日のカード",
+  "description": "朝に恋愛のカードを1枚引き、その日の自分に向けた言葉とガイド音声を受け取る体験版。",
+  "lang": "ja",
+  "start_url": "./#home",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FBF7EF",
+  "theme_color": "#F7F3FB",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

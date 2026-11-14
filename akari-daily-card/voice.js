@@ -19,6 +19,14 @@
   const synth = 'speechSynthesis' in global ? global.speechSynthesis : null;
 
   let cachedVoice = null;
+  let preferredName = '';   // 設定で選んだ声（端末にあれば最優先）
+  function setPreferred(name) {
+    preferredName = name || '';
+    if (preferredName && synth) {
+      const v = listJaVoices().find((x) => x.name === preferredName);
+      if (v) cachedVoice = v;
+    }
+  }
 
   function listJaVoices() {
     if (!synth) return [];
@@ -27,6 +35,10 @@
 
   function chooseVoice(voices) {
     if (!voices.length) return null;
+    if (preferredName) {
+      const p = voices.find((x) => x.name === preferredName);
+      if (p) return p;
+    }
     for (const name of CFG.audio.preferredVoiceNames) {
       const v = voices.find((x) => x.name.indexOf(name) !== -1);
       if (v) return v;
@@ -100,6 +112,34 @@
     return true;
   }
   function stopAll() { if (synth) synth.cancel(); }
+
+  /* 始まりと終わりの小さな鈴の音（Web Audio。ボタン操作の中で初期化する） */
+  let actx = null;
+  function chime(kind) {
+    try {
+      const AC = global.AudioContext || global.webkitAudioContext;
+      if (!AC) return;
+      if (!actx) actx = new AC();
+      if (actx.state === 'suspended') actx.resume();
+      const t0 = actx.currentTime + 0.02;
+      const notes = kind === 'end' ? [1318.5, 987.8, 784] : [784, 987.8, 1318.5];
+      notes.forEach((f, idx) => {
+        const o = actx.createOscillator();
+        const g = actx.createGain();
+        o.type = 'sine';
+        o.frequency.value = f;
+        const st = t0 + idx * 0.18;
+        g.gain.setValueAtTime(0.0001, st);
+        g.gain.exponentialRampToValueAtTime(0.12, st + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, st + 1.6);
+        o.connect(g).connect(actx.destination);
+        o.start(st);
+        o.stop(st + 1.7);
+      });
+    } catch (e) { /* 鳴らなくても進行に影響しない */ }
+  }
+  // Safari は cancel() 直後の speak() を取りこぼすことがあるため、話している時だけ止める
+  function softCancel() { if (synth && (synth.speaking || synth.pending)) synth.cancel(); }
 
   /* ---------------- プレイヤー本体 ---------------- */
   function create(opts) {
@@ -243,6 +283,7 @@
       setState('ended');
       on.caption({ index: segs.length, text: '' });
       emitProgress();
+      chime('end');
       on.complete({ elapsedSeconds: Math.round(elapsedMs / 1000), mode });
     }
 
@@ -254,8 +295,14 @@
       startTicker();
       if (resuming && phase === 'gap') {
         gap(gapRemain);
+      } else if (!resuming && i === 0) {
+        // 最初の再生：鈴の音のあとに話し始める
+        if (mode === 'tts') softCancel();
+        chime('start');
+        const my = token;
+        gapTimer = setTimeout(() => { if (my === token && state === 'playing') speak(); }, 1500);
       } else {
-        if (synth && mode === 'tts') synth.cancel();
+        if (mode === 'tts') softCancel();
         speak();
       }
     }
@@ -304,5 +351,5 @@
     };
   }
 
-  global.AKARI_VOICE = { prepare, create, sample, stopAll, supported: !!synth, listJaVoices };
+  global.AKARI_VOICE = { prepare, create, sample, stopAll, setPreferred, supported: !!synth, listJaVoices, current: () => (cachedVoice ? cachedVoice.name : '') };
 })(window);
